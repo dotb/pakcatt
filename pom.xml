@@ -54,6 +54,13 @@
             <artifactId>spring-boot-starter-freemarker</artifactId>
             <version>1.5.7.RELEASE</version>
         </dependency>
+
+        <!-- Serial Port -->
+        <dependency>
+            <groupId>com.neuronrobotics</groupId>
+            <artifactId>nrjavaserial</artifactId>
+            <version>5.1.1</version>
+        </dependency>
     </dependencies>
 
     <build>

@@ -11,6 +11,12 @@ class Configuration {
     @Value("\${pakcatt.service-name}")
     private lateinit var serviceName: String
 
+    @Value("\${pakcatt.serial-port-path}")
+    private lateinit var serialPortPath: String
+
+    @Value("\${pakcatt.serial-port-baud}")
+    private lateinit var serialPortBaud: Number
+
     @Bean
     fun restTemplate(): RestTemplate {
         return RestTemplate()
@@ -19,6 +25,16 @@ class Configuration {
     @Bean
     open fun serviceName(): String {
         return serviceName
+    }
+
+    @Bean
+    open fun serialPortPath(): String {
+        return serialPortPath
+    }
+
+    @Bean
+    open fun serialPortBaud(): Int {
+        return serialPortBaud.toInt()
     }
 
 }
