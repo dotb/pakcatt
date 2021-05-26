@@ -71,6 +71,22 @@ data class KissFrame(private val portAndCommand: Byte,
         return constructCallsign(destCallsign, destSSID)
     }
 
+    fun controlField(): Byte {
+        return controlField
+    }
+
+    fun protocolID(): Byte {
+        return protocolID
+    }
+
+    fun payloadData(): ByteArray {
+        return payloadData
+    }
+
+    fun payloadDataString(): String {
+        return convertBytesToString(payloadData)
+    }
+
     private fun constructCallsign(callsignByteArray: ByteArray, callsignSSID: Byte): String {
         val shiftedCallsign = shiftBitsLeft(callsignByteArray)
         val callsignString = convertBytesToString(shiftedCallsign)

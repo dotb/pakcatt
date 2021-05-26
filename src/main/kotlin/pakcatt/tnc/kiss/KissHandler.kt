@@ -18,7 +18,7 @@ class KissHandler(val tncConnection: TNC) {
         }
 
         tncConnection.connect()
-
+/*
         val ctrlC = 0x03
         val ctrlCCommand = ByteArray(1)
         ctrlCCommand[0] = ctrlC.toByte()
@@ -30,7 +30,7 @@ class KissHandler(val tncConnection: TNC) {
         Thread.sleep(400)
         tncConnection.sendData(ctrlCCommand)
         tncConnection.sendData("KISS $01\r\n".toByteArray())
-
+*/
     }
 
     private fun handleNewByte(newByte: Byte) {
@@ -59,7 +59,9 @@ class KissHandler(val tncConnection: TNC) {
         logger.debug("Received AX.25 frame: ${Utils.byteArrayToHex(frame)}")
         if (frame.size >= KissFrame.SIZE_MIN) {
             val kissFrame = createKissFrame(frame)
-            logger.debug("Frame from: ${kissFrame.sourceCallsign()} to: ${kissFrame.destCallsign()}")
+            logger.debug("Frame from: ${kissFrame.sourceCallsign()} to: ${kissFrame.destCallsign()} control: ${Utils.byteToHex(kissFrame.controlField())} protocolID: ${Utils.byteToHex(kissFrame.protocolID())}")
+            logger.debug("Frame data hex: ${Utils.byteArrayToHex(kissFrame.payloadData())}")
+            logger.debug("Frame data string: ${kissFrame.payloadDataString()}")
         } else {
             logger.error("KISS frame was too small to decode: ${frame.size} bytes")
         }

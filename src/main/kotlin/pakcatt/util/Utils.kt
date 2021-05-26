@@ -12,12 +12,14 @@ companion object {
     }
 
     fun byteArrayToHex(byteArray: ByteArray): String {
-        var hexString = ""
+        var stringBuilder = StringBuilder()
+
         for (byte in byteArray) {
             val byteAsHex = byteToHex(byte)
-            hexString += " $hexString"
+            stringBuilder.append(byteAsHex)
+            stringBuilder.append(" ")
         }
-        return hexString
+        return stringBuilder.toString()
     }
 }
 
