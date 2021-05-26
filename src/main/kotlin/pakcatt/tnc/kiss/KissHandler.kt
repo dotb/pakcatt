@@ -59,7 +59,7 @@ class KissHandler(val tncConnection: TNC) {
         logger.debug("Received AX.25 frame: ${Utils.byteArrayToHex(frame)}")
         if (frame.size >= KissFrame.SIZE_MIN) {
             val kissFrame = createKissFrame(frame)
-            logger.debug("Frame from: ${kissFrame.sourceCallsign()} to: ${kissFrame.destCallsign()} control: ${Utils.byteToHex(kissFrame.controlField())} protocolID: ${Utils.byteToHex(kissFrame.protocolID())}")
+            logger.debug("Frame from: ${kissFrame.sourceCallsign()} to: ${kissFrame.destCallsign()} control: ${Utils.byteToHex(kissFrame.controlField())} protocolID: ${Utils.byteToHex(kissFrame.protocolID())} controlType: ${kissFrame.controlTypeString()}")
             logger.debug("Frame data hex: ${Utils.byteArrayToHex(kissFrame.payloadData())}")
             logger.debug("Frame data string: ${kissFrame.payloadDataString()}")
         } else {

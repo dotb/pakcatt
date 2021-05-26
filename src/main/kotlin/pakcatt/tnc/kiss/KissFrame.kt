@@ -31,7 +31,7 @@ Repeater SSID      1 byte (HRRSSID1 H=Repeated yes/no, R=Reserved, SSID=SSID, 1=
                     - The repeater extension bit is always 1 = no more address data to follow) (AX.25)
 
 
-Control field      1 byte (always 0x03 - specifies that this is a UI-frame) (AX.25)
+Control field      1 byte (AX.25)
                     - I or Information frame - RRRPSSS0 (0  = I)
                     - S or Supervisory frame - RRRPFF01 (01 = S)
                     - U or Unnumbered frame  - MMMPMM11 (11 = U)
@@ -61,6 +61,10 @@ data class KissFrame(private val portAndCommand: Byte,
         const val SIZE_MIN = 15
     }
 
+    enum class ControlType {
+        I_FRAME, S_FRAME, U_FRAME, UNKNOWN_FRAME
+    }
+
     private val logger = LoggerFactory.getLogger(KissFrame::class.java)
 
     fun sourceCallsign(): String {
@@ -85,6 +89,19 @@ data class KissFrame(private val portAndCommand: Byte,
 
     fun payloadDataString(): String {
         return convertBytesToString(payloadData)
+    }
+
+    fun controlType(): ControlType {
+        return calculateControlType()
+    }
+
+    fun controlTypeString(): String {
+        return when (calculateControlType()) {
+            ControlType.I_FRAME -> "I"
+            ControlType.S_FRAME -> "S"
+            ControlType.U_FRAME -> "U"
+            ControlType.UNKNOWN_FRAME -> "?"
+        }
     }
 
     private fun constructCallsign(callsignByteArray: ByteArray, callsignSSID: Byte): String {
@@ -117,13 +134,39 @@ data class KissFrame(private val portAndCommand: Byte,
             val shiftedInt = maskedInt shr 1
             val shiftedByte = shiftedInt.toByte()
             shiftedArray[index] = shiftedByte
-            logger.debug("byte: ${Utils.byteToHex(byte)} shiftedByte: ${Utils.byteToHex(shiftedByte)} intVal: ${Utils.intToHex(intVal)} maskedInt: ${Utils.intToHex(maskedInt)} shiftedInt: ${Utils.intToHex(shiftedInt)}")
+//            logger.debug("byte: ${Utils.byteToHex(byte)} shiftedByte: ${Utils.byteToHex(shiftedByte)} intVal: ${Utils.intToHex(intVal)} maskedInt: ${Utils.intToHex(maskedInt)} shiftedInt: ${Utils.intToHex(shiftedInt)}")
         }
         return shiftedArray
     }
 
     private fun removeWhitespace(string: String): String {
         return string.replace(" ", "")
+    }
+
+    /*
+    Control field      1 byte (AX.25)
+    - I or Information frame - RRRPSSS0 (0  = I)
+    - S or Supervisory frame - RRRPFF01 (01 = S)
+    - U or Unnumbered frame  - MMMPMM11 (11 = U)
+        Where
+        - RRR = Receive sequence number - senders next expected receive number
+        - P   = Poll/Final bit
+        - SSS = Send sequence number - senders current send number, for this frame
+        - FF = Supervisory function bits
+     */
+    private fun calculateControlType(): ControlType {
+        val iFrameHash = 0x00000001
+        val suFrameHash = 0x00000003
+        var intControlByte = controlField.toInt()
+        return if (0x00 == intControlByte.and(iFrameHash)) {
+            ControlType.I_FRAME
+        } else if (0x01 == intControlByte.and(suFrameHash)) {
+            ControlType.S_FRAME
+        } else if (0x03 == intControlByte.and(suFrameHash)) {
+            ControlType.U_FRAME
+        } else {
+            ControlType.UNKNOWN_FRAME
+        }
     }
 
 }
