@@ -3,6 +3,7 @@ package pakcatt.util
 import org.slf4j.LoggerFactory
 import pakcatt.tnc.kiss.KissFrame
 import kotlin.experimental.and
+import kotlin.experimental.or
 
 class ByteUtils {
 
@@ -60,6 +61,10 @@ class ByteUtils {
 
         fun maskInt(int: Int, mask: Int):Int {
             return int.and(mask)
+        }
+
+        fun setBits(byte: Byte, mask: Int): Byte {
+            return byte.or(mask.toByte())
         }
 
         fun compareMaskedByte(sourceByte: Byte, mask: Int, comparisonByte: Int): Boolean {

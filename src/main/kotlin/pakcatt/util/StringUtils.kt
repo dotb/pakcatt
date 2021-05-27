@@ -30,6 +30,10 @@ companion object {
         return String(byteArray, Charsets.US_ASCII)
     }
 
+    fun convertStringToBytes(string: String): ByteArray {
+        return string.toByteArray(Charsets.US_ASCII)
+    }
+
 }
 
 }

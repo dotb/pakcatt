@@ -90,7 +90,8 @@ class KissHandler(val tncConnection: TNC) {
         if (frame.size >= 18) {
             payloadData = frame.copyOfRange(17, frame.size)
         }
-        val kissFrame = KissFrame(portAndCommand,
+        val kissFrame = KissFrame()
+        kissFrame.parseRawKISSFrame(portAndCommand,
                 destCallsign,
                 destSSID,
                 sourceCallsign,
