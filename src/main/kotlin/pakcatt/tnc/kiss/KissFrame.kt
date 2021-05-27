@@ -134,7 +134,7 @@ data class KissFrame(private val portAndCommand: Byte,
             val shiftedInt = maskedInt shr 1
             val shiftedByte = shiftedInt.toByte()
             shiftedArray[index] = shiftedByte
-//            logger.debug("byte: ${Utils.byteToHex(byte)} shiftedByte: ${Utils.byteToHex(shiftedByte)} intVal: ${Utils.intToHex(intVal)} maskedInt: ${Utils.intToHex(maskedInt)} shiftedInt: ${Utils.intToHex(shiftedInt)}")
+            logger.trace("byte: ${Utils.byteToHex(byte)} shiftedByte: ${Utils.byteToHex(shiftedByte)} intVal: ${Utils.intToHex(intVal)} maskedInt: ${Utils.intToHex(maskedInt)} shiftedInt: ${Utils.intToHex(shiftedInt)}")
         }
         return shiftedArray
     }
