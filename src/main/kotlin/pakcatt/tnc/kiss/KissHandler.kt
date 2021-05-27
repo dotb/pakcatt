@@ -3,7 +3,7 @@ package pakcatt.tnc.kiss
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import pakcatt.tnc.TNC
-import pakcatt.util.Utils
+import pakcatt.util.StringUtils
 
 @Service
 class KissHandler(val tncConnection: TNC) {
@@ -56,11 +56,11 @@ class KissHandler(val tncConnection: TNC) {
     }
 
     private fun handleNewFrame(frame: ByteArray) {
-        logger.trace("Received AX.25 frame: ${Utils.byteArrayToHex(frame)}")
+        logger.trace("Received AX.25 frame: ${StringUtils.byteArrayToHex(frame)}")
         if (frame.size >= KissFrame.SIZE_MIN) {
             val kissFrame = createKissFrame(frame)
-            logger.debug("Frame from: ${kissFrame.sourceCallsign()} to: ${kissFrame.destCallsign()} control: ${Utils.byteToHex(kissFrame.controlField())} protocolID: ${Utils.byteToHex(kissFrame.protocolID())} controlType: ${kissFrame.controlTypeString()}")
-            logger.trace("Frame data hex: ${Utils.byteArrayToHex(kissFrame.payloadData())}")
+            logger.debug("Frame from: ${kissFrame.sourceCallsign()} to: ${kissFrame.destCallsign()} control: ${StringUtils.byteToHex(kissFrame.controlField())} protocolID: ${StringUtils.byteToHex(kissFrame.protocolID())} controlType: ${kissFrame.controlTypeString()}")
+            logger.trace("Frame data hex: ${StringUtils.byteArrayToHex(kissFrame.payloadData())}")
             logger.debug("Frame data string: ${kissFrame.payloadDataString()}")
         } else {
             logger.error("KISS frame was too small to decode: ${frame.size} bytes")

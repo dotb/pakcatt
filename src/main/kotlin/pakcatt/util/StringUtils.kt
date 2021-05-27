@@ -1,6 +1,6 @@
 package pakcatt.util
 
-class Utils {
+class StringUtils {
 
 companion object {
     fun byteToHex(byte: Byte): String {
@@ -21,6 +21,15 @@ companion object {
         }
         return stringBuilder.toString()
     }
+
+    fun removeWhitespace(string: String): String {
+        return string.replace(" ", "")
+    }
+
+    fun convertBytesToString(byteArray: ByteArray): String {
+        return String(byteArray, Charsets.US_ASCII)
+    }
+
 }
 
 }

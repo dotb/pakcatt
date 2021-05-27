@@ -1,7 +1,8 @@
 package pakcatt.tnc.kiss
 
 import org.slf4j.LoggerFactory
-import pakcatt.util.Utils
+import pakcatt.util.ByteUtils
+import pakcatt.util.StringUtils
 import kotlin.experimental.and
 
 /*
@@ -88,7 +89,7 @@ data class KissFrame(private val portAndCommand: Byte,
     }
 
     fun payloadDataString(): String {
-        return convertBytesToString(payloadData)
+        return StringUtils.convertBytesToString(payloadData)
     }
 
     fun controlType(): ControlType {
@@ -105,42 +106,16 @@ data class KissFrame(private val portAndCommand: Byte,
     }
 
     private fun constructCallsign(callsignByteArray: ByteArray, callsignSSID: Byte): String {
-        val shiftedCallsign = shiftBitsLeft(callsignByteArray)
-        val callsignString = convertBytesToString(shiftedCallsign)
-        val trimmedCallsign = removeWhitespace(callsignString)
+        val shiftedCallsign = ByteUtils.shiftBitsRight(callsignByteArray, 1)
+        val callsignString = StringUtils.convertBytesToString(shiftedCallsign)
+        val trimmedCallsign = StringUtils.removeWhitespace(callsignString)
         val ssid = ssidFromSSIDByte(callsignSSID)
         return "${trimmedCallsign}-${ssid}"
     }
 
     private fun ssidFromSSIDByte(ssidByte: Byte): Int {
-        val ssidMask = 0x1E
-        val maskedSSID = ssidByte.and(ssidMask.toByte())
-        return maskedSSID.toInt() shr 1
-    }
-
-    private fun convertBytesToString(byteArray: ByteArray): String {
-        return String(byteArray, Charsets.US_ASCII)
-    }
-
-    private fun shiftBitsLeft(byteArray: ByteArray): ByteArray {
-        /* When we convert a byte to an integer type additional 1's are added
-           to the high bytes. We use a mask to remove these and ensure only
-           the original byte is manipulated. */
-        val intMask = 0x000000FF
-        var shiftedArray = ByteArray(byteArray.size)
-        for ((index, byte) in byteArray.withIndex()) {
-            val intVal = byte.toInt()
-            val maskedInt = intVal.and(intMask)
-            val shiftedInt = maskedInt shr 1
-            val shiftedByte = shiftedInt.toByte()
-            shiftedArray[index] = shiftedByte
-            logger.trace("byte: ${Utils.byteToHex(byte)} shiftedByte: ${Utils.byteToHex(shiftedByte)} intVal: ${Utils.intToHex(intVal)} maskedInt: ${Utils.intToHex(maskedInt)} shiftedInt: ${Utils.intToHex(shiftedInt)}")
-        }
-        return shiftedArray
-    }
-
-    private fun removeWhitespace(string: String): String {
-        return string.replace(" ", "")
+        val shiftedByte = ByteUtils.shiftBitsRight(ssidByte, 1)
+        return ByteUtils.maskInt(shiftedByte.toInt(), 0x0F)
     }
 
     /*
