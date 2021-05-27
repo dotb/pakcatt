@@ -120,6 +120,17 @@ data class KissFrame(private val portAndCommand: Byte,
         }
     }
 
+    fun pollFinalBit(): Boolean {
+        return ByteUtils.compareMaskedByte(controlField,0x10, 0x10)
+    }
+
+    fun pollFinalBitString(): String {
+        return when (pollFinalBit()) {
+            true -> "1"
+            false -> "0"
+        }
+    }
+
     private fun constructCallsign(callsignByteArray: ByteArray, callsignSSID: Byte): String {
         val shiftedCallsign = ByteUtils.shiftBitsRight(callsignByteArray, 1)
         val callsignString = StringUtils.convertBytesToString(shiftedCallsign)
