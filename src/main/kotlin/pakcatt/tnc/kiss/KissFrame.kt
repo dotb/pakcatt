@@ -100,6 +100,14 @@ data class KissFrame(private val portAndCommand: Byte,
         return calculateControlFrame()
     }
 
+    fun receiveSequenceNumber(): Int {
+        return calculateReceiveSequenceNumber()
+    }
+
+    fun sendSequenceNumber(): Int {
+        return calculateSendSequenceNumber()
+    }
+
     fun controlTypeString(): String {
         return when (calculateControlFrame()) {
             ControlFrame.I_FRAME -> "I"
@@ -176,6 +184,17 @@ data class KissFrame(private val portAndCommand: Byte,
                 ControlFrame.UNKNOWN_FRAME
             }
         }
+    }
+
+    private fun calculateReceiveSequenceNumber(): Int {
+        val shiftedControlField = ByteUtils.shiftBitsRight(controlField, 5)
+        return shiftedControlField.toInt()
+    }
+
+    private fun calculateSendSequenceNumber(): Int {
+        val shiftedControlField = ByteUtils.shiftBitsRight(controlField, 1)
+        val maskedControlField = ByteUtils.maskByte(shiftedControlField, 0x07)
+        return maskedControlField.toInt()
     }
 
 }
