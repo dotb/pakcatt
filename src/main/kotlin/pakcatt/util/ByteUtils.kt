@@ -54,12 +54,17 @@ class ByteUtils {
             return shiftedInt.toByte()
         }
 
-        fun maskByte(byte: Byte, mask: Byte): Byte {
-            return byte.and(mask)
+        fun maskByte(byte: Byte, mask: Int): Byte {
+            return byte.and(mask.toByte())
         }
 
         fun maskInt(int: Int, mask: Int):Int {
             return int.and(mask)
+        }
+
+        fun compareMaskedByte(sourceByte: Byte, mask: Int, comparisonByte: Int): Boolean {
+            val hashedSourceByte = maskByte(sourceByte, mask)
+            return comparisonByte.compareTo(hashedSourceByte) == 0
         }
 
     }

@@ -3,7 +3,6 @@ package pakcatt.tnc.kiss
 import org.slf4j.LoggerFactory
 import pakcatt.util.ByteUtils
 import pakcatt.util.StringUtils
-import kotlin.experimental.and
 
 /*
 # KISS and embedded AX.25 frames contain these fields #
@@ -62,8 +61,13 @@ data class KissFrame(private val portAndCommand: Byte,
         const val SIZE_MIN = 15
     }
 
-    enum class ControlType {
-        I_FRAME, S_FRAME, U_FRAME, UNKNOWN_FRAME
+    enum class ControlFrame {
+        I_FRAME,
+        S_FRAME_RECEIVE_READY, S_FRAME_RECEIVE_NOT_READY, S_FRAME_REJECT, S_FRAME_SELECTIVE_REJECT,
+        U_FRAME_SET_ASYNC_BALANCED_MODE, U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED, U_FRAME_DISCONNECT,
+        U_FRAME_DISCONNECT_MODE, U_FRAME_UNNUMBERED_ACKNOWLEDGE, U_FRAME_REJECT, U_FRAME_UNNUMBERED_INFORMATION,
+        U_FRAME_EXCHANGE_IDENTIFICATION, U_FRAME_TEST,
+        UNKNOWN_FRAME
     }
 
     private val logger = LoggerFactory.getLogger(KissFrame::class.java)
@@ -92,16 +96,27 @@ data class KissFrame(private val portAndCommand: Byte,
         return StringUtils.convertBytesToString(payloadData)
     }
 
-    fun controlType(): ControlType {
-        return calculateControlType()
+    fun controlFrame(): ControlFrame {
+        return calculateControlFrame()
     }
 
     fun controlTypeString(): String {
-        return when (calculateControlType()) {
-            ControlType.I_FRAME -> "I"
-            ControlType.S_FRAME -> "S"
-            ControlType.U_FRAME -> "U"
-            ControlType.UNKNOWN_FRAME -> "?"
+        return when (calculateControlFrame()) {
+            ControlFrame.I_FRAME -> "I"
+            ControlFrame.S_FRAME_RECEIVE_READY -> "S_RECEIVE_READY"
+            ControlFrame.S_FRAME_RECEIVE_NOT_READY -> "S_RECEIVE_NOT_READY"
+            ControlFrame.S_FRAME_REJECT -> "S_REJECT"
+            ControlFrame.S_FRAME_SELECTIVE_REJECT -> "S_SELECTIVE_REJECT"
+            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE -> "U_ASYNC_BAL_MODE"
+            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED -> "U_ASYNC_BAL_MODE_EX"
+            ControlFrame.U_FRAME_DISCONNECT -> "U_DISCONNECT"
+            ControlFrame.U_FRAME_DISCONNECT_MODE -> "U_DISCONNECT_MODE"
+            ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE -> "U_UNNUMBERED_ACK"
+            ControlFrame.U_FRAME_REJECT -> "U_REJECT"
+            ControlFrame.U_FRAME_UNNUMBERED_INFORMATION -> "U_UNNUMBERED_INFO"
+            ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION -> "U_EXCHANGE_ID"
+            ControlFrame.U_FRAME_TEST -> "U_TEST"
+            ControlFrame.UNKNOWN_FRAME -> "?"
         }
     }
 
@@ -129,18 +144,26 @@ data class KissFrame(private val portAndCommand: Byte,
         - SSS = Send sequence number - senders current send number, for this frame
         - FF = Supervisory function bits
      */
-    private fun calculateControlType(): ControlType {
-        val iFrameHash = 0x00000001
-        val suFrameHash = 0x00000003
-        var intControlByte = controlField.toInt()
-        return if (0x00 == intControlByte.and(iFrameHash)) {
-            ControlType.I_FRAME
-        } else if (0x01 == intControlByte.and(suFrameHash)) {
-            ControlType.S_FRAME
-        } else if (0x03 == intControlByte.and(suFrameHash)) {
-            ControlType.U_FRAME
-        } else {
-            ControlType.UNKNOWN_FRAME
+    private fun calculateControlFrame(): ControlFrame {
+        return when {
+            ByteUtils.compareMaskedByte(controlField,0x01, 0x00) -> { ControlFrame.I_FRAME }
+            ByteUtils.compareMaskedByte(controlField,0x0F, 0x01) -> { ControlFrame.S_FRAME_RECEIVE_READY }
+            ByteUtils.compareMaskedByte(controlField,0x0F, 0x05) -> { ControlFrame.S_FRAME_RECEIVE_NOT_READY }
+            ByteUtils.compareMaskedByte(controlField,0x0F, 0x09) -> { ControlFrame.S_FRAME_REJECT }
+            ByteUtils.compareMaskedByte(controlField,0x0F, 0x0D) -> { ControlFrame.S_FRAME_SELECTIVE_REJECT }
+            ByteUtils.compareMaskedByte(controlField,0xDF, 0x6F) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE }
+            ByteUtils.compareMaskedByte(controlField,0xDF, 0x2F) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED }
+            ByteUtils.compareMaskedByte(controlField,0xDF, 0x43) -> { ControlFrame.U_FRAME_DISCONNECT }
+            ByteUtils.compareMaskedByte(controlField,0xDF, 0x0F) -> { ControlFrame.U_FRAME_DISCONNECT_MODE }
+            ByteUtils.compareMaskedByte(controlField,0xDF, 0x63) -> { ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE }
+            ByteUtils.compareMaskedByte(controlField,0xDF, 0x87) -> { ControlFrame.U_FRAME_REJECT }
+            ByteUtils.compareMaskedByte(controlField,0xDF, 0x03) -> { ControlFrame.U_FRAME_UNNUMBERED_INFORMATION }
+            ByteUtils.compareMaskedByte(controlField,0xDF, 0xAF) -> { ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION }
+            ByteUtils.compareMaskedByte(controlField,0xDF, 0xE3) -> { ControlFrame.U_FRAME_TEST }
+            else -> {
+                logger.error("Decoded an unknown AX.25 controlFrame ${StringUtils.byteToHex(controlField)}")
+                ControlFrame.UNKNOWN_FRAME
+            }
         }
     }
 
