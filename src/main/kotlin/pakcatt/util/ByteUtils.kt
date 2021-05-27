@@ -72,6 +72,15 @@ class ByteUtils {
             return comparisonByte.compareTo(hashedSourceByte) == 0
         }
 
+        fun insertIntoByteArray(source: ByteArray, destination: ByteArray, startIndex: Int): ByteArray {
+            var index = startIndex
+            for (byte in source) {
+                destination[index] = byte
+                index++
+            }
+            return destination
+        }
+
     }
 
 }

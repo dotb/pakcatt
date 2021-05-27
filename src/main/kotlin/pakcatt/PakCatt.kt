@@ -4,9 +4,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import org.springframework.scheduling.annotation.EnableAsync
 import org.springframework.scheduling.annotation.EnableScheduling
-import pakcatt.tnc.TNCSerial
-import pakcatt.tnc.kiss.KissFrame
-import pakcatt.tnc.kiss.KissHandler
 
 @SpringBootApplication
 @EnableScheduling

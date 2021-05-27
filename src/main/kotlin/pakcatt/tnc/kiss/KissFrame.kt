@@ -126,6 +126,20 @@ class KissFrame() {
         }
     }
 
+    fun packetData(): ByteArray {
+        val packetSize = 7 + destCallsign.size + sourceCallsign.size + payloadData.size
+        var kissPacket = ByteArray(packetSize)
+        kissPacket[0] = portAndCommand
+        ByteUtils.insertIntoByteArray(destCallsign, kissPacket, 1)
+        kissPacket[7] = destSSID
+        ByteUtils.insertIntoByteArray(sourceCallsign, kissPacket, 8)
+        kissPacket[14] = sourceSSID
+        kissPacket[15] = controlField
+        kissPacket[16] = protocolID
+        ByteUtils.insertIntoByteArray(payloadData, kissPacket, 17)
+        return kissPacket
+    }
+
     fun sourceCallsign(): String {
         return constructCallsign(sourceCallsign, sourceSSID)
     }
@@ -191,6 +205,12 @@ class KissFrame() {
             true -> "1"
             false -> "0"
         }
+    }
+
+    override fun toString(): String {
+        return "From: ${sourceCallsign()} to: ${destCallsign()} control: ${StringUtils.byteToHex(controlField())} " +
+                "controlType: ${controlTypeString()} pollFinalBit: ${pollFinalBitString()} protocolID: ${StringUtils.byteToHex(protocolID())} " +
+                "Receive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()}"
     }
 
     private fun constructCallsign(callsignByteArray: ByteArray, callsignSSID: Byte): String {

@@ -1,16 +1,19 @@
 package pakcatt.tnc.kiss
 
 import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import pakcatt.tnc.TNC
 import pakcatt.util.StringUtils
+import java.util.*
 
 @Service
-class KissHandler(val tncConnection: TNC) {
+class KissService(val tncConnection: TNC) {
 
-    private val logger = LoggerFactory.getLogger(KissHandler::class.java)
+    private val logger = LoggerFactory.getLogger(KissService::class.java)
     private var incomingFrame = ByteArray(1024)
     private var incomingFrameIndex = -1
+    private var transmitQueue = LinkedList<KissFrame>()
 
     init {
         tncConnection.setReceiveDataCallback {
@@ -31,6 +34,24 @@ class KissHandler(val tncConnection: TNC) {
         tncConnection.sendData(ctrlCCommand)
         tncConnection.sendData("KISS $01\r\n".toByteArray())
 */
+
+        val testFrame = KissFrame()
+        testFrame.setDestCallsign("VK3LIT-2")
+        testFrame.setSourceCallsign("VK3LIT-1")
+        testFrame.setReceiveSequenceNumber(4)
+        logger.debug("Test frame ${testFrame.toString()}")
+        transmitQueue.push(testFrame)
+    }
+
+    @Scheduled(fixedRate = 2000)
+    private fun serviceTransmitQueue() {
+        if (!transmitQueue.isEmpty()) {
+            val nextFrame = transmitQueue.pop()
+            logger.debug("Sending frame from: ${nextFrame.sourceCallsign()} to: ${nextFrame.destCallsign()}")
+            tncConnection.sendData(KissFrame.FRAME_END)
+            tncConnection.sendData(nextFrame.packetData())
+            tncConnection.sendData(KissFrame.FRAME_END)
+        }
     }
 
     private fun handleNewByte(newByte: Byte) {
@@ -59,9 +80,7 @@ class KissHandler(val tncConnection: TNC) {
         logger.trace("Received AX.25 frame: ${StringUtils.byteArrayToHex(frame)}")
         if (frame.size >= KissFrame.SIZE_MIN) {
             val kissFrame = createKissFrame(frame)
-            logger.debug("Frame from: ${kissFrame.sourceCallsign()} to: ${kissFrame.destCallsign()} control: ${StringUtils.byteToHex(kissFrame.controlField())} " +
-                    "controlType: ${kissFrame.controlTypeString()} pollFinalBit: ${kissFrame.pollFinalBitString()} protocolID: ${StringUtils.byteToHex(kissFrame.protocolID())} " +
-                    "Receive Seq: ${kissFrame.receiveSequenceNumber()} Send Seq: ${kissFrame.sendSequenceNumber()}")
+            logger.debug("Frame ${kissFrame.toString()}")
             logger.trace("Frame data hex: ${StringUtils.byteArrayToHex(kissFrame.payloadData())}")
             logger.debug("Frame data string: ${kissFrame.payloadDataString()}")
         } else {

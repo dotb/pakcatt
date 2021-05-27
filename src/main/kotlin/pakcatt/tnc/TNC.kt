@@ -16,4 +16,6 @@ abstract class TNC {
 
     abstract fun sendData(outputData: ByteArray)
 
+    abstract fun sendData(outputData: Int)
+
 }

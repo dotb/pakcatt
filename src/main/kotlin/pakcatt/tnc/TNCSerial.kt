@@ -44,6 +44,16 @@ class TNCSerial(private val serialPortPath: String,
         }
     }
 
+    override fun sendData(outputData: Int) {
+        logger.debug("Serial sending data of size: 1 byte")
+        val myOutputStream = outputStream
+        if (null != myOutputStream) {
+            myOutputStream.write(outputData)
+        } else {
+            logger.error("Tried to send a line to the serial port but it's not connected.")
+        }
+    }
+
     @Scheduled(fixedRate = 1)
     private fun serviceSerialPort() {
         try {
