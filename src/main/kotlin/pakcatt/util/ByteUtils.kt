@@ -64,7 +64,11 @@ class ByteUtils {
         }
 
         fun setBits(byte: Byte, mask: Int): Byte {
-            return byte.or(mask.toByte())
+            return setBits(byte, mask.toByte())
+        }
+
+        fun setBits(byte: Byte, mask: Byte): Byte {
+            return byte.or(mask)
         }
 
         fun compareMaskedByte(sourceByte: Byte, mask: Int, comparisonByte: Int): Boolean {

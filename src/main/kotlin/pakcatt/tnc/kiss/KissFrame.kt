@@ -3,7 +3,7 @@ package pakcatt.tnc.kiss
 import org.slf4j.LoggerFactory
 import pakcatt.util.ByteUtils
 import pakcatt.util.StringUtils
-import kotlin.experimental.and
+import kotlin.experimental.or
 
 /*
 # KISS and embedded AX.25 frames contain these fields #
@@ -71,7 +71,7 @@ class KissFrame() {
     private var sourceCallsign: ByteArray = ByteArray(0)
     private var sourceSSID: Byte = 0x00
     private var controlField: Byte = 0x00
-    private var protocolID: Byte = 0xF0.toByte()
+    private var protocolID: Byte = 0xF0.toByte() // No layer 3
     private var payloadData: ByteArray = ByteArray(0)
 
     fun parseRawKISSFrame(portAndCommand: Byte,
@@ -99,9 +99,10 @@ class KissFrame() {
     }
 
     fun setSourceCallsign(sourceCallsign: String) {
+        // Set the source callsign ending in 1 to denote there is no repeater address
         val parsedCallsign = parseStringCallsign(sourceCallsign)
         this.sourceCallsign = parsedCallsign.first
-        this.sourceSSID = parsedCallsign.second
+        this.sourceSSID = ByteUtils.setBits(parsedCallsign.second, 0x01)
     }
 
     fun setPayloadMessage(message: String) {
@@ -110,12 +111,12 @@ class KissFrame() {
 
     fun setReceiveSequenceNumber(receiveSeq: Int) {
         val sequenceNumberByte = parseReceiveSequenceNumber(receiveSeq)
-        controlField = controlField.and(sequenceNumberByte)
+        this.controlField = ByteUtils.setBits(controlField, sequenceNumberByte)
     }
 
     fun setSendSequenceNumber(sendSeq: Int) {
         val sequenceNumberByte = parseSendSequenceNumber(sendSeq)
-        controlField = controlField.and(sequenceNumberByte)
+        this.controlField = ByteUtils.setBits(controlField, sequenceNumberByte)
     }
 
     fun setPollFinalBit(pollFinalBit: Boolean) {
@@ -127,7 +128,7 @@ class KissFrame() {
     }
 
     fun packetData(): ByteArray {
-        val packetSize = 7 + destCallsign.size + sourceCallsign.size + payloadData.size
+        val packetSize = 5 + destCallsign.size + sourceCallsign.size + payloadData.size
         var kissPacket = ByteArray(packetSize)
         kissPacket[0] = portAndCommand
         ByteUtils.insertIntoByteArray(destCallsign, kissPacket, 1)
@@ -274,7 +275,7 @@ class KissFrame() {
     private fun parseStringCallsign(callsign: String): Pair<ByteArray, Byte> {
         // Assume a default SSID of -0
         var callString = callsign
-        var ssid =  0
+        var ssid = 0
 
         // Check if the callsign contains an SSID
         if (callsign.contains("-")) {
@@ -283,10 +284,12 @@ class KissFrame() {
             ssid = ssidString.toInt()
         }
 
+        // Pad out the callsign and format the call and ssid bits for AX.25
+        callString = StringUtils.padWithSpaces(callString, 6)
         val callsignBytes = StringUtils.convertStringToBytes(callString)
         val ssidByte = ssid.toByte()
         val shiftedSSID = ByteUtils.shiftBitsLeft(ssidByte, 1)
-        val maskedSSID = ByteUtils.maskByte(shiftedSSID, 0x1D)
+        val maskedSSID = ByteUtils.maskByte(shiftedSSID, 0x1E)
         val setbitsSSID = ByteUtils.setBits(maskedSSID, 0x60) // Set the reserved bits to 1
         return Pair(ByteUtils.shiftBitsLeft(callsignBytes, 1), setbitsSSID)
     }

@@ -34,6 +34,14 @@ companion object {
         return string.toByteArray(Charsets.US_ASCII)
     }
 
+    fun padWithSpaces(string: String, totalLength: Int): String {
+        var paddedString = StringBuilder(string)
+        for (i in string.length + 1 .. totalLength) {
+            paddedString.append(" ")
+        }
+        return paddedString.toString()
+    }
+
 }
 
 }
