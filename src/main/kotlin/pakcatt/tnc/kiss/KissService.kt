@@ -22,20 +22,7 @@ class KissService(val tncConnection: TNC) {
         }
 
         tncConnection.connect()
-/*
-        val ctrlC = 0x03
-        val ctrlCCommand = ByteArray(1)
-        ctrlCCommand[0] = ctrlC.toByte()
-        tncConnection.sendData(ctrlCCommand)
-        tncConnection.sendData(ctrlCCommand)
-        tncConnection.sendData(ctrlCCommand)
-        tncConnection.sendData("echo off\r\n".toByteArray())
-        tncConnection.sendData("connect VK2VRO\r\n".toByteArray())
-        Thread.sleep(400)
-        tncConnection.sendData(ctrlCCommand)
-        tncConnection.sendData("KISS $01\r\n".toByteArray())
-*/
-
+        
         val testFrame = KissFrame()
         testFrame.setDestCallsign("VK3LIT-2")
         testFrame.setSourceCallsign("VK3LIT-1")

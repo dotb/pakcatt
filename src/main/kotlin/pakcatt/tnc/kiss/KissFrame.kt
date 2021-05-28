@@ -53,6 +53,20 @@ class KissFrame() {
     companion object {
         const val FRAME_END = -64
         const val SIZE_MIN = 15
+        const val TYPE_I_FRAME = 0x00
+        const val TYPE_S_FRAME_RECEIVE_READY = 0x01
+        const val TYPE_S_FRAME_RECEIVE_NOT_READY = 0x05
+        const val TYPE_S_FRAME_REJECT = 0x09
+        const val TYPE_S_FRAME_SELECTIVE_REJECT = 0x0D
+        const val TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE = 0x6F
+        const val TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED = 0x2F
+        const val TYPE_U_FRAME_DISCONNECT = 0x43
+        const val TYPE_U_FRAME_DISCONNECT_MODE = 0x0F
+        const val TYPE_U_FRAME_UNNUMBERED_ACKNOWLEDGE = 0x63
+        const val TYPE_U_FRAME_REJECT = 0x87
+        const val TYPE_U_FRAME_UNNUMBERED_INFORMATION = 0x03
+        const val TYPE_U_FRAME_EXCHANGE_IDENTIFICATION = 0xAF
+        const val TYPE_U_FRAME_TEST = 0xE3
     }
 
     enum class ControlFrame {
@@ -105,8 +119,9 @@ class KissFrame() {
         this.sourceSSID = ByteUtils.setBits(parsedCallsign.second, 0x01)
     }
 
-    fun setPayloadMessage(message: String) {
-        payloadData = StringUtils.convertStringToBytes(message)
+    fun setControlType(controlType: ControlFrame) {
+        setControlFieldBits(controlType)
+        setCommandBits(controlType)
     }
 
     fun setReceiveSequenceNumber(receiveSeq: Int) {
@@ -125,6 +140,10 @@ class KissFrame() {
         } else {
             controlField = ByteUtils.maskByte(controlField, 0xDF)
         }
+    }
+
+    fun setPayloadMessage(message: String) {
+        payloadData = StringUtils.convertStringToBytes(message)
     }
 
     fun packetData(): ByteArray {
@@ -227,33 +246,25 @@ class KissFrame() {
         return ByteUtils.maskInt(shiftedByte.toInt(), 0x0F)
     }
 
-    /*
-    Control field      1 byte (AX.25)
-    - I or Information frame - RRRPSSS0 (0  = I)
-    - S or Supervisory frame - RRRPFF01 (01 = S)
-    - U or Unnumbered frame  - MMMPMM11 (11 = U)
-        Where
-        - RRR = Receive sequence number - senders next expected receive number
-        - P   = Poll/Final bit
-        - SSS = Send sequence number - senders current send number, for this frame
-        - FF = Supervisory function bits
+    /**
+     * Section 4.3 - Coding for Commands and Responses
      */
     private fun calculateControlFrame(): ControlFrame {
         return when {
-            ByteUtils.compareMaskedByte(controlField,0x01, 0x00) -> { ControlFrame.I_FRAME }
-            ByteUtils.compareMaskedByte(controlField,0x0F, 0x01) -> { ControlFrame.S_FRAME_RECEIVE_READY }
-            ByteUtils.compareMaskedByte(controlField,0x0F, 0x05) -> { ControlFrame.S_FRAME_RECEIVE_NOT_READY }
-            ByteUtils.compareMaskedByte(controlField,0x0F, 0x09) -> { ControlFrame.S_FRAME_REJECT }
-            ByteUtils.compareMaskedByte(controlField,0x0F, 0x0D) -> { ControlFrame.S_FRAME_SELECTIVE_REJECT }
-            ByteUtils.compareMaskedByte(controlField,0xDF, 0x6F) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE }
-            ByteUtils.compareMaskedByte(controlField,0xDF, 0x2F) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED }
-            ByteUtils.compareMaskedByte(controlField,0xDF, 0x43) -> { ControlFrame.U_FRAME_DISCONNECT }
-            ByteUtils.compareMaskedByte(controlField,0xDF, 0x0F) -> { ControlFrame.U_FRAME_DISCONNECT_MODE }
-            ByteUtils.compareMaskedByte(controlField,0xDF, 0x63) -> { ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE }
-            ByteUtils.compareMaskedByte(controlField,0xDF, 0x87) -> { ControlFrame.U_FRAME_REJECT }
-            ByteUtils.compareMaskedByte(controlField,0xDF, 0x03) -> { ControlFrame.U_FRAME_UNNUMBERED_INFORMATION }
-            ByteUtils.compareMaskedByte(controlField,0xDF, 0xAF) -> { ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION }
-            ByteUtils.compareMaskedByte(controlField,0xDF, 0xE3) -> { ControlFrame.U_FRAME_TEST }
+            ByteUtils.compareMaskedByte(controlField,0x01, TYPE_I_FRAME) -> { ControlFrame.I_FRAME }
+            ByteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_RECEIVE_READY) -> { ControlFrame.S_FRAME_RECEIVE_READY }
+            ByteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_RECEIVE_NOT_READY) -> { ControlFrame.S_FRAME_RECEIVE_NOT_READY }
+            ByteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_REJECT) -> { ControlFrame.S_FRAME_REJECT }
+            ByteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_SELECTIVE_REJECT) -> { ControlFrame.S_FRAME_SELECTIVE_REJECT }
+            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE }
+            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED }
+            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_DISCONNECT) -> { ControlFrame.U_FRAME_DISCONNECT }
+            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_DISCONNECT_MODE) -> { ControlFrame.U_FRAME_DISCONNECT_MODE }
+            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_UNNUMBERED_ACKNOWLEDGE) -> { ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE }
+            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_REJECT) -> { ControlFrame.U_FRAME_REJECT }
+            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_UNNUMBERED_INFORMATION) -> { ControlFrame.U_FRAME_UNNUMBERED_INFORMATION }
+            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_EXCHANGE_IDENTIFICATION) -> { ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION }
+            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_TEST) -> { ControlFrame.U_FRAME_TEST }
             else -> {
                 logger.error("Decoded an unknown AX.25 controlFrame ${StringUtils.byteToHex(controlField)}")
                 ControlFrame.UNKNOWN_FRAME
@@ -302,6 +313,60 @@ class KissFrame() {
     private fun parseSendSequenceNumber(sequenceNumberInt: Int): Byte {
         val sequenceNumberByte = sequenceNumberInt.toByte()
         return ByteUtils.shiftBitsLeft(sequenceNumberByte, 1)
+    }
+
+    /**
+     * Section 4.3 - Coding for Commands and Responses
+     */
+    private fun setControlFieldBits(controlType: ControlFrame) {
+        controlField = when(controlType) {
+            ControlFrame.I_FRAME -> ByteUtils.setBits(controlField, TYPE_I_FRAME)
+            ControlFrame.S_FRAME_RECEIVE_READY -> ByteUtils.setBits(controlField, TYPE_S_FRAME_RECEIVE_READY)
+            ControlFrame.S_FRAME_RECEIVE_NOT_READY -> ByteUtils.setBits(controlField, TYPE_S_FRAME_RECEIVE_NOT_READY)
+            ControlFrame.S_FRAME_REJECT -> ByteUtils.setBits(controlField, TYPE_S_FRAME_REJECT)
+            ControlFrame.S_FRAME_SELECTIVE_REJECT -> ByteUtils.setBits(controlField, TYPE_S_FRAME_SELECTIVE_REJECT)
+            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE -> ByteUtils.setBits(controlField, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE)
+            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED -> ByteUtils.setBits(controlField, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED)
+            ControlFrame.U_FRAME_DISCONNECT -> ByteUtils.setBits(controlField, TYPE_U_FRAME_DISCONNECT)
+            ControlFrame.U_FRAME_DISCONNECT_MODE -> ByteUtils.setBits(controlField, TYPE_U_FRAME_DISCONNECT_MODE)
+            ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE -> ByteUtils.setBits(controlField, TYPE_U_FRAME_UNNUMBERED_ACKNOWLEDGE)
+            ControlFrame.U_FRAME_REJECT -> ByteUtils.setBits(controlField, TYPE_U_FRAME_REJECT)
+            ControlFrame.U_FRAME_UNNUMBERED_INFORMATION -> ByteUtils.setBits(controlField, TYPE_U_FRAME_UNNUMBERED_INFORMATION)
+            ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION -> ByteUtils.setBits(controlField, TYPE_U_FRAME_EXCHANGE_IDENTIFICATION)
+            ControlFrame.U_FRAME_TEST -> ByteUtils.setBits(controlField, TYPE_U_FRAME_TEST)
+            ControlFrame.UNKNOWN_FRAME -> ByteUtils.setBits(controlField, TYPE_I_FRAME) // Default to I frame
+        }
+    }
+
+    /**
+     * Section 6.1.2 - Command/Response Procedure
+     * The control bit in the SSID bytes are set as either 1 or 0
+     * to denote a command or a response packet. Below we set either
+     * one of these bits to 1, assuming the other remains 0.
+     */
+    private fun setCommandBits(controlType: ControlFrame) {
+        destSSID = when (controlType) {
+            ControlFrame.I_FRAME -> ByteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE -> ByteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED -> ByteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_DISCONNECT -> ByteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_DISCONNECT_MODE -> ByteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_UNNUMBERED_INFORMATION -> ByteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION -> ByteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_TEST -> ByteUtils.setBits(destSSID, 0x80)
+            else -> destSSID
+        }
+
+        sourceSSID = when (controlType) {
+            ControlFrame.S_FRAME_RECEIVE_READY -> ByteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.S_FRAME_RECEIVE_NOT_READY -> ByteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.S_FRAME_REJECT -> ByteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.S_FRAME_SELECTIVE_REJECT -> ByteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE -> ByteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.U_FRAME_REJECT -> ByteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.UNKNOWN_FRAME -> ByteUtils.setBits(sourceSSID, 0x80)
+            else -> sourceSSID
+        }
     }
 
 }
