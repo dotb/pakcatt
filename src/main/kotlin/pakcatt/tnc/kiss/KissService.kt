@@ -22,11 +22,14 @@ class KissService(val tncConnection: TNC) {
         }
 
         tncConnection.connect()
-        
+
         val testFrame = KissFrame()
         testFrame.setDestCallsign("VK3LIT-2")
         testFrame.setSourceCallsign("VK3LIT-1")
-        testFrame.setReceiveSequenceNumber(4)
+        testFrame.setControlType(KissFrame.ControlFrame.U_FRAME_UNNUMBERED_INFORMATION)
+//        testFrame.setReceiveSequenceNumber(4)
+        testFrame.setPayloadMessage("A")
+        logger.debug("Test frame hex ${StringUtils.byteArrayToHex(testFrame.packetData())}")
         logger.debug("Test frame ${testFrame.toString()}")
         transmitQueue.push(testFrame)
     }
@@ -65,12 +68,12 @@ class KissService(val tncConnection: TNC) {
     }
 
     private fun handleNewFrame(frame: ByteArray) {
-        logger.trace("Received AX.25 frame: ${StringUtils.byteArrayToHex(frame)}")
+        logger.debug("Received frame:\t ${StringUtils.byteArrayToHex(frame)}")
         if (frame.size >= KissFrame.SIZE_MIN) {
             val kissFrame = createKissFrame(frame)
-            logger.debug("Frame ${kissFrame.toString()}")
-            logger.trace("Frame data hex: ${StringUtils.byteArrayToHex(kissFrame.payloadData())}")
-            logger.debug("Frame data string: ${kissFrame.payloadDataString()}")
+            logger.debug("Decoded hex:\t\t ${StringUtils.byteArrayToHex(kissFrame.packetData())}")
+            logger.debug("Decoded meta:\t ${kissFrame.toString()}")
+            logger.debug("Decoded data:\t ${kissFrame.payloadDataString()}")
         } else {
             logger.error("KISS frame was too small to decode: ${frame.size} bytes")
         }
