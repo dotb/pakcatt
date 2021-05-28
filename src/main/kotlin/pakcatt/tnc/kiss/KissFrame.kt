@@ -256,15 +256,15 @@ class KissFrame() {
             ByteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_RECEIVE_NOT_READY) -> { ControlFrame.S_FRAME_RECEIVE_NOT_READY }
             ByteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_REJECT) -> { ControlFrame.S_FRAME_REJECT }
             ByteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_SELECTIVE_REJECT) -> { ControlFrame.S_FRAME_SELECTIVE_REJECT }
-            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE }
-            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED }
-            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_DISCONNECT) -> { ControlFrame.U_FRAME_DISCONNECT }
-            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_DISCONNECT_MODE) -> { ControlFrame.U_FRAME_DISCONNECT_MODE }
-            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_UNNUMBERED_ACKNOWLEDGE) -> { ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE }
-            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_REJECT) -> { ControlFrame.U_FRAME_REJECT }
-            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_UNNUMBERED_INFORMATION) -> { ControlFrame.U_FRAME_UNNUMBERED_INFORMATION }
-            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_EXCHANGE_IDENTIFICATION) -> { ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION }
-            ByteUtils.compareMaskedByte(controlField,0xDF, TYPE_U_FRAME_TEST) -> { ControlFrame.U_FRAME_TEST }
+            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE }
+            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED }
+            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_DISCONNECT) -> { ControlFrame.U_FRAME_DISCONNECT }
+            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_DISCONNECT_MODE) -> { ControlFrame.U_FRAME_DISCONNECT_MODE }
+            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_UNNUMBERED_ACKNOWLEDGE) -> { ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE }
+            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_REJECT) -> { ControlFrame.U_FRAME_REJECT }
+            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_UNNUMBERED_INFORMATION) -> { ControlFrame.U_FRAME_UNNUMBERED_INFORMATION }
+            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_EXCHANGE_IDENTIFICATION) -> { ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION }
+            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_TEST) -> { ControlFrame.U_FRAME_TEST }
             else -> {
                 logger.error("Decoded an unknown AX.25 controlFrame ${StringUtils.byteToHex(controlField)}")
                 ControlFrame.UNKNOWN_FRAME

@@ -19,7 +19,6 @@ class ByteUtils {
             for ((index, byte) in byteArray.withIndex()) {
                 val shiftedByte = shiftBitsLeft(byte, places)
                 shiftedArray[index] = shiftedByte
-                logger.trace("byte: ${StringUtils.byteToHex(byte)} shiftedByte: ${StringUtils.byteToHex(shiftedByte)}")
             }
             return shiftedArray
         }
@@ -29,7 +28,6 @@ class ByteUtils {
             for ((index, byte) in byteArray.withIndex()) {
                 val shiftedByte = shiftBitsRight(byte, places)
                 shiftedArray[index] = shiftedByte
-                logger.trace("byte: ${StringUtils.byteToHex(byte)} shiftedByte: ${StringUtils.byteToHex(shiftedByte)}")
             }
             return shiftedArray
         }
@@ -43,7 +41,6 @@ class ByteUtils {
             val intVal = byte.toInt()
             val maskedInt = maskInt(intVal, 0x000000FF)
             val shiftedInt = maskedInt shl places
-            logger.trace("byte: ${StringUtils.byteToHex(byte)} intVal: ${StringUtils.intToHex(intVal)} maskedInt: ${StringUtils.intToHex(maskedInt)} shiftedInt: ${StringUtils.intToHex(shiftedInt)}")
             return shiftedInt.toByte()
         }
 
@@ -51,7 +48,6 @@ class ByteUtils {
             val intVal = byte.toInt()
             val maskedInt = maskInt(intVal, 0x000000FF)
             val shiftedInt = maskedInt shr places
-            logger.trace("byte: ${StringUtils.byteToHex(byte)} shiftedByte: intVal: ${StringUtils.intToHex(intVal)} maskedInt: ${StringUtils.intToHex(maskedInt)} shiftedInt: ${StringUtils.intToHex(shiftedInt)}")
             return shiftedInt.toByte()
         }
 

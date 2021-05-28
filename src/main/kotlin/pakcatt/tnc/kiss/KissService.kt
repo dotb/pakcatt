@@ -51,7 +51,7 @@ class KissService(val tncConnection: TNC) {
 
             if (incomingFrameIndex >= 0) {
                 // Make a copy of the new frame
-                val newFrame = incomingFrame.copyOfRange(0, incomingFrameIndex)
+                val newFrame = incomingFrame.copyOfRange(0, incomingFrameIndex + 1)
 
                 // Reset the current frame memory
                 incomingFrameIndex = -1
