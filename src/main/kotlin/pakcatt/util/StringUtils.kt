@@ -1,8 +1,10 @@
 package pakcatt.util
 
+import org.springframework.stereotype.Component
+
+@Component
 class StringUtils {
 
-companion object {
     fun byteToHex(byte: Byte): String {
         return String.format("%02x", byte)
     }
@@ -41,7 +43,5 @@ companion object {
         }
         return paddedString.toString()
     }
-
-}
 
 }

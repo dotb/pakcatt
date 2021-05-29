@@ -78,6 +78,8 @@ class KissFrame() {
     }
 
     private val logger = LoggerFactory.getLogger(KissFrame::class.java)
+    private val byteUtils = ByteUtils()
+    private val stringUtils = StringUtils()
     private var portAndCommand: Byte = 0x00
     private var destCallsign: ByteArray = ByteArray(0)
     private var destSSID: Byte = 0x00
@@ -115,7 +117,7 @@ class KissFrame() {
         // Set the source callsign ending in 1 to denote there is no repeater address
         val parsedCallsign = parseStringCallsign(sourceCallsign)
         this.sourceCallsign = parsedCallsign.first
-        this.sourceSSID = ByteUtils.setBits(parsedCallsign.second, 0x01)
+        this.sourceSSID = byteUtils.setBits(parsedCallsign.second, 0x01)
     }
 
     fun setControlType(controlType: ControlFrame) {
@@ -125,37 +127,37 @@ class KissFrame() {
 
     fun setReceiveSequenceNumber(receiveSeq: Int) {
         val sequenceNumberByte = parseReceiveSequenceNumber(receiveSeq)
-        this.controlField = ByteUtils.setBits(controlField, sequenceNumberByte)
+        this.controlField = byteUtils.setBits(controlField, sequenceNumberByte)
     }
 
     fun setSendSequenceNumber(sendSeq: Int) {
         val sequenceNumberByte = parseSendSequenceNumber(sendSeq)
-        this.controlField = ByteUtils.setBits(controlField, sequenceNumberByte)
+        this.controlField = byteUtils.setBits(controlField, sequenceNumberByte)
     }
 
     fun setPollFinalBit(pollFinalBit: Boolean) {
         if (pollFinalBit) {
-            controlField = ByteUtils.setBits(controlField, 0x10)
+            controlField = byteUtils.setBits(controlField, 0x10)
         } else {
-            controlField = ByteUtils.maskByte(controlField, 0xDF)
+            controlField = byteUtils.maskByte(controlField, 0xDF)
         }
     }
 
     fun setPayloadMessage(message: String) {
-        payloadData = StringUtils.convertStringToBytes(message)
+        payloadData = stringUtils.convertStringToBytes(message)
     }
 
     fun packetData(): ByteArray {
         val packetSize = 5 + destCallsign.size + sourceCallsign.size + payloadData.size
         var kissPacket = ByteArray(packetSize)
         kissPacket[0] = portAndCommand
-        ByteUtils.insertIntoByteArray(destCallsign, kissPacket, 1)
+        byteUtils.insertIntoByteArray(destCallsign, kissPacket, 1)
         kissPacket[7] = destSSID
-        ByteUtils.insertIntoByteArray(sourceCallsign, kissPacket, 8)
+        byteUtils.insertIntoByteArray(sourceCallsign, kissPacket, 8)
         kissPacket[14] = sourceSSID
         kissPacket[15] = controlField
         kissPacket[16] = protocolID
-        ByteUtils.insertIntoByteArray(payloadData, kissPacket, 17)
+        byteUtils.insertIntoByteArray(payloadData, kissPacket, 17)
         return kissPacket
     }
 
@@ -180,7 +182,7 @@ class KissFrame() {
     }
 
     fun payloadDataString(): String {
-        return StringUtils.convertBytesToString(payloadData)
+        return stringUtils.convertBytesToString(payloadData)
     }
 
     fun controlFrame(): ControlFrame {
@@ -216,7 +218,7 @@ class KissFrame() {
     }
 
     fun pollFinalBit(): Boolean {
-        return ByteUtils.compareMaskedByte(controlField,0x10, 0x10)
+        return byteUtils.compareMaskedByte(controlField,0x10, 0x10)
     }
 
     fun pollFinalBitString(): String {
@@ -227,22 +229,22 @@ class KissFrame() {
     }
 
     override fun toString(): String {
-        return "From: ${sourceCallsign()} to: ${destCallsign()} control: ${StringUtils.byteToHex(controlField())} " +
-                "controlType: ${controlTypeString()} pollFinalBit: ${pollFinalBitString()} protocolID: ${StringUtils.byteToHex(protocolID())} " +
+        return "From: ${sourceCallsign()} to: ${destCallsign()} control: ${stringUtils.byteToHex(controlField())} " +
+                "controlType: ${controlTypeString()} pollFinalBit: ${pollFinalBitString()} protocolID: ${stringUtils.byteToHex(protocolID())} " +
                 "Receive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()}"
     }
 
     private fun constructCallsign(callsignByteArray: ByteArray, callsignSSID: Byte): String {
-        val shiftedCallsign = ByteUtils.shiftBitsRight(callsignByteArray, 1)
-        val callsignString = StringUtils.convertBytesToString(shiftedCallsign)
-        val trimmedCallsign = StringUtils.removeWhitespace(callsignString)
+        val shiftedCallsign = byteUtils.shiftBitsRight(callsignByteArray, 1)
+        val callsignString = stringUtils.convertBytesToString(shiftedCallsign)
+        val trimmedCallsign = stringUtils.removeWhitespace(callsignString)
         val ssid = ssidFromSSIDByte(callsignSSID)
         return "${trimmedCallsign}-${ssid}"
     }
 
     private fun ssidFromSSIDByte(ssidByte: Byte): Int {
-        val shiftedByte = ByteUtils.shiftBitsRight(ssidByte, 1)
-        return ByteUtils.maskInt(shiftedByte.toInt(), 0x0F)
+        val shiftedByte = byteUtils.shiftBitsRight(ssidByte, 1)
+        return byteUtils.maskInt(shiftedByte.toInt(), 0x0F)
     }
 
     /**
@@ -250,35 +252,35 @@ class KissFrame() {
      */
     private fun calculateControlFrame(): ControlFrame {
         return when {
-            ByteUtils.compareMaskedByte(controlField,0x01, TYPE_I_FRAME) -> { ControlFrame.I_FRAME }
-            ByteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_RECEIVE_READY) -> { ControlFrame.S_FRAME_RECEIVE_READY }
-            ByteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_RECEIVE_NOT_READY) -> { ControlFrame.S_FRAME_RECEIVE_NOT_READY }
-            ByteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_REJECT) -> { ControlFrame.S_FRAME_REJECT }
-            ByteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_SELECTIVE_REJECT) -> { ControlFrame.S_FRAME_SELECTIVE_REJECT }
-            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE }
-            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED }
-            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_DISCONNECT) -> { ControlFrame.U_FRAME_DISCONNECT }
-            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_DISCONNECT_MODE) -> { ControlFrame.U_FRAME_DISCONNECT_MODE }
-            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_UNNUMBERED_ACKNOWLEDGE) -> { ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE }
-            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_REJECT) -> { ControlFrame.U_FRAME_REJECT }
-            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_UNNUMBERED_INFORMATION) -> { ControlFrame.U_FRAME_UNNUMBERED_INFORMATION }
-            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_EXCHANGE_IDENTIFICATION) -> { ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION }
-            ByteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_TEST) -> { ControlFrame.U_FRAME_TEST }
+            byteUtils.compareMaskedByte(controlField,0x01, TYPE_I_FRAME) -> { ControlFrame.I_FRAME }
+            byteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_RECEIVE_READY) -> { ControlFrame.S_FRAME_RECEIVE_READY }
+            byteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_RECEIVE_NOT_READY) -> { ControlFrame.S_FRAME_RECEIVE_NOT_READY }
+            byteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_REJECT) -> { ControlFrame.S_FRAME_REJECT }
+            byteUtils.compareMaskedByte(controlField,0x0F, TYPE_S_FRAME_SELECTIVE_REJECT) -> { ControlFrame.S_FRAME_SELECTIVE_REJECT }
+            byteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE }
+            byteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED) -> { ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED }
+            byteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_DISCONNECT) -> { ControlFrame.U_FRAME_DISCONNECT }
+            byteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_DISCONNECT_MODE) -> { ControlFrame.U_FRAME_DISCONNECT_MODE }
+            byteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_UNNUMBERED_ACKNOWLEDGE) -> { ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE }
+            byteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_REJECT) -> { ControlFrame.U_FRAME_REJECT }
+            byteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_UNNUMBERED_INFORMATION) -> { ControlFrame.U_FRAME_UNNUMBERED_INFORMATION }
+            byteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_EXCHANGE_IDENTIFICATION) -> { ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION }
+            byteUtils.compareMaskedByte(controlField,0xEF, TYPE_U_FRAME_TEST) -> { ControlFrame.U_FRAME_TEST }
             else -> {
-                logger.error("Decoded an unknown AX.25 controlFrame ${StringUtils.byteToHex(controlField)}")
+                logger.error("Decoded an unknown AX.25 controlFrame ${stringUtils.byteToHex(controlField)}")
                 ControlFrame.UNKNOWN_FRAME
             }
         }
     }
 
     private fun calculateReceiveSequenceNumber(): Int {
-        val shiftedControlField = ByteUtils.shiftBitsRight(controlField, 5)
+        val shiftedControlField = byteUtils.shiftBitsRight(controlField, 5)
         return shiftedControlField.toInt()
     }
 
     private fun calculateSendSequenceNumber(): Int {
-        val shiftedControlField = ByteUtils.shiftBitsRight(controlField, 1)
-        val maskedControlField = ByteUtils.maskByte(shiftedControlField, 0x07)
+        val shiftedControlField = byteUtils.shiftBitsRight(controlField, 1)
+        val maskedControlField = byteUtils.maskByte(shiftedControlField, 0x07)
         return maskedControlField.toInt()
     }
 
@@ -295,23 +297,23 @@ class KissFrame() {
         }
 
         // Pad out the callsign and format the call and ssid bits for AX.25
-        callString = StringUtils.padWithSpaces(callString, 6)
-        val callsignBytes = StringUtils.convertStringToBytes(callString)
+        callString = stringUtils.padWithSpaces(callString, 6)
+        val callsignBytes = stringUtils.convertStringToBytes(callString)
         val ssidByte = ssid.toByte()
-        val shiftedSSID = ByteUtils.shiftBitsLeft(ssidByte, 1)
-        val maskedSSID = ByteUtils.maskByte(shiftedSSID, 0x1E)
-        val setbitsSSID = ByteUtils.setBits(maskedSSID, 0x60) // Set the reserved bits to 1
-        return Pair(ByteUtils.shiftBitsLeft(callsignBytes, 1), setbitsSSID)
+        val shiftedSSID = byteUtils.shiftBitsLeft(ssidByte, 1)
+        val maskedSSID = byteUtils.maskByte(shiftedSSID, 0x1E)
+        val setbitsSSID = byteUtils.setBits(maskedSSID, 0x60) // Set the reserved bits to 1
+        return Pair(byteUtils.shiftBitsLeft(callsignBytes, 1), setbitsSSID)
     }
 
     private fun parseReceiveSequenceNumber(sequenceNumberInt: Int): Byte {
         val sequenceNumberByte = sequenceNumberInt.toByte()
-        return ByteUtils.shiftBitsLeft(sequenceNumberByte, 5)
+        return byteUtils.shiftBitsLeft(sequenceNumberByte, 5)
     }
 
     private fun parseSendSequenceNumber(sequenceNumberInt: Int): Byte {
         val sequenceNumberByte = sequenceNumberInt.toByte()
-        return ByteUtils.shiftBitsLeft(sequenceNumberByte, 1)
+        return byteUtils.shiftBitsLeft(sequenceNumberByte, 1)
     }
 
     /**
@@ -319,21 +321,21 @@ class KissFrame() {
      */
     private fun setControlFieldBits(controlType: ControlFrame) {
         controlField = when(controlType) {
-            ControlFrame.I_FRAME -> ByteUtils.setBits(controlField, TYPE_I_FRAME)
-            ControlFrame.S_FRAME_RECEIVE_READY -> ByteUtils.setBits(controlField, TYPE_S_FRAME_RECEIVE_READY)
-            ControlFrame.S_FRAME_RECEIVE_NOT_READY -> ByteUtils.setBits(controlField, TYPE_S_FRAME_RECEIVE_NOT_READY)
-            ControlFrame.S_FRAME_REJECT -> ByteUtils.setBits(controlField, TYPE_S_FRAME_REJECT)
-            ControlFrame.S_FRAME_SELECTIVE_REJECT -> ByteUtils.setBits(controlField, TYPE_S_FRAME_SELECTIVE_REJECT)
-            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE -> ByteUtils.setBits(controlField, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE)
-            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED -> ByteUtils.setBits(controlField, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED)
-            ControlFrame.U_FRAME_DISCONNECT -> ByteUtils.setBits(controlField, TYPE_U_FRAME_DISCONNECT)
-            ControlFrame.U_FRAME_DISCONNECT_MODE -> ByteUtils.setBits(controlField, TYPE_U_FRAME_DISCONNECT_MODE)
-            ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE -> ByteUtils.setBits(controlField, TYPE_U_FRAME_UNNUMBERED_ACKNOWLEDGE)
-            ControlFrame.U_FRAME_REJECT -> ByteUtils.setBits(controlField, TYPE_U_FRAME_REJECT)
-            ControlFrame.U_FRAME_UNNUMBERED_INFORMATION -> ByteUtils.setBits(controlField, TYPE_U_FRAME_UNNUMBERED_INFORMATION)
-            ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION -> ByteUtils.setBits(controlField, TYPE_U_FRAME_EXCHANGE_IDENTIFICATION)
-            ControlFrame.U_FRAME_TEST -> ByteUtils.setBits(controlField, TYPE_U_FRAME_TEST)
-            ControlFrame.UNKNOWN_FRAME -> ByteUtils.setBits(controlField, TYPE_I_FRAME) // Default to I frame
+            ControlFrame.I_FRAME -> byteUtils.setBits(controlField, TYPE_I_FRAME)
+            ControlFrame.S_FRAME_RECEIVE_READY -> byteUtils.setBits(controlField, TYPE_S_FRAME_RECEIVE_READY)
+            ControlFrame.S_FRAME_RECEIVE_NOT_READY -> byteUtils.setBits(controlField, TYPE_S_FRAME_RECEIVE_NOT_READY)
+            ControlFrame.S_FRAME_REJECT -> byteUtils.setBits(controlField, TYPE_S_FRAME_REJECT)
+            ControlFrame.S_FRAME_SELECTIVE_REJECT -> byteUtils.setBits(controlField, TYPE_S_FRAME_SELECTIVE_REJECT)
+            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE -> byteUtils.setBits(controlField, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE)
+            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED -> byteUtils.setBits(controlField, TYPE_U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED)
+            ControlFrame.U_FRAME_DISCONNECT -> byteUtils.setBits(controlField, TYPE_U_FRAME_DISCONNECT)
+            ControlFrame.U_FRAME_DISCONNECT_MODE -> byteUtils.setBits(controlField, TYPE_U_FRAME_DISCONNECT_MODE)
+            ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE -> byteUtils.setBits(controlField, TYPE_U_FRAME_UNNUMBERED_ACKNOWLEDGE)
+            ControlFrame.U_FRAME_REJECT -> byteUtils.setBits(controlField, TYPE_U_FRAME_REJECT)
+            ControlFrame.U_FRAME_UNNUMBERED_INFORMATION -> byteUtils.setBits(controlField, TYPE_U_FRAME_UNNUMBERED_INFORMATION)
+            ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION -> byteUtils.setBits(controlField, TYPE_U_FRAME_EXCHANGE_IDENTIFICATION)
+            ControlFrame.U_FRAME_TEST -> byteUtils.setBits(controlField, TYPE_U_FRAME_TEST)
+            ControlFrame.UNKNOWN_FRAME -> byteUtils.setBits(controlField, TYPE_I_FRAME) // Default to I frame
         }
     }
 
@@ -345,25 +347,25 @@ class KissFrame() {
      */
     private fun setCommandBits(controlType: ControlFrame) {
         destSSID = when (controlType) {
-            ControlFrame.I_FRAME -> ByteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE -> ByteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED -> ByteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_FRAME_DISCONNECT -> ByteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_FRAME_DISCONNECT_MODE -> ByteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_FRAME_UNNUMBERED_INFORMATION -> ByteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION -> ByteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_FRAME_TEST -> ByteUtils.setBits(destSSID, 0x80)
+            ControlFrame.I_FRAME -> byteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE -> byteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED -> byteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_DISCONNECT -> byteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_DISCONNECT_MODE -> byteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_UNNUMBERED_INFORMATION -> byteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_EXCHANGE_IDENTIFICATION -> byteUtils.setBits(destSSID, 0x80)
+            ControlFrame.U_FRAME_TEST -> byteUtils.setBits(destSSID, 0x80)
             else -> destSSID
         }
 
         sourceSSID = when (controlType) {
-            ControlFrame.S_FRAME_RECEIVE_READY -> ByteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_FRAME_RECEIVE_NOT_READY -> ByteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_FRAME_REJECT -> ByteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_FRAME_SELECTIVE_REJECT -> ByteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE -> ByteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.U_FRAME_REJECT -> ByteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.UNKNOWN_FRAME -> ByteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.S_FRAME_RECEIVE_READY -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.S_FRAME_RECEIVE_NOT_READY -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.S_FRAME_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.S_FRAME_SELECTIVE_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.U_FRAME_UNNUMBERED_ACKNOWLEDGE -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.U_FRAME_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlFrame.UNKNOWN_FRAME -> byteUtils.setBits(sourceSSID, 0x80)
             else -> sourceSSID
         }
     }

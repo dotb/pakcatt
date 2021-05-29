@@ -8,7 +8,7 @@ import pakcatt.util.StringUtils
 import java.util.*
 
 @Service
-class KissService(val tncConnection: TNC) {
+class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
 
     private val logger = LoggerFactory.getLogger(KissService::class.java)
     private lateinit var receiveFrameCallback:(receivedFrame: KissFrame) -> Unit?
@@ -68,11 +68,11 @@ class KissService(val tncConnection: TNC) {
     }
 
     private fun handleNewFrame(frame: ByteArray) {
-        logger.debug("Received frame:\t ${StringUtils.byteArrayToHex(frame)}")
+        logger.debug("Received frame:\t ${stringUtils.byteArrayToHex(frame)}")
         val myReceiveFrameCallback = receiveFrameCallback
         if (frame.size >= KissFrame.SIZE_MIN && null != myReceiveFrameCallback) {
             val kissFrame = createKissFrame(frame)
-            logger.debug("Decoded hex:\t\t ${StringUtils.byteArrayToHex(kissFrame.packetData())}")
+            logger.debug("Decoded hex:\t\t ${stringUtils.byteArrayToHex(kissFrame.packetData())}")
             logger.debug("Decoded meta:\t ${kissFrame.toString()}")
             logger.debug("Decoded data:\t ${kissFrame.payloadDataString()}")
             myReceiveFrameCallback(kissFrame)
