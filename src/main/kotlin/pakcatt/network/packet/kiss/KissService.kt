@@ -11,6 +11,7 @@ import java.util.*
 class KissService(val tncConnection: TNC) {
 
     private val logger = LoggerFactory.getLogger(KissService::class.java)
+    private lateinit var receiveFrameCallback:(receivedFrame: KissFrame) -> Unit?
     private var incomingFrame = ByteArray(1024)
     private var incomingFrameIndex = -1
     private var transmitQueue = LinkedList<KissFrame>()
@@ -19,25 +20,25 @@ class KissService(val tncConnection: TNC) {
         tncConnection.setReceiveDataCallback {
             handleNewByte(it)
         }
-
         tncConnection.connect()
+    }
 
-        val testFrame = KissFrame()
-        testFrame.setDestCallsign("VK3LIT-2")
-        testFrame.setSourceCallsign("VK3LIT-1")
-        testFrame.setControlType(KissFrame.ControlFrame.U_FRAME_UNNUMBERED_INFORMATION)
-//        testFrame.setReceiveSequenceNumber(4)
-        testFrame.setPayloadMessage("A")
-        logger.debug("Test frame hex ${StringUtils.byteArrayToHex(testFrame.packetData())}")
-        logger.debug("Test frame ${testFrame.toString()}")
-        transmitQueue.push(testFrame)
+    /**
+     * Set the callback handler for incoming decoded KISS frames
+     */
+    fun setReceiveFrameCallback(newCallback: (receivedFrame: KissFrame) -> Unit) {
+        receiveFrameCallback = newCallback
+    }
+
+    fun queueFrameForTransmission(frame: KissFrame) {
+        transmitQueue.push(frame)
     }
 
     @Scheduled(fixedRate = 2000)
     private fun serviceTransmitQueue() {
         if (!transmitQueue.isEmpty()) {
             val nextFrame = transmitQueue.pop()
-            logger.debug("Sending frame from: ${nextFrame.sourceCallsign()} to: ${nextFrame.destCallsign()}")
+            logger.debug("Sending frame: ${nextFrame.toString()}")
             tncConnection.sendData(KissFrame.FRAME_END)
             tncConnection.sendData(nextFrame.packetData())
             tncConnection.sendData(KissFrame.FRAME_END)
@@ -68,11 +69,13 @@ class KissService(val tncConnection: TNC) {
 
     private fun handleNewFrame(frame: ByteArray) {
         logger.debug("Received frame:\t ${StringUtils.byteArrayToHex(frame)}")
-        if (frame.size >= KissFrame.SIZE_MIN) {
+        val myReceiveFrameCallback = receiveFrameCallback
+        if (frame.size >= KissFrame.SIZE_MIN && null != myReceiveFrameCallback) {
             val kissFrame = createKissFrame(frame)
             logger.debug("Decoded hex:\t\t ${StringUtils.byteArrayToHex(kissFrame.packetData())}")
             logger.debug("Decoded meta:\t ${kissFrame.toString()}")
             logger.debug("Decoded data:\t ${kissFrame.payloadDataString()}")
+            myReceiveFrameCallback(kissFrame)
         } else {
             logger.error("KISS frame was too small to decode: ${frame.size} bytes")
         }

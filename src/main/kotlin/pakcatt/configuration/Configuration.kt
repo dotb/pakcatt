@@ -8,6 +8,9 @@ import org.springframework.web.client.RestTemplate
 @Configuration
 class Configuration {
 
+    @Value("\${pakcatt.mycall}")
+    private lateinit var myCall: String
+
     @Value("\${pakcatt.service-name}")
     private lateinit var serviceName: String
 
@@ -20,6 +23,11 @@ class Configuration {
     @Bean
     fun restTemplate(): RestTemplate {
         return RestTemplate()
+    }
+
+    @Bean
+    open fun myCall(): String {
+        return myCall
     }
 
     @Bean

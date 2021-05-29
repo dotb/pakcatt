@@ -35,7 +35,7 @@ class TNCSerial(private val serialPortPath: String,
     }
 
     override fun sendData(outputData: ByteArray) {
-        logger.debug("Serial sending data of size: ${outputData.size} bytes")
+        logger.trace("Serial sending data of size: ${outputData.size} bytes")
         val myOutputStream = outputStream
         if (null != myOutputStream) {
             myOutputStream.write(outputData)
@@ -45,7 +45,7 @@ class TNCSerial(private val serialPortPath: String,
     }
 
     override fun sendData(outputData: Int) {
-        logger.debug("Serial sending data of size: 1 byte")
+        logger.trace("Serial sending data of size: 1 byte")
         val myOutputStream = outputStream
         if (null != myOutputStream) {
             myOutputStream.write(outputData)

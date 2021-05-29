@@ -68,7 +68,8 @@ class ByteUtils {
 
         fun compareMaskedByte(sourceByte: Byte, mask: Int, comparisonByte: Int): Boolean {
             val hashedSourceByte = maskByte(sourceByte, mask)
-            return comparisonByte.compareTo(hashedSourceByte) == 0
+            val mashedSourceInt = hashedSourceByte.toInt()
+            return mashedSourceInt.compareTo(comparisonByte) == 0
         }
 
         fun insertIntoByteArray(source: ByteArray, destination: ByteArray, startIndex: Int): ByteArray {
