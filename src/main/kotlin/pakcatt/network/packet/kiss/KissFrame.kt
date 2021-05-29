@@ -80,13 +80,13 @@ class KissFrame() {
     private val logger = LoggerFactory.getLogger(KissFrame::class.java)
     private val byteUtils = ByteUtils()
     private val stringUtils = StringUtils()
-    private var portAndCommand: Byte = 0x00
+    private var portAndCommand: Byte = byteUtils.intToByte(0x00)
     private var destCallsign: ByteArray = ByteArray(0)
-    private var destSSID: Byte = 0x00
+    private var destSSID: Byte = byteUtils.intToByte(0x00)
     private var sourceCallsign: ByteArray = ByteArray(0)
-    private var sourceSSID: Byte = 0x00
-    private var controlField: Byte = 0x00
-    private var protocolID: Byte = 0xF0.toByte() // No layer 3
+    private var sourceSSID: Byte = byteUtils.intToByte(0x00)
+    private var controlField: Byte = byteUtils.intToByte(0x00)
+    private var protocolID: Byte = byteUtils.intToByte(0xF0)
     private var payloadData: ByteArray = ByteArray(0)
 
     fun parseRawKISSFrame(portAndCommand: Byte,
