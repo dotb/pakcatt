@@ -1,5 +1,5 @@
 ### PakCatt
-PakCatt is a modern framework built on top of KISS and AX25, for packet radio networks. It's name comes from the much loved PakRaTT TNC modems used in the heyday of packet radio. PakCatt is made by VK3LIT and VK2VRO.
+PakCatt is a modern packet radio framework built on top of KISS and AX25. It's name comes from the much loved PAKRATT TNC modems used in the heyday of packet radio. PakCatt is made by VK3LIT and VK2VRO.
     
 ## Features
 
