@@ -1,4 +1,4 @@
-package pakcatt.tnc
+package pakcatt.network.packet.tnc
 
 import gnu.io.NRSerialPort
 import org.slf4j.LoggerFactory

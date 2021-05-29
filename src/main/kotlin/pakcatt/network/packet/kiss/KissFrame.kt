@@ -1,9 +1,8 @@
-package pakcatt.tnc.kiss
+package pakcatt.network.packet.kiss
 
 import org.slf4j.LoggerFactory
 import pakcatt.util.ByteUtils
 import pakcatt.util.StringUtils
-import kotlin.experimental.or
 
 /*
 # KISS and embedded AX.25 frames contain these fields #

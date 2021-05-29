@@ -1,4 +1,4 @@
-package pakcatt.tnc
+package pakcatt.network.packet.tnc
 
 abstract class TNC {
 

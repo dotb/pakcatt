@@ -1,7 +1,6 @@
 package pakcatt.util
 
 import org.slf4j.LoggerFactory
-import pakcatt.tnc.kiss.KissFrame
 import kotlin.experimental.and
 import kotlin.experimental.or
 
@@ -9,7 +8,7 @@ class ByteUtils {
 
     companion object {
 
-        private val logger = LoggerFactory.getLogger(KissFrame::class.java)
+        private val logger = LoggerFactory.getLogger(ByteUtils::class.java)
 
         /**
          * Shift the bits in an array of bytes to the left

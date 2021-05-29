@@ -1,10 +1,9 @@
-package pakcatt.tnc.kiss
+package pakcatt.network.packet.kiss
 
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import pakcatt.tnc.TNC
-import pakcatt.util.ByteUtils
+import pakcatt.network.packet.tnc.TNC
 import pakcatt.util.StringUtils
 import java.util.*
 
