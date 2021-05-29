@@ -102,7 +102,7 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
         if (frame.size >= 18) {
             payloadData = frame.copyOfRange(17, frame.size)
         }
-        val kissFrame = KissFrame()
+        val kissFrame = KissFrameStandard()
         kissFrame.parseRawKISSFrame(portAndCommand,
                 destCallsign,
                 destSSID,

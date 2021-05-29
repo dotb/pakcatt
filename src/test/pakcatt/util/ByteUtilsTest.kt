@@ -39,6 +39,18 @@ class ByteUtilsTest {
     }
 
     @Test
+    fun testsSiftBitsRightInt() {
+        var originalInt = 0x00FF00FF
+        var result = subject.shiftBitsRight(originalInt, 4)
+        assertEquals(0x0F, result)
+
+        originalInt = 0xAA
+        result = subject.shiftBitsRight(originalInt, 1)
+        assertEquals(0x55, result)
+    }
+
+
+    @Test
     fun testMaskByte() {
         val originByte = subject.intToByte(0xFE)
         val mask = 0x81
@@ -49,10 +61,22 @@ class ByteUtilsTest {
 
     @Test
     fun testCompareMaskedByte() {
-        val originByte = subject.intToByte(0xFE)
-        val mask = 0xAA
-        val comparison = 0xAA
-        val result = subject.compareMaskedByte(originByte, mask, comparison)
+        var originByte = subject.intToByte(0xFE)
+        var mask = 0xAA
+        var comparison = 0xAA
+        var result = subject.compareMaskedByte(originByte, mask, comparison)
+        assertEquals(true, result)
+
+        originByte = subject.intToByte(0x3F)
+        mask = 0x10
+        comparison = 0x00
+        result = subject.compareMaskedByte(originByte, mask, comparison)
+        assertEquals(false, result)
+
+        originByte = subject.intToByte(0x3f)
+        mask = 0x00
+        comparison = 0x00
+        result = subject.compareMaskedByte(originByte, mask, comparison)
         assertEquals(true, result)
     }
 

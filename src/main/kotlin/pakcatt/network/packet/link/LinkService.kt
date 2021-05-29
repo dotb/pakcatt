@@ -3,6 +3,8 @@ package pakcatt.network.packet.link
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import pakcatt.network.packet.kiss.KissFrame
+import pakcatt.network.packet.kiss.KissFrameExtended
+import pakcatt.network.packet.kiss.KissFrameStandard
 import pakcatt.network.packet.kiss.KissService
 
 @Service
@@ -41,8 +43,9 @@ class LinkService(var kissService: KissService,
 
     private fun handleMyFrame(frame: KissFrame) {
         when (frame.controlFrame()) {
-            KissFrame.ControlFrame.I_FRAME -> handApplicationFrame(frame)
-            KissFrame.ControlFrame.U_FRAME_SET_ASYNC_BALANCED_MODE_EXTENDED -> sendDisconnectMode(frame) // Not yet supported
+            KissFrame.ControlFrame.I_8 -> handApplicationFrame(frame)
+            KissFrame.ControlFrame.U_SET_ASYNC_BALANCED_MODE_P -> sendUnnumberedAcknowlege(frame)
+            KissFrame.ControlFrame.U_DISCONNECT -> sendUnnumberedAcknowlege(frame)
             else -> ignoreFrame(frame)
         }
     }
@@ -58,17 +61,25 @@ class LinkService(var kissService: KissService,
 
     /* Link layer responses */
     private fun sendDisconnectMode(frame: KissFrame) {
-        val frame = newResponseFrame(frame.sourceCallsign(), KissFrame.ControlFrame.U_FRAME_DISCONNECT_MODE)
+        val frame = newResponseFrame(frame.sourceCallsign(), KissFrame.ControlFrame.U_DISCONNECT, false)
+        kissService.queueFrameForTransmission(frame)
+    }
+
+    private fun sendUnnumberedAcknowlege(frame: KissFrame) {
+        val frame = newResponseFrame(frame.sourceCallsign(), KissFrame.ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
         kissService.queueFrameForTransmission(frame)
     }
 
     private fun ignoreFrame(frame: KissFrame) {
-        logger.error("Frame ignored: ${frame.toString()}")
+        logger.info("Frame ignored: ${frame.toString()}")
     }
 
     /* Factory methods */
-    private fun newResponseFrame(destCallsign: String, frameType: KissFrame.ControlFrame): KissFrame {
-        val newFrame = KissFrame()
+    private fun newResponseFrame(destCallsign: String, frameType: KissFrame.ControlFrame, extended: Boolean): KissFrame {
+        val newFrame = when (extended) {
+            false -> KissFrameStandard()
+            true -> KissFrameExtended()
+        }
         newFrame.setDestCallsign(destCallsign)
         newFrame.setSourceCallsign(myCall)
         newFrame.setControlType(frameType)

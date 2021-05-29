@@ -66,14 +66,19 @@ class ByteUtils {
         val intVal = byte.toInt()
         val maskedInt = maskInt(intVal, 0x000000FF)
         val shiftedInt = maskedInt shl places
-        return shiftedInt.toByte()
+        return intToByte(shiftedInt)
     }
 
     fun shiftBitsRight(byte: Byte, places: Int): Byte {
         val intVal = byte.toInt()
         val maskedInt = maskInt(intVal, 0x000000FF)
         val shiftedInt = maskedInt shr places
-        return shiftedInt.toByte()
+        return intToByte(shiftedInt)
+    }
+
+    fun shiftBitsRight(int: Int, places: Int): Int {
+        val shiftedInt = int shr places
+        return maskInt(shiftedInt, 0x000000FF)
     }
 
     fun maskByte(byte: Byte, mask: Int): Byte {
