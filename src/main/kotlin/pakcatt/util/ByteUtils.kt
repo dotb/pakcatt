@@ -104,13 +104,21 @@ class ByteUtils {
         return maskedSourceInt.compareTo(comparisonByte) == 0
     }
 
-    fun insertIntoByteArray(source: ByteArray, destination: ByteArray, startIndex: Int): ByteArray {
+    fun insertIntoByteArray(source: Byte, destination: ByteArray, index: Int): Int {
+        return if (destination.size > index) {
+            destination[index] = source
+            index + 1
+        } else {
+            index
+        }
+    }
+
+    fun insertIntoByteArray(source: ByteArray, destination: ByteArray, startIndex: Int): Int {
         var index = startIndex
         for (byte in source) {
-            destination[index] = byte
-            index++
+            index = insertIntoByteArray(byte, destination, index)
         }
-        return destination
+        return index
     }
 
 }

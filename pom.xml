@@ -61,6 +61,14 @@
             <artifactId>nrjavaserial</artifactId>
             <version>5.1.1</version>
         </dependency>
+
+        <!-- Awaitility for testing scheduled code -->
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <version>3.1.6</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

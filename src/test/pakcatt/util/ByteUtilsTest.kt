@@ -1,10 +1,9 @@
 package pakcatt.util
 
-import org.junit.Assert.assertEquals
+import junit.framework.TestCase
 import org.junit.Test
-import kotlin.experimental.and
 
-class ByteUtilsTest {
+class ByteUtilsTest: TestCase() {
 
     private val subject = ByteUtils()
 

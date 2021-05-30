@@ -41,7 +41,7 @@ Control field      1 byte (AX.25)
                         - SSS = Send sequence number - senders current send number, for this frame
                         - FF = Supervisory function bits
 
-Protocol ID        1 byte (always 0xf0 - no layer 3 protocol) (AX.25)
+Protocol ID        1 byte (always 0xf0 - no layer 3 protocol) (AX.25). Only used in I and UI frames.
 Information Field  1-256 bytes (payload data) (AX.25)
 
 Frame End (FEND)   1 byte (0xc0) (KISS)
@@ -121,16 +121,28 @@ abstract class KissFrame() {
 
     fun packetData(): ByteArray {
         val controlField = controlField()
-        val packetSize = 5 + controlField.size + destCallsign.size + sourceCallsign.size + payloadData.size
+
+        var packetSize = controlField.size + destCallsign.size + sourceCallsign.size + payloadData.size
+
+        // Section 3.4. PID Field. The PID field is only sent on I and UI Frames
+        if (arrayOf(ControlFrame.I_8, ControlFrame.I_8_P, ControlFrame.I_128, ControlFrame.I_128_P,
+        ControlFrame.U_UNNUMBERED_INFORMATION, ControlFrame.U_UNNUMBERED_INFORMATION_P)
+                .contains(calculateControlFrame())) {
+            packetSize += 4
+        } else {
+            packetSize += 3
+        }
+
+        var nextIndex = 0
         var kissPacket = ByteArray(packetSize)
-        kissPacket[0] = portAndCommand
-        byteUtils.insertIntoByteArray(destCallsign, kissPacket, 1)
-        kissPacket[7] = destSSID
-        byteUtils.insertIntoByteArray(sourceCallsign, kissPacket, 8)
-        kissPacket[14] = sourceSSID
-        byteUtils.insertIntoByteArray(controlField, kissPacket, 15)
-        kissPacket[15 + controlField.size] = protocolID
-        byteUtils.insertIntoByteArray(payloadData, kissPacket, 16 + controlField.size)
+        nextIndex = byteUtils.insertIntoByteArray(portAndCommand, kissPacket, nextIndex)
+        nextIndex = byteUtils.insertIntoByteArray(destCallsign, kissPacket, nextIndex)
+        nextIndex = byteUtils.insertIntoByteArray(destSSID, kissPacket, nextIndex)
+        nextIndex = byteUtils.insertIntoByteArray(sourceCallsign, kissPacket, nextIndex)
+        nextIndex = byteUtils.insertIntoByteArray(sourceSSID, kissPacket, nextIndex)
+        nextIndex = byteUtils.insertIntoByteArray(controlField, kissPacket, nextIndex)
+        nextIndex = byteUtils.insertIntoByteArray(protocolID, kissPacket, nextIndex) // Optional
+        byteUtils.insertIntoByteArray(payloadData, kissPacket, nextIndex) // Optional
         return kissPacket
     }
 
