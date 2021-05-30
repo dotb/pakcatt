@@ -39,7 +39,6 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
         while (!transmitQueue.isEmpty()) {
             val nextFrame = transmitQueue.pollFirst()
             logger.debug("Sending frame: ${nextFrame.toString()}")
-            tncConnection.sendData(KissFrame.FRAME_END)
             tncConnection.sendData(nextFrame.packetData())
             tncConnection.sendData(KissFrame.FRAME_END)
             logger.debug("Sent frame:\t\t ${stringUtils.byteArrayToHex(nextFrame.packetData())}")
