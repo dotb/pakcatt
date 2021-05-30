@@ -42,6 +42,7 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
             tncConnection.sendData(KissFrame.FRAME_END)
             tncConnection.sendData(nextFrame.packetData())
             tncConnection.sendData(KissFrame.FRAME_END)
+            logger.debug("Sent frame:\t ${stringUtils.byteArrayToHex(nextFrame.packetData())}")
         }
     }
 

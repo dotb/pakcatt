@@ -41,31 +41,42 @@ class LinkServiceTest: TestCase() {
     @Test
     fun testStandardConversationHandshake() {
         val mockedTNC = tnc as TNCMocked
+
+
+        /* Accept an incoming conversation, respond with an Unnumbered ACK */
         mockedTNC.clearDataBuffer()
-
         // From: VK3LIT-2 to: VK3LIT-1 control: 3f  controlType: U_SET_ASYNC_BALANCED_MODE_P pollFinalBit: 1 protocolID: 80
-        val conversationRequest = byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x62, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x3f)
+        sendFrame(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x62, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x3f), mockedTNC)
+        waitForResponse(mockedTNC)
+        // From: VK3LIT-1 to: VK3LIT-2 control: 73  controlType: U_UNNUMBERED_ACKNOWLEDGE_P pollFinalBit: 1
+        assertResponse(byteArrayFromInts(0xC0, 0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0), mockedTNC)
 
+
+        /* Receive an incoming message, respond with an Ready Receive ACK*/
+        mockedTNC.clearDataBuffer()
+        // From: VK3LIT-2 to: VK3LIT-1 control: 10  controlType: I_8 pollFinalBit: 1 protocolID: f0 Receive Seq: 0 Send Seq: 0 Data: Hello!
+        sendFrame(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe2, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x10, 0xf0, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x21, 0x0d), mockedTNC)
+        waitForResponse(mockedTNC)
+        // From: VK3LIT-1 to: VK3LIT-2 control: 21  controlType: S_8_RECEIVE_READY pollFinalBit: 0 protocolID: f0 Receive Seq: 1 Send Seq: 0
+        assertResponse(byteArrayFromInts(0xC0, 0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x21, 0xC0), mockedTNC)
+
+
+        /* Receive an Receive Ready P message and transfer rx variable state back to the remote TNC */
+        mockedTNC.clearDataBuffer()
+        // From: VK3LIT-2 to: VK3LIT-1 control: 10  controlType: I_8 pollFinalBit: 1 protocolID: f0 Receive Seq: 0 Send Seq: 0 Data: Hello!
+        sendFrame(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe2, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x11), mockedTNC)
+        waitForResponse(mockedTNC)
         // From: VK3LIT-2 to: VK3LIT-1 control: 73  controlType: U_TEST pollFinalBit: 1 protocolID: 80 Receive Seq: 3 Send Seq: 1
-        val expectedResponse = byteArrayFromInts(0xC0, 0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0)
+        assertResponse(byteArrayFromInts(0xC0, 0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x31, 0xC0), mockedTNC)
 
-        // Send conversation request
-        mockedTNC.receiveDataCallback(byteUtils.intToByte(0xC0))
-        for (byte in conversationRequest) {
-            mockedTNC.receiveDataCallback(byte)
-        }
-        mockedTNC.receiveDataCallback(byteUtils.intToByte(0xC0))
 
-        // Wait for the response
-        await().atMost(Duration.FIVE_SECONDS).until {
-            mockedTNC.dataBuffer().size >= 10
-        }
-
-        // Evaluate any response
-        val response = mockedTNC.dataBuffer()
-        val responseStr = stringUtils.byteArrayToHex(response)
-        val expectedResponseStr = stringUtils.byteArrayToHex(expectedResponse)
-        assertEquals(expectedResponseStr, responseStr)
+        /* Receive a disconnect, and respond with an Unnumbered ACK */
+        mockedTNC.clearDataBuffer()
+        // From: VK3LIT-2 to: VK3LIT-1 control: 53  controlType: U_DISCONNECT_P pollFinalBit: 1 protocolID: 80 Receive Seq: 2 Send Seq: 1
+        sendFrame(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe2, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x53), mockedTNC)
+        waitForResponse(mockedTNC)
+        // From: VK3LIT-1 to: VK3LIT-2 control: 73  controlType: U_UNNUMBERED_ACKNOWLEDGE_P pollFinalBit: 1 protocolID: f0 Receive Seq: 3 Send Seq: 1
+        assertResponse(byteArrayFromInts(0xC0, 0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0), mockedTNC)
     }
 
 
@@ -76,6 +87,27 @@ class LinkServiceTest: TestCase() {
             byteArray[index] = byte
         }
         return byteArray
+    }
+
+    private fun sendFrame(frameData: ByteArray, mockedTNC: TNCMocked) {
+        // Send conversation request
+        mockedTNC.receiveDataCallback(byteUtils.intToByte(0xC0))
+        for (byte in frameData) {
+            mockedTNC.receiveDataCallback(byte)
+        }
+        mockedTNC.receiveDataCallback(byteUtils.intToByte(0xC0))
+    }
+
+    private fun waitForResponse(mockedTNC: TNCMocked) {
+        // Wait for the response
+        await().atMost(Duration.TEN_SECONDS).until {
+            mockedTNC.dataBuffer().size >= 10
+        }
+    }
+
+    private fun assertResponse(expectedResponse: ByteArray, mockedTNC: TNCMocked) {
+        val response = mockedTNC.dataBuffer()
+        assertEquals(stringUtils.byteArrayToHex(expectedResponse), stringUtils.byteArrayToHex(response))
     }
 
 }
