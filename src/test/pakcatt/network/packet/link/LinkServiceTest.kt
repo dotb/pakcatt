@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
+import pakcatt.network.packet.kiss.KissFrame
+import pakcatt.network.packet.kiss.KissFrameStandard
 import pakcatt.network.packet.tnc.TNC
 import pakcatt.network.packet.tnc.TNCMocked
 import pakcatt.util.ByteUtils
@@ -81,8 +83,71 @@ class LinkServiceTest: TestCase() {
         assertResponse(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0), mockedTNC)
     }
 
+    @Test
+    fun testSequenceNumbersAndRollover() {
+        val mockedTNC = tnc as TNCMocked
+        mockedTNC.clearDataBuffer()
+        // From: VK3LIT-2 to: VK3LIT-1 control: 3f  controlType: U_SET_ASYNC_BALANCED_MODE_P pollFinalBit: 1 protocolID: 80
+        sendFrame(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x62, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x3f), mockedTNC)
+        waitForResponse(mockedTNC)
+        // From: VK3LIT-1 to: VK3LIT-2 control: 73  controlType: U_UNNUMBERED_ACKNOWLEDGE_P pollFinalBit: 1
+        assertResponse(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0), mockedTNC)
 
-    private fun byteArrayFromInts(vararg elements: Int): ByteArray {
+        // Send multiple message exchanges to ensure sequence numbers increment and roll over properly after 7 (a 3 bit value)
+        var rxSequenceNumber = 0
+        for (sendSequenceNumber in 0..6) {
+            mockedTNC.clearDataBuffer()
+            val requestFrame = KissFrameStandard()
+            requestFrame.setDestCallsign("VK3LIT-1")
+            requestFrame.setSourceCallsign("VK3LIT-2")
+            requestFrame.setControlType(KissFrame.ControlFrame.I_8)
+            requestFrame.setPayloadMessage("hello")
+            requestFrame.setSendSequenceNumber(sendSequenceNumber)
+            requestFrame.setReceiveSequenceNumber(rxSequenceNumber)
+            sendFrame(requestFrame.packetData(), mockedTNC)
+            waitForResponse(mockedTNC)
+
+            val responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.dataBuffer())
+            rxSequenceNumber = requestFrame.sendSequenceNumber() + 1
+            assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", sendSequenceNumber + 1, responseFrame.receiveSequenceNumber())
+            assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", sendSequenceNumber, responseFrame.sendSequenceNumber())
+        }
+
+        // The 7th exchange should roll-over the received sequence number
+        mockedTNC.clearDataBuffer()
+        var requestFrame = KissFrameStandard()
+        requestFrame.setDestCallsign("VK3LIT-1")
+        requestFrame.setSourceCallsign("VK3LIT-2")
+        requestFrame.setControlType(KissFrame.ControlFrame.I_8)
+        requestFrame.setPayloadMessage("hello")
+        requestFrame.setSendSequenceNumber(7)
+        requestFrame.setReceiveSequenceNumber(rxSequenceNumber)
+        sendFrame(requestFrame.packetData(), mockedTNC)
+        waitForResponse(mockedTNC)
+
+        var responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.dataBuffer())
+        assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 0, responseFrame.receiveSequenceNumber())
+        assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 7, responseFrame.sendSequenceNumber())
+
+        // The 8th exchange should roll-over the sent sequence number
+        mockedTNC.clearDataBuffer()
+        requestFrame = KissFrameStandard()
+        requestFrame.setDestCallsign("VK3LIT-1")
+        requestFrame.setSourceCallsign("VK3LIT-2")
+        requestFrame.setControlType(KissFrame.ControlFrame.I_8)
+        requestFrame.setPayloadMessage("hello")
+        requestFrame.setSendSequenceNumber(0)
+        requestFrame.setReceiveSequenceNumber(rxSequenceNumber)
+        sendFrame(requestFrame.packetData(), mockedTNC)
+        waitForResponse(mockedTNC)
+
+        responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.dataBuffer())
+        assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 1, responseFrame.receiveSequenceNumber())
+        assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 0, responseFrame.sendSequenceNumber())
+
+    }
+
+        private fun byteArrayFromInts(vararg elements: Int): ByteArray {
         val byteArray = ByteArray(elements.size)
         for ((index, intOctet) in elements.withIndex()) {
             val byte = byteUtils.intToByte(intOctet)

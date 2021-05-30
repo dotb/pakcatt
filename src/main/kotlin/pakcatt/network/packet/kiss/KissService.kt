@@ -71,7 +71,7 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
         logger.debug("Received frame:\t ${stringUtils.byteArrayToHex(frame)}")
         val myReceiveFrameCallback = receiveFrameCallback
         if (frame.size >= KissFrame.SIZE_MIN && null != myReceiveFrameCallback) {
-            val kissFrame = createKissFrame(frame)
+            val kissFrame = KissFrame.parseRawKISSFrame(frame)
             logger.debug("Decoded hex:\t\t ${stringUtils.byteArrayToHex(kissFrame.packetData())}")
             logger.debug("Decoded meta:\t ${kissFrame.toString()}")
             logger.debug("Decoded data:\t ${kissFrame.payloadDataString()}")
@@ -79,39 +79,6 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
         } else {
             logger.error("KISS frame was too small to decode: ${frame.size} bytes")
         }
-    }
-
-    fun createKissFrame(frame: ByteArray): KissFrame {
-        // Mandatory fields
-        val portAndCommand = frame[0]
-        val destCallsign = frame.copyOfRange(1, 7)
-        val destSSID = frame[7]
-        val sourceCallsign = frame.copyOfRange(8, 14)
-        val sourceSSID = frame[14]
-
-        // Optional fields
-        var controlField = Byte.MIN_VALUE
-        var protocolID = Byte.MIN_VALUE
-        var payloadData = ByteArray(0)
-        if (frame.size >= 16) {
-            controlField = frame[15]
-        }
-        if (frame.size >= 17) {
-            protocolID = frame[16]
-        }
-        if (frame.size >= 18) {
-            payloadData = frame.copyOfRange(17, frame.size)
-        }
-        val kissFrame = KissFrameStandard()
-        kissFrame.parseRawKISSFrame(portAndCommand,
-                destCallsign,
-                destSSID,
-                sourceCallsign,
-                sourceSSID,
-                controlField,
-                protocolID,
-                payloadData)
-        return kissFrame
     }
 
 }
