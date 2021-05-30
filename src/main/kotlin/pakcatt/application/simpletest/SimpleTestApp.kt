@@ -7,11 +7,14 @@ import pakcatt.application.shared.PacCattApp
 import kotlin.math.sqrt
 
 @Component
-class SimpleTestApp: PacCattApp() {
+class SimpleTestApp(val simpleTestMyCall: String): PacCattApp() {
     private val logger = LoggerFactory.getLogger(SimpleTestApp::class.java)
 
-    override fun handleReceivedMessage(receivedMessage: String): AppResponse {
+    override fun handleReceivedMessage(remoteCallSign: String, destinationCallSign: String, receivedMessage: String): AppResponse {
        return when {
+           messageNotForMe(destinationCallSign, simpleTestMyCall) -> {
+               return AppResponse.ignore()
+           }
             receivedMessage.toLowerCase().contains("help") -> {
                 AppResponse.text("Your options are: check mail, hello, and ping")
             }
@@ -35,7 +38,7 @@ class SimpleTestApp: PacCattApp() {
                 AppResponse.text(result)
             }
             receivedMessage.toLowerCase().contains("nop") -> {
-                return AppResponse.none()
+                return AppResponse.acknowlegeOnly()
             }
             else -> {
                 return AppResponse.text("Say, what?")

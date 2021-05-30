@@ -15,15 +15,6 @@ class TestConfiguration {
     }
 
     @Bean
-    fun myCall(): String {
-        return "VK3LIT-1"
-    }
-    @Bean
-    open fun serviceName(): String {
-        return "PacCatt"
-    }
-
-    @Bean
     open fun serialPortPath(): String {
         return "/dev/null"
     }
@@ -31,6 +22,11 @@ class TestConfiguration {
     @Bean
     open fun serialPortBaud(): Int {
         return 9600
+    }
+
+    @Bean
+    fun simpleTestMyCall(): String {
+        return "VK3LIT-1"
     }
 
 }

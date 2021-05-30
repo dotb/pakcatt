@@ -10,31 +10,18 @@ import org.springframework.web.client.RestTemplate
 @Profile("production")
 class Configuration {
 
-    @Value("\${pakcatt.mycall}")
-    private lateinit var myCall: String
-
-    @Value("\${pakcatt.service-name}")
-    private lateinit var serviceName: String
-
     @Value("\${pakcatt.serial-port-path}")
     private lateinit var serialPortPath: String
 
     @Value("\${pakcatt.serial-port-baud}")
     private lateinit var serialPortBaud: Number
 
+    @Value("\${pakcatt.application.simple-test.mycall}")
+    private lateinit var simpleTestMyCall: String
+
     @Bean
     fun restTemplate(): RestTemplate {
         return RestTemplate()
-    }
-
-    @Bean
-    open fun myCall(): String {
-        return myCall
-    }
-
-    @Bean
-    open fun serviceName(): String {
-        return serviceName
     }
 
     @Bean
@@ -45,6 +32,11 @@ class Configuration {
     @Bean
     open fun serialPortBaud(): Int {
         return serialPortBaud.toInt()
+    }
+
+    @Bean
+    open fun simpleTestMyCall(): String {
+        return simpleTestMyCall
     }
 
 }

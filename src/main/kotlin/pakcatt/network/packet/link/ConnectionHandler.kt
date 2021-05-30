@@ -52,18 +52,14 @@ class ConnectionHandler(val remoteCallsign: String,
         logger.debug("Information frame: ${incomingFrame.toString()}")
         if (incomingFrame.sendSequenceNumber() == nextExpectedReceiveSequenceNumber) {
             incrementReceiveSequenceNumber()
-            if (pACKRequired) {
-                acknowlegeBySendingReadyReceive(incomingFrame, pACKRequired)
-            }
 
             // Share the payload with any listening applications to process
             for (app in applications) {
-                val payloadString = incomingFrame.payloadDataString()
-                val appResponse = app.handleReceivedMessage(payloadString)
-                if (appResponse.responseType == AppResponse.ResponseType.TEXT) {
-                    sendMessage(appResponse.message)
-                } else if (!pACKRequired) {
-                    acknowlegeBySendingReadyReceive(incomingFrame, pACKRequired)
+                val appResponse = app.handleReceivedMessage(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString())
+                when (appResponse.responseType) {
+                    AppResponse.ResponseType.TEXT -> sendMessage(appResponse.message)
+                    AppResponse.ResponseType.ACK_ONLY -> acknowlegeBySendingReadyReceive(incomingFrame, pACKRequired)
+                    AppResponse.ResponseType.IGNORE -> logger.debug("App ignored frame: ${incomingFrame.toString()}")
                 }
             }
         } else {
@@ -73,8 +69,15 @@ class ConnectionHandler(val remoteCallsign: String,
 
     /* Link layer handlers */
     private fun handleConnectionRequest(incomingFrame: KissFrame) {
-        logger.info("Connecting to $remoteCallsign")
+        logger.info("Connecting to remote party: $remoteCallsign local party: $myCallsign")
+
+        // Reset sequence state
         controlMode = ControlMode.MODULO_8
+        nextExpectedReceiveSequenceNumber = 0
+        nextSendSequenceNumber = 0
+        lastSentSequenceNumberAcknowleged = 0
+
+        // Acknowledge the connection
         val frame = newResponseFrame(KissFrame.ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
         networkInterface.queueFrameForDelivery(frame)
     }

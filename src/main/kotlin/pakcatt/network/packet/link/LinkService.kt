@@ -13,8 +13,7 @@ interface NetworkInterface {
 
 @Service
 class LinkService(var kissService: KissService,
-                  val applications: List<PacCattApp>,
-                  var myCall: String): NetworkInterface {
+                  val applications: List<PacCattApp>): NetworkInterface {
 
     private val logger = LoggerFactory.getLogger(LinkService::class.java)
     private var connectionHandlers = HashMap<String, ConnectionHandler>()
@@ -26,17 +25,8 @@ class LinkService(var kissService: KissService,
     }
 
     private fun handleReceivedFrame(incomingFrame: KissFrame) {
-        if (isMyFrame(incomingFrame)) {
-            logger.debug("Frame addressed to me: ${incomingFrame.toString()}")
-            val connectionHandler = connectionHandlerForConversation(incomingFrame.sourceCallsign(), incomingFrame.destCallsign())
-            connectionHandler.handleIncomingFrame(incomingFrame)
-        } else {
-            logger.debug("Frame not addressed to me: ${incomingFrame.toString()}")
-        }
-    }
-
-    private fun isMyFrame(frame: KissFrame): Boolean {
-        return frame.destCallsign().equals(myCall, ignoreCase = true)
+        val connectionHandler = connectionHandlerForConversation(incomingFrame.sourceCallsign(), incomingFrame.destCallsign())
+        connectionHandler.handleIncomingFrame(incomingFrame)
     }
 
     private fun connectionHandlerForConversation(fromCallsign: String, toCallsign: String): ConnectionHandler {
