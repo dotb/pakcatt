@@ -12,9 +12,9 @@ class SimpleTestApp(val simpleTestMyCall: String): PacCattApp() {
 
     override fun handleReceivedMessage(remoteCallSign: String, destinationCallSign: String, receivedMessage: String): AppResponse {
        return when {
-           messageNotForMe(destinationCallSign, simpleTestMyCall) -> {
+            messageNotForMe(destinationCallSign, simpleTestMyCall) -> {
                return AppResponse.ignore()
-           }
+            }
             receivedMessage.toLowerCase().contains("help") -> {
                 AppResponse.text("Your options are: check mail, hello, and ping")
             }
@@ -29,9 +29,6 @@ class SimpleTestApp(val simpleTestMyCall: String): PacCattApp() {
             }
             receivedMessage.toLowerCase().contains("pong") -> {
                 return AppResponse.text("Ping! haha")
-            }
-            receivedMessage.toLowerCase().contains("cmd") -> {
-                return AppResponse.text("converse")
             }
             receivedMessage.toLowerCase().contains("sqrt") -> {
                 val result = handleSQRT(receivedMessage)
