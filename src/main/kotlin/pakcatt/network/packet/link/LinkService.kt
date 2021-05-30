@@ -2,6 +2,7 @@ package pakcatt.network.packet.link
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import pakcatt.application.shared.PacCattApp
 import pakcatt.network.packet.kiss.KissFrame
 import pakcatt.network.packet.kiss.KissService
 
@@ -12,6 +13,7 @@ interface NetworkInterface {
 
 @Service
 class LinkService(var kissService: KissService,
+                  val applications: List<PacCattApp>,
                   var myCall: String): NetworkInterface {
 
     private val logger = LoggerFactory.getLogger(LinkService::class.java)
@@ -43,7 +45,7 @@ class LinkService(var kissService: KissService,
         return if (null != connectionHandler) {
             connectionHandler
         } else {
-            val connectionHandler = ConnectionHandler(fromCallsign, toCallsign, this)
+            val connectionHandler = ConnectionHandler(fromCallsign, toCallsign, this, applications)
             connectionHandlers[key] = connectionHandler
             connectionHandler
         }
@@ -63,7 +65,7 @@ class LinkService(var kissService: KissService,
     }
 
     override fun closeConnection(connectionHandler: ConnectionHandler) {
-        removeConnectionHandler(connectionHandler.fromCallsign, connectionHandler.toCallsign)
+        removeConnectionHandler(connectionHandler.remoteCallsign, connectionHandler.myCallsign)
     }
 
 }

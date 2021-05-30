@@ -190,9 +190,24 @@ abstract class KissFrame() {
     }
 
     override fun toString(): String {
-        return "From: ${sourceCallsign()} to: ${destCallsign()} control: ${stringUtils.byteArrayToHex(controlField())} " +
-                "controlType: ${controlTypeString()} pollFinalBit: ${pollFinalBitString()} protocolID: ${stringUtils.byteToHex(protocolID())} " +
-                "Receive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()}"
+        var string = "From: ${sourceCallsign()} to: ${destCallsign()} control: ${stringUtils.byteArrayToHex(controlField())} " +
+                "controlType: ${controlTypeString()} pollFinalBit: ${pollFinalBitString()}"
+
+        if (listOf(KissFrame.ControlFrame.I_8, KissFrame.ControlFrame.I_8_P,
+                KissFrame.ControlFrame.I_128, KissFrame.ControlFrame.I_128_P).contains(calculateControlFrame())) {
+            string += " protocolID: ${stringUtils.byteToHex(protocolID())} Receive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()}"
+        }
+
+        if (listOf(ControlFrame.S_8_RECEIVE_READY, ControlFrame.S_8_RECEIVE_READY_P, ControlFrame.S_8_RECEIVE_NOT_READY,
+                ControlFrame.S_8_RECEIVE_NOT_READY_P, ControlFrame.S_8_REJECT, ControlFrame.S_8_REJECT_P, ControlFrame.S_8_SELECTIVE_REJECT,
+                ControlFrame.S_8_SELECTIVE_REJECT_P, ControlFrame.S_128_RECEIVE_READY, ControlFrame.S_128_RECEIVE_READY_P,
+                ControlFrame.S_128_RECEIVE_NOT_READY, ControlFrame.S_128_RECEIVE_NOT_READY_P, ControlFrame.S_128_REJECT,
+                ControlFrame.S_128_REJECT_P, ControlFrame.S_128_SELECTIVE_REJECT,
+                ControlFrame.S_128_SELECTIVE_REJECT_P).contains(calculateControlFrame())) {
+            string += " Receive Seq: ${receiveSequenceNumber()}"
+        }
+
+        return string
     }
 
     private fun constructCallsign(callsignByteArray: ByteArray, callsignSSID: Byte): String {

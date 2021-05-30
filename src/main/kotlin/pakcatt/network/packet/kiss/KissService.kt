@@ -31,18 +31,18 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
     }
 
     fun queueFrameForTransmission(frame: KissFrame) {
-        transmitQueue.push(frame)
+        transmitQueue.add(frame)
     }
 
-    @Scheduled(fixedRate = 2000)
+    @Scheduled(fixedRate = 1000)
     private fun serviceTransmitQueue() {
-        if (!transmitQueue.isEmpty()) {
-            val nextFrame = transmitQueue.pop()
+        while (!transmitQueue.isEmpty()) {
+            val nextFrame = transmitQueue.pollFirst()
             logger.debug("Sending frame: ${nextFrame.toString()}")
             tncConnection.sendData(KissFrame.FRAME_END)
             tncConnection.sendData(nextFrame.packetData())
             tncConnection.sendData(KissFrame.FRAME_END)
-            logger.debug("Sent frame:\t ${stringUtils.byteArrayToHex(nextFrame.packetData())}")
+            logger.debug("Sent frame:\t\t ${stringUtils.byteArrayToHex(nextFrame.packetData())}")
         }
     }
 
