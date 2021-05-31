@@ -98,6 +98,7 @@ class ConnectionHandler(val remoteCallsign: String,
         logger.info("Disconnecting from $remoteCallsign")
         val frame = newResponseFrame(KissFrame.ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
         networkInterface.queueFrameForDelivery(frame)
+        networkInterface.closeConnection(this)
     }
 
     private fun ignoreFrame(incomingFrame: KissFrame) {
@@ -108,8 +109,9 @@ class ConnectionHandler(val remoteCallsign: String,
     /* Application Interface methods */
     private fun sendMessage(message: String) {
         logger.debug("Sending message to: $remoteCallsign from: $myCallsign message: $message")
+        val messageWithEOL = "$message\n\r" // And EOL characters
         val frame = newResponseFrame(KissFrame.ControlFrame.I_8, false)
-        frame.setPayloadMessage(message)
+        frame.setPayloadMessage(messageWithEOL)
         networkInterface.queueFrameForDelivery(frame)
     }
 
