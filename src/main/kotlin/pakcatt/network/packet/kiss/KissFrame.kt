@@ -1,6 +1,5 @@
 package pakcatt.network.packet.kiss
 
-import org.slf4j.LoggerFactory
 import pakcatt.util.ByteUtils
 import pakcatt.util.StringUtils
 
@@ -89,10 +88,10 @@ abstract class KissFrame() {
     }
 
     enum class ControlFrame(val mask: Int, val bitPattern: Int) {
-        I_8(0x11, 0x00),
-        I_8_P(0x11,0x10),
-        I_128(0x0101,0x0000),
-        I_128_P(0x0101,0x0100),
+        INFORMATION_8(0x11, 0x00),
+        INFORMATION_8_P(0x11,0x10),
+        INFORMATION_128(0x0101,0x0000),
+        INFORMATION_128_P(0x0101,0x0100),
 
         S_8_RECEIVE_READY(0x1F,0x01), S_8_RECEIVE_NOT_READY(0x1F,0x05), S_8_REJECT(0x1F,0x09), S_8_SELECTIVE_REJECT(0x1F,0x0D),
         S_8_RECEIVE_READY_P(0x1F,0x11), S_8_RECEIVE_NOT_READY_P(0x1F,0x15), S_8_REJECT_P(0x1F,0x019), S_8_SELECTIVE_REJECT_P(0x1F,0x1D),
@@ -158,7 +157,7 @@ abstract class KissFrame() {
         var packetSize = controlField.size + destCallsign.size + sourceCallsign.size + payloadData.size
 
         // Section 3.4. PID Field. The PID field is only sent on I and UI Frames
-        if (arrayOf(ControlFrame.I_8, ControlFrame.I_8_P, ControlFrame.I_128, ControlFrame.I_128_P,
+        if (arrayOf(ControlFrame.INFORMATION_8, ControlFrame.INFORMATION_8_P, ControlFrame.INFORMATION_128, ControlFrame.INFORMATION_128_P,
         ControlFrame.U_UNNUMBERED_INFORMATION, ControlFrame.U_UNNUMBERED_INFORMATION_P)
                 .contains(calculateControlFrame())) {
             packetSize += 4
@@ -223,12 +222,12 @@ abstract class KissFrame() {
     }
 
     override fun toString(): String {
-        var string = "From: ${sourceCallsign()} to: ${destCallsign()} control: ${stringUtils.byteArrayToHex(controlField())} " +
-                "controlType: ${controlTypeString()} pollFinalBit: ${pollFinalBitString()}"
+        var string = "From: ${sourceCallsign()} to: ${destCallsign()} pollFinalBit: ${pollFinalBitString()} " +
+                "control: ${stringUtils.byteArrayToHex(controlField())} controlType: ${controlTypeString()} "
 
-        if (listOf(KissFrame.ControlFrame.I_8, KissFrame.ControlFrame.I_8_P,
-                KissFrame.ControlFrame.I_128, KissFrame.ControlFrame.I_128_P).contains(calculateControlFrame())) {
-            string += " protocolID: ${stringUtils.byteToHex(protocolID())} Receive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()}"
+        if (listOf(KissFrame.ControlFrame.INFORMATION_8, KissFrame.ControlFrame.INFORMATION_8_P,
+                KissFrame.ControlFrame.INFORMATION_128, KissFrame.ControlFrame.INFORMATION_128_P).contains(calculateControlFrame())) {
+            string += "\t\t\tReceive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()} protocolID: ${stringUtils.byteToHex(protocolID())} "
         }
 
         if (listOf(ControlFrame.S_8_RECEIVE_READY, ControlFrame.S_8_RECEIVE_READY_P, ControlFrame.S_8_RECEIVE_NOT_READY,
@@ -237,7 +236,11 @@ abstract class KissFrame() {
                 ControlFrame.S_128_RECEIVE_NOT_READY, ControlFrame.S_128_RECEIVE_NOT_READY_P, ControlFrame.S_128_REJECT,
                 ControlFrame.S_128_REJECT_P, ControlFrame.S_128_SELECTIVE_REJECT,
                 ControlFrame.S_128_SELECTIVE_REJECT_P).contains(calculateControlFrame())) {
-            string += " Receive Seq: ${receiveSequenceNumber()}"
+            string += "\t\tReceive Seq: ${receiveSequenceNumber()}"
+        }
+
+        if (payloadData.size > 0) {
+            string += " Payload: ${payloadDataString()}"
         }
 
         return string
@@ -286,10 +289,10 @@ abstract class KissFrame() {
      */
     private fun setCommandBits(controlType: ControlFrame) {
         destSSID = when (controlType) {
-            ControlFrame.I_8 -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.I_8_P -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.I_128 -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.I_128_P -> byteUtils.setBits(destSSID, 0x80)
+            ControlFrame.INFORMATION_8 -> byteUtils.setBits(destSSID, 0x80)
+            ControlFrame.INFORMATION_8_P -> byteUtils.setBits(destSSID, 0x80)
+            ControlFrame.INFORMATION_128 -> byteUtils.setBits(destSSID, 0x80)
+            ControlFrame.INFORMATION_128_P -> byteUtils.setBits(destSSID, 0x80)
             ControlFrame.U_SET_ASYNC_BALANCED_MODE -> byteUtils.setBits(destSSID, 0x80)
             ControlFrame.U_SET_ASYNC_BALANCED_MODE_EXTENDED -> byteUtils.setBits(destSSID, 0x80)
             ControlFrame.U_DISCONNECT -> byteUtils.setBits(destSSID, 0x80)

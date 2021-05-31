@@ -2,7 +2,9 @@ package pakcatt.application.simpletest
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import pakcatt.application.shared.AppResponse
+import pakcatt.application.shared.AppRequest
+import pakcatt.application.shared.ConnectionResponse
+import pakcatt.application.shared.InteractionResponse
 import pakcatt.application.shared.PacCattApp
 import kotlin.math.sqrt
 
@@ -10,35 +12,43 @@ import kotlin.math.sqrt
 class SimpleTestApp(val simpleTestMyCall: String): PacCattApp() {
     private val logger = LoggerFactory.getLogger(SimpleTestApp::class.java)
 
-    override fun handleReceivedMessage(remoteCallSign: String, destinationCallSign: String, receivedMessage: String): AppResponse {
+
+    override fun decisionOnConnectionRequest(request: AppRequest): ConnectionResponse {
+        return when (isAddressedToMe(request, simpleTestMyCall)) {
+            true -> ConnectionResponse.connectWithMessage("Welcome to PakCatt! Type help to learn more :-)")
+            false -> ConnectionResponse.ignore()
+        }
+    }
+
+    override fun handleReceivedMessage(request: AppRequest): InteractionResponse {
        return when {
-            messageNotForMe(destinationCallSign, simpleTestMyCall) -> {
-               return AppResponse.ignore()
+            notAddressedToMe(request, simpleTestMyCall) -> {
+               return InteractionResponse.ignore()
             }
-            receivedMessage.toLowerCase().contains("help") -> {
-                AppResponse.text("Your options are: check mail, hello, and ping")
+            request.message.toLowerCase().contains("help") -> {
+                InteractionResponse.sendText("Your options are: check mail, hello, and ping")
             }
-            receivedMessage.toLowerCase().contains("check mail") -> {
-                AppResponse.text("You've always got mail ;-)")
+            request.message.toLowerCase().contains("check mail") -> {
+                InteractionResponse.sendText("You've always got mail ;-)")
             }
-            receivedMessage.toLowerCase().contains("hello") -> {
-                AppResponse.text("Hi, there! *wave*")
+            request.message.toLowerCase().contains("hello") -> {
+                InteractionResponse.sendText("Hi, there! *wave*")
             }
-            receivedMessage.toLowerCase().contains("ping") -> {
-                return AppResponse.text("Pong!")
+            request.message.toLowerCase().contains("ping") -> {
+                return InteractionResponse.sendText("Pong!")
             }
-            receivedMessage.toLowerCase().contains("pong") -> {
-                return AppResponse.text("Ping! haha")
+            request.message.toLowerCase().contains("pong") -> {
+                return InteractionResponse.sendText("Ping! haha")
             }
-            receivedMessage.toLowerCase().contains("sqrt") -> {
-                val result = handleSQRT(receivedMessage)
-                AppResponse.text(result)
+           request.message.toLowerCase().contains("sqrt") -> {
+                val result = handleSQRT(request.message)
+                InteractionResponse.sendText(result)
             }
-            receivedMessage.toLowerCase().contains("nop") -> {
-                return AppResponse.acknowlegeOnly()
+            request.message.toLowerCase().contains("nop") -> {
+                return InteractionResponse.acknowlegeOnly()
             }
             else -> {
-                return AppResponse.text("Say, what?")
+                return InteractionResponse.sendText("Say, what?")
             }
         }
     }
