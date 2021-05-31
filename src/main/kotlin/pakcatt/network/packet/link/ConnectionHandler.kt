@@ -35,6 +35,10 @@ class ConnectionHandler(val remoteCallsign: String,
     private var lastSentSequenceNumberAcknowledged = 0
 
 
+    fun handleRequestToSendMessageFromApp(request: AppRequest) {
+        sendMessage(request.message, false)
+    }
+
     fun handleIncomingFrame(incomingFrame: KissFrame) {
         when (incomingFrame.controlFrame()) {
             KissFrame.ControlFrame.U_SET_ASYNC_BALANCED_MODE_P -> handleConnectionRequest(incomingFrame) // Connection request

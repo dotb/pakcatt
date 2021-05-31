@@ -29,21 +29,36 @@ class LinkService(var kissService: KissService,
         }
     }
 
+    fun handleRequestToSendMessageFromApp(messageRequest: AppRequest) {
+        if (connectionExistsForConversation(messageRequest.remoteCallsign, messageRequest.addressedToCallsign)) {
+            val connectionHandler =
+                connectionHandlerForConversation(messageRequest.remoteCallsign, messageRequest.addressedToCallsign)
+            connectionHandler.handleRequestToSendMessageFromApp(messageRequest)
+        } else {
+            logger.error("Sending direct unnumbered messages is not yet supported. An existing connection is required.")
+        }
+    }
+
     private fun handleReceivedFrame(incomingFrame: KissFrame) {
         val connectionHandler = connectionHandlerForConversation(incomingFrame.sourceCallsign(), incomingFrame.destCallsign())
         connectionHandler.handleIncomingFrame(incomingFrame)
     }
 
-    private fun connectionHandlerForConversation(fromCallsign: String, toCallsign: String): ConnectionHandler {
-        val key = connectionHandlerKey(fromCallsign, toCallsign)
+    private fun connectionHandlerForConversation(remoteCallsign: String, addressedToCallsign: String): ConnectionHandler {
+        val key = connectionHandlerKey(remoteCallsign, addressedToCallsign)
         val connectionHandler = connectionHandlers[key]
         return if (null != connectionHandler) {
             connectionHandler
         } else {
-            val connectionHandler = ConnectionHandler(fromCallsign, toCallsign, this)
+            val connectionHandler = ConnectionHandler(remoteCallsign, addressedToCallsign, this)
             connectionHandlers[key] = connectionHandler
             connectionHandler
         }
+    }
+
+    private fun connectionExistsForConversation(remoteCallsign: String, addressedToCallsign: String): Boolean {
+        val key = connectionHandlerKey(remoteCallsign, addressedToCallsign)
+        return connectionHandlers.containsKey(key)
     }
 
     private fun removeConnectionHandler(fromCallsign: String, toCallsign: String) {

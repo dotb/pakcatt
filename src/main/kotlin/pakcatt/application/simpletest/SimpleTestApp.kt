@@ -47,6 +47,10 @@ class SimpleTestApp(val simpleTestMyCall: String): PacCattApp() {
             request.message.toLowerCase().contains("nop") -> {
                 return InteractionResponse.acknowlegeOnly()
             }
+           request.message.toLowerCase().contains("message me") -> {
+               sendMessage(request.remoteCallsign, request.addressedToCallsign, "Here is your message!")
+               return InteractionResponse.acknowlegeOnly()
+           }
             else -> {
                 return InteractionResponse.sendText("Say, what?")
             }
