@@ -6,17 +6,17 @@ import org.springframework.stereotype.Component
 import pakcatt.application.shared.AppRequest
 import pakcatt.application.shared.ConnectionResponse
 import pakcatt.application.shared.InteractionResponse
-import pakcatt.application.shared.PacCattApp
+import pakcatt.application.shared.PakCattApp
 import kotlin.math.sqrt
 
 @Component
 @Profile("production")
-class SimpleTestApp(val simpleTestMyCall: String): PacCattApp() {
+class SimpleTestApp(val myCall: String): PakCattApp() {
     private val logger = LoggerFactory.getLogger(SimpleTestApp::class.java)
 
 
     override fun decisionOnConnectionRequest(request: AppRequest): ConnectionResponse {
-        return when (isAddressedToMe(request, simpleTestMyCall)) {
+        return when (isAddressedToMe(request, myCall)) {
             true -> ConnectionResponse.connectWithMessage("Welcome to PakCatt! Type help to learn more :-)")
             false -> ConnectionResponse.ignore()
         }
@@ -24,11 +24,11 @@ class SimpleTestApp(val simpleTestMyCall: String): PacCattApp() {
 
     override fun handleReceivedMessage(request: AppRequest): InteractionResponse {
        return when {
-            notAddressedToMe(request, simpleTestMyCall) -> {
+            notAddressedToMe(request, myCall) -> {
                return InteractionResponse.ignore()
             }
             request.message.toLowerCase().contains("help") -> {
-                InteractionResponse.sendText("Your options are: check mail, hello, and ping")
+                InteractionResponse.sendText("Your options are: check send, list, read, delete, hello, ping, and sqrt")
             }
             request.message.toLowerCase().contains("check mail") -> {
                 InteractionResponse.sendText("You've always got mail ;-)")
@@ -48,13 +48,8 @@ class SimpleTestApp(val simpleTestMyCall: String): PacCattApp() {
             }
             request.message.toLowerCase().contains("nop") -> {
                 return InteractionResponse.acknowlegeOnly()
-            }
-           request.message.toLowerCase().contains("message me") -> {
-               sendMessage(request.remoteCallsign, request.addressedToCallsign, "Here is your message!")
-               return InteractionResponse.acknowlegeOnly()
-           }
-            else -> {
-                return InteractionResponse.sendText("Say, what?")
+            } else -> {
+                InteractionResponse.ignore()
             }
         }
     }

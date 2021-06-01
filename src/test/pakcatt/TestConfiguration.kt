@@ -25,7 +25,7 @@ class TestConfiguration {
     }
 
     @Bean
-    fun simpleTestMyCall(): String {
+    fun myCall(): String {
         return "VK3LIT-1"
     }
 

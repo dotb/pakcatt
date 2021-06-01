@@ -16,8 +16,8 @@ class Configuration {
     @Value("\${pakcatt.serial-port-baud}")
     private lateinit var serialPortBaud: Number
 
-    @Value("\${pakcatt.application.simple-test.mycall}")
-    private lateinit var simpleTestMyCall: String
+    @Value("\${pakcatt.application.mycall}")
+    private lateinit var myCall: String
 
     @Bean
     fun restTemplate(): RestTemplate {
@@ -35,8 +35,8 @@ class Configuration {
     }
 
     @Bean
-    open fun simpleTestMyCall(): String {
-        return simpleTestMyCall
+    open fun myCall(): String {
+        return myCall
     }
 
 }

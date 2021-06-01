@@ -44,4 +44,10 @@ class StringUtils {
         return paddedString.toString()
     }
 
+    fun chompString(input: String): String {
+        var chompedString = input.replace("\r","")
+        chompedString = chompedString.replace("\n", "")
+        return chompedString
+    }
+
 }

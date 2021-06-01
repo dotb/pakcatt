@@ -5,11 +5,11 @@ import org.springframework.stereotype.Component
 import pakcatt.application.shared.AppRequest
 import pakcatt.application.shared.ConnectionResponse
 import pakcatt.application.shared.InteractionResponse
-import pakcatt.application.shared.PacCattApp
+import pakcatt.application.shared.PakCattApp
 
 @Component
 @Profile("test")
-class TestApp: PacCattApp() {
+class TestApp: PakCattApp() {
     override fun decisionOnConnectionRequest(request: AppRequest): ConnectionResponse {
         return ConnectionResponse.connect()
     }

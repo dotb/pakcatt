@@ -5,7 +5,7 @@ import org.springframework.stereotype.Service
 import pakcatt.application.shared.AppRequest
 import pakcatt.application.shared.ConnectionResponse
 import pakcatt.application.shared.InteractionResponse
-import pakcatt.application.shared.PacCattApp
+import pakcatt.application.shared.PakCattApp
 import pakcatt.network.packet.kiss.KissFrame
 import pakcatt.network.packet.kiss.KissService
 
@@ -18,7 +18,7 @@ interface NetworkInterface {
 
 @Service
 class LinkService(var kissService: KissService,
-                  val applications: List<PacCattApp>): NetworkInterface {
+                  val applications: List<PakCattApp>): NetworkInterface {
 
     private val logger = LoggerFactory.getLogger(LinkService::class.java)
     private var connectionHandlers = HashMap<String, ConnectionHandler>()
