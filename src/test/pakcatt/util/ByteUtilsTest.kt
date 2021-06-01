@@ -82,7 +82,7 @@ class ByteUtilsTest: TestCase() {
     @Test
     fun testFixEndOfLineCharacters() {
         val stringUtils = StringUtils()
-        val lineFeed: Byte = 12
+        val lineFeed: Byte = 10
         val carriageReturn: Byte = 13
         val a: Byte = 97
         val b: Byte = 98

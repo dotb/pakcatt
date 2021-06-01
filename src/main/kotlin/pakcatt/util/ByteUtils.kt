@@ -127,7 +127,7 @@ class ByteUtils {
      * with both \r\n.
      */
     fun fixEndOfLineCharacters(inputBytes: ByteArray): ByteArray {
-        val lineFeed = intToByte(12)
+        val lineFeed = intToByte(10)
         val carriageReturn = intToByte(13)
         var updatedArray = ArrayList<Byte>()
 
@@ -158,6 +158,5 @@ class ByteUtils {
 
         return updatedArray.toByteArray()
     }
-
 
 }

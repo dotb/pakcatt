@@ -1,6 +1,7 @@
 package pakcatt.application.simpletest
 
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import pakcatt.application.shared.AppRequest
 import pakcatt.application.shared.ConnectionResponse
@@ -9,6 +10,7 @@ import pakcatt.application.shared.PacCattApp
 import kotlin.math.sqrt
 
 @Component
+@Profile("production")
 class SimpleTestApp(val simpleTestMyCall: String): PacCattApp() {
     private val logger = LoggerFactory.getLogger(SimpleTestApp::class.java)
 
