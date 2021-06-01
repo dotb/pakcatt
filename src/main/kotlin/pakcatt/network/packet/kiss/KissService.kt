@@ -68,13 +68,13 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
     }
 
     private fun handleNewFrame(frame: ByteArray) {
-        logger.trace("Received bytes:\t ${stringUtils.byteArrayToHex(frame)}")
+        logger.trace("Received bytes:\t {}", stringUtils.byteArrayToHex(frame))
         val myReceiveFrameCallback = receiveFrameCallback
         if (frame.size >= KissFrame.SIZE_MIN && null != myReceiveFrameCallback) {
             val kissFrame = KissFrame.parseRawKISSFrame(frame)
-            logger.trace("Decoded hex:\t\t ${stringUtils.byteArrayToHex(kissFrame.packetData())}")
-            logger.debug("Received frame:\t ${kissFrame.toString()}")
-            logger.trace("Decoded data:\t ${kissFrame.payloadDataString()}")
+            logger.trace("Decoded hex:\t\t {}", stringUtils.byteArrayToHex(kissFrame.packetData()))
+            logger.debug("Received frame:\t {}", kissFrame.toString())
+            logger.trace("Decoded data:\t {}", kissFrame.payloadDataString())
             myReceiveFrameCallback(kissFrame)
         } else {
             logger.error("KISS frame was too small to decode: ${frame.size} bytes")

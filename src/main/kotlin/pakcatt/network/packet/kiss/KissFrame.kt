@@ -72,6 +72,7 @@ abstract class KissFrame() {
             }
             if (frame.size >= 18) {
                 payloadData = frame.copyOfRange(17, frame.size)
+                payloadData = ByteUtils().fixEndOfLineCharacters(payloadData)
             }
             val kissFrame = KissFrameStandard()
             kissFrame.parseRawKISSFrame(portAndCommand,

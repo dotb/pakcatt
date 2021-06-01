@@ -79,4 +79,41 @@ class ByteUtilsTest: TestCase() {
         assertEquals(true, result)
     }
 
+    @Test
+    fun testFixEndOfLineCharacters() {
+        val stringUtils = StringUtils()
+        val lineFeed: Byte = 12
+        val carriageReturn: Byte = 13
+        val a: Byte = 97
+        val b: Byte = 98
+        val c: Byte = 99
+        val d: Byte = 100
+
+        val arrayWithCarriageReturnThenLineFeed = byteArrayOf(carriageReturn, lineFeed, a, b, carriageReturn, lineFeed, c, d, carriageReturn, lineFeed, carriageReturn, lineFeed, a, b, carriageReturn, lineFeed)
+        val arrayWithLineFeedThenCarriageReturn = byteArrayOf(lineFeed, carriageReturn, a, b, lineFeed, carriageReturn, c, d, lineFeed, carriageReturn, lineFeed, carriageReturn, a, b, lineFeed, carriageReturn)
+        val arrayWithOnlyLineFeed = byteArrayOf(lineFeed, a, b, lineFeed, c, d, lineFeed, lineFeed, a, b, lineFeed)
+        val arrayWithOnlyCarriageReturn = byteArrayOf(carriageReturn, a, b, carriageReturn, c, d, carriageReturn, carriageReturn, a, b, carriageReturn)
+        val shortArrayWithCarriageReturn = byteArrayOf(a, carriageReturn)
+        val shortArrayWithLineFeed = byteArrayOf(a, lineFeed)
+        val shortArrayWithCarriageReturnThenLineFeed = byteArrayOf(a, carriageReturn, lineFeed)
+        val realPacketTest = byteArrayOf(0x61.toByte(), 0x0d.toByte(), 0x62.toByte(), 0x0d.toByte(), 0x63.toByte(), 0x0d.toByte(), 0x64.toByte(), 0x0d.toByte())
+        val realPacketResult = byteArrayOf(a, carriageReturn, lineFeed, b, carriageReturn, lineFeed, c, carriageReturn, lineFeed, d, carriageReturn, lineFeed)
+
+
+        // An array that already has both EOL characters should not be updated. We're not fussy about the order of EOL chars.
+        assertEquals(stringUtils.byteArrayToHex(arrayWithCarriageReturnThenLineFeed), stringUtils.byteArrayToHex(subject.fixEndOfLineCharacters(arrayWithCarriageReturnThenLineFeed)))
+        assertEquals(stringUtils.byteArrayToHex(arrayWithLineFeedThenCarriageReturn), stringUtils.byteArrayToHex(subject.fixEndOfLineCharacters(arrayWithLineFeedThenCarriageReturn)))
+
+        // Arrays with only one EOL character should be adjusted to have both <CR> and <LF>
+        assertEquals(stringUtils.byteArrayToHex(arrayWithCarriageReturnThenLineFeed), stringUtils.byteArrayToHex(subject.fixEndOfLineCharacters(arrayWithOnlyLineFeed)))
+        assertEquals(stringUtils.byteArrayToHex(arrayWithCarriageReturnThenLineFeed), stringUtils.byteArrayToHex(subject.fixEndOfLineCharacters(arrayWithOnlyCarriageReturn)))
+
+        // Short arrays should be handled, too.
+        assertEquals(stringUtils.byteArrayToHex(shortArrayWithCarriageReturnThenLineFeed), stringUtils.byteArrayToHex(subject.fixEndOfLineCharacters(shortArrayWithCarriageReturn)))
+        assertEquals(stringUtils.byteArrayToHex(shortArrayWithCarriageReturnThenLineFeed), stringUtils.byteArrayToHex(subject.fixEndOfLineCharacters(shortArrayWithLineFeed)))
+
+        // Test an example for a real packet
+        assertEquals(stringUtils.byteArrayToHex(realPacketResult), stringUtils.byteArrayToHex(subject.fixEndOfLineCharacters(realPacketTest)))
+    }
+
 }
