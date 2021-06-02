@@ -11,7 +11,7 @@ interface AppInterface {
 }
 
 @Service
-class AppService(val applications: List<RootApp>): AppInterface {
+class AppService(val rootApplications: List<RootApp>): AppInterface {
 
     private val logger = LoggerFactory.getLogger(AppService::class.java)
     private var currentUsers = HashMap<String, UserContext>()
@@ -23,7 +23,7 @@ class AppService(val applications: List<RootApp>): AppInterface {
         // Start with the decision to ignore
         var finalConnectionDecision = ConnectionResponse.ignore()
 
-        for (app in applications) {
+        for (app in rootApplications) {
             val connectionDecision = app.decisionOnConnectionRequest(request)
 
             // Update the app focus state in the user context if required.
@@ -53,7 +53,7 @@ class AppService(val applications: List<RootApp>): AppInterface {
         } else {
             // if the user is not engaged with an app, send the request to all apps
             var finalInteractionResponse = InteractionResponse.ignore()
-            for (app in applications) {
+            for (app in rootApplications) {
                 // Handle any response from the app
                 val interactionResponse = getResponseForReceivedMessage(request, userContext, app)
                 when (interactionResponse.responseType) {
