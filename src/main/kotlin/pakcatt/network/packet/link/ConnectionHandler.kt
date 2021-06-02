@@ -1,12 +1,10 @@
 package pakcatt.network.packet.link
 
 import org.slf4j.LoggerFactory
-import pakcatt.network.packet.link.model.ConnectionResponse
-import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.network.packet.kiss.KissFrame
 import pakcatt.network.packet.kiss.KissFrameExtended
 import pakcatt.network.packet.kiss.KissFrameStandard
-import pakcatt.network.packet.link.model.LinkRequest
+import pakcatt.network.packet.link.model.*
 
 class ConnectionHandler(val remoteCallsign: String,
                         val myCallsign: String,
@@ -62,9 +60,9 @@ class ConnectionHandler(val remoteCallsign: String,
             // Share the payload with any listening applications to process
             val  appResponse = linkInterface.getResponseForReceivedMessage(LinkRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
             when (appResponse.responseType) {
-                InteractionResponse.InteractionResponseType.SEND_TEXT -> acknowledgeAndSendMessage(appResponse.message, pACKRequired)
-                InteractionResponse.InteractionResponseType.ACK_ONLY -> acknowledgeBySendingReadyReceive(pACKRequired)
-                InteractionResponse.InteractionResponseType.IGNORE -> logger.trace("Apps ignored frame: ${incomingFrame.toString()}")
+                InteractionResponseType.SEND_TEXT -> acknowledgeAndSendMessage(appResponse.message, pACKRequired)
+                InteractionResponseType.ACK_ONLY -> acknowledgeBySendingReadyReceive(pACKRequired)
+                InteractionResponseType.IGNORE -> logger.trace("Apps ignored frame: ${incomingFrame.toString()}")
             }
         } else {
             logger.error("Received an out of sequence information frame. Expected send sequence number: $nextExpectedReceiveSequenceNumber. Frame: ${incomingFrame.toString()}")
@@ -77,9 +75,9 @@ class ConnectionHandler(val remoteCallsign: String,
         // Gather a connection decision from applications
         val appResponse = linkInterface.getDecisionOnConnectionRequest(LinkRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
         when (appResponse.responseType) {
-            ConnectionResponse.ConnectionResponseType.CONNECT -> acceptIncomingConnection()
-            ConnectionResponse.ConnectionResponseType.CONNECT_WITH_MESSAGE -> acceptIncomingConnectionWithMessage(appResponse.message)
-            ConnectionResponse.ConnectionResponseType.IGNORE -> logger.trace("Ignored connection request from: $remoteCallsign to :$myCallsign")
+            ConnectionResponseType.CONNECT -> acceptIncomingConnection()
+            ConnectionResponseType.CONNECT_WITH_MESSAGE -> acceptIncomingConnectionWithMessage(appResponse.message)
+            ConnectionResponseType.IGNORE -> logger.trace("Ignored connection request from: $remoteCallsign to :$myCallsign")
         }
     }
 

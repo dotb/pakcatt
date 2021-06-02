@@ -1,32 +1,35 @@
 package pakcatt.network.packet.link.model
 
-class InteractionResponse(val responseType: InteractionResponseType,
-                          val message: String) {
+import pakcatt.application.shared.SubApp
 
-    enum class InteractionResponseType {
-        SEND_TEXT, ACK_ONLY, IGNORE
-    }
+enum class InteractionResponseType {
+    SEND_TEXT, ACK_ONLY, IGNORE
+}
+
+class InteractionResponse(val responseType: InteractionResponseType,
+                          val message: String,
+                          nextApp: SubApp? = null): LinkResponse(nextApp) {
 
     companion object {
         /**
          * Response with a textual message.
          */
-        fun sendText(message: String): InteractionResponse {
-            return InteractionResponse(InteractionResponseType.SEND_TEXT, message)
+        fun sendText(message: String, nextApp: SubApp? = null): InteractionResponse {
+            return InteractionResponse(InteractionResponseType.SEND_TEXT, message, nextApp)
         }
 
         /**
-         * Acknowlege the message without a textual response.
+         * Acknowledge the message without a textual response.
          */
-        fun acknowlegeOnly(): InteractionResponse {
-            return InteractionResponse(InteractionResponseType.ACK_ONLY, "")
+        fun acknowledgeOnly(nextApp: SubApp? = null): InteractionResponse {
+            return InteractionResponse(InteractionResponseType.ACK_ONLY, "", nextApp)
         }
 
         /**
          * Ignore the message, and don't respond at all.
          */
-        fun ignore(): InteractionResponse {
-            return InteractionResponse(InteractionResponseType.IGNORE, "")
+        fun ignore(nextApp: SubApp? = null): InteractionResponse {
+            return InteractionResponse(InteractionResponseType.IGNORE, "", nextApp)
         }
     }
 

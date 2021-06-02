@@ -4,7 +4,7 @@ import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.ConnectionResponse
 import pakcatt.network.packet.link.model.InteractionResponse
 
-abstract class PakCattApp {
+abstract class RootApp: SubApp() {
 
     protected fun isAddressedToMe(request: LinkRequest, myCallsign: String): Boolean {
         return request.addressedToCallsign.equals(myCallsign, ignoreCase = true)
@@ -15,7 +15,5 @@ abstract class PakCattApp {
     }
 
     abstract fun decisionOnConnectionRequest(request: LinkRequest): ConnectionResponse
-
-    abstract fun handleReceivedMessage(request: LinkRequest): InteractionResponse
 
 }

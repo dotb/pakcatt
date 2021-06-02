@@ -1,31 +1,18 @@
 package pakcatt.application.mailbox
 
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Component
 import pakcatt.application.shared.*
 import pakcatt.network.packet.link.model.LinkRequest
-import pakcatt.network.packet.link.model.ConnectionResponse
 import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 
-@Component
-@Profile("production")
-class MailboxApp(val myCall: String,
-                 val mailboxStore: MailboxStore): PakCattApp() {
+class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
     private var editingInProgress = HashMap<String, EditState>()
     private val stringUtils = StringUtils()
     private val tabSpace = "\t\t"
     private val eol = "\r\n"
-
-    override fun decisionOnConnectionRequest(request: LinkRequest): ConnectionResponse {
-        return when (isAddressedToMe(request, myCall)) {
-            true -> ConnectionResponse.connectWithMessage("Welcome to PakCatt! Type help to learn more :-)")
-            false -> ConnectionResponse.ignore()
-        }
-    }
 
     override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
         // Check if a message is being edited. Otherwise look for any mail commands.
@@ -46,6 +33,7 @@ class MailboxApp(val myCall: String,
     fun handleMailCommand(request: LinkRequest): InteractionResponse {
         val command = parseCommand(request.message)
         return when (command.command) {
+            "quit" -> InteractionResponse.sendText("Bye")
             "list" -> listMessages(request)
             "read" -> readMessage(command.arg)
             "send" -> sendMessage(request, command.arg)
@@ -127,7 +115,7 @@ class MailboxApp(val myCall: String,
         } else {
             editState.message.message.append(chompedBody)
             editState.message.message.append(eol)
-            InteractionResponse.acknowlegeOnly()
+            InteractionResponse.acknowledgeOnly()
         }
     }
 

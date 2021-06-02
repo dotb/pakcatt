@@ -1,23 +1,24 @@
-package pakcatt.application.simpletest
+package pakcatt.application.mainmenu
 
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
+import pakcatt.application.mailbox.MailboxApp
+import pakcatt.application.mailbox.MailboxStore
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.ConnectionResponse
 import pakcatt.network.packet.link.model.InteractionResponse
-import pakcatt.application.shared.PakCattApp
+import pakcatt.application.shared.RootApp
 import kotlin.math.sqrt
 
 @Component
 @Profile("production")
-class SimpleTestApp(val myCall: String): PakCattApp() {
-    private val logger = LoggerFactory.getLogger(SimpleTestApp::class.java)
-
+class MainMenuApp(val myCall: String): RootApp() {
+    private val logger = LoggerFactory.getLogger(MainMenuApp::class.java)
 
     override fun decisionOnConnectionRequest(request: LinkRequest): ConnectionResponse {
         return when (isAddressedToMe(request, myCall)) {
-            true -> ConnectionResponse.connectWithMessage("Welcome to PakCatt! Type help to learn more :-)")
+            true -> ConnectionResponse.connectWithMessage("Welcome to PakCatt! Type help to learn more :-)", this)
             false -> ConnectionResponse.ignore()
         }
     }
@@ -31,7 +32,7 @@ class SimpleTestApp(val myCall: String): PakCattApp() {
                 InteractionResponse.sendText("Your options are: check send, list, read, delete, hello, ping, and sqrt")
             }
             request.message.toLowerCase().contains("check mail") -> {
-                InteractionResponse.sendText("You've always got mail ;-)")
+                InteractionResponse.sendText("You've always got mail ;-)", MailboxApp(MailboxStore()))
             }
             request.message.toLowerCase().contains("hello") -> {
                 InteractionResponse.sendText("Hi, there! *wave*")
@@ -47,7 +48,7 @@ class SimpleTestApp(val myCall: String): PakCattApp() {
                 InteractionResponse.sendText(result)
             }
             request.message.toLowerCase().contains("nop") -> {
-                return InteractionResponse.acknowlegeOnly()
+                return InteractionResponse.acknowledgeOnly()
             } else -> {
                 InteractionResponse.ignore()
             }
