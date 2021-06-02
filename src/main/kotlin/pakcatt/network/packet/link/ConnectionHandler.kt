@@ -1,16 +1,16 @@
 package pakcatt.network.packet.link
 
 import org.slf4j.LoggerFactory
-import pakcatt.application.shared.AppRequest
-import pakcatt.application.shared.ConnectionResponse
-import pakcatt.application.shared.InteractionResponse
+import pakcatt.network.packet.link.model.ConnectionResponse
+import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.network.packet.kiss.KissFrame
 import pakcatt.network.packet.kiss.KissFrameExtended
 import pakcatt.network.packet.kiss.KissFrameStandard
+import pakcatt.network.packet.link.model.LinkRequest
 
 class ConnectionHandler(val remoteCallsign: String,
                         val myCallsign: String,
-                        val networkInterface: NetworkInterface) {
+                        val linkInterface: LinkInterface) {
 
     private val logger = LoggerFactory.getLogger(ConnectionHandler::class.java)
 
@@ -35,7 +35,7 @@ class ConnectionHandler(val remoteCallsign: String,
     private var lastSentSequenceNumberAcknowledged = 0
 
 
-    fun handleRequestToSendMessageFromApp(request: AppRequest) {
+    fun handleRequestToSendMessageFromApp(request: LinkRequest) {
         sendMessage(request.message, false)
     }
 
@@ -60,7 +60,7 @@ class ConnectionHandler(val remoteCallsign: String,
             incrementReceiveSequenceNumber()
 
             // Share the payload with any listening applications to process
-            val  appResponse = networkInterface.handleReceivedMessage(AppRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
+            val  appResponse = linkInterface.getResponseForReceivedMessage(LinkRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
             when (appResponse.responseType) {
                 InteractionResponse.InteractionResponseType.SEND_TEXT -> acknowledgeAndSendMessage(appResponse.message, pACKRequired)
                 InteractionResponse.InteractionResponseType.ACK_ONLY -> acknowledgeBySendingReadyReceive(pACKRequired)
@@ -75,7 +75,7 @@ class ConnectionHandler(val remoteCallsign: String,
     /* Link layer handlers */
     private fun handleConnectionRequest(incomingFrame: KissFrame) {
         // Gather a connection decision from applications
-        val appResponse = networkInterface.decisionOnConnectionRequest(AppRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
+        val appResponse = linkInterface.getDecisionOnConnectionRequest(LinkRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
         when (appResponse.responseType) {
             ConnectionResponse.ConnectionResponseType.CONNECT -> acceptIncomingConnection()
             ConnectionResponse.ConnectionResponseType.CONNECT_WITH_MESSAGE -> acceptIncomingConnectionWithMessage(appResponse.message)
@@ -91,7 +91,7 @@ class ConnectionHandler(val remoteCallsign: String,
         nextSendSequenceNumber = 0
         lastSentSequenceNumberAcknowledged = 0
         val frame = newResponseFrame(KissFrame.ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
-        networkInterface.queueFrameForDelivery(frame)
+        linkInterface.queueFrameForDelivery(frame)
     }
 
     private fun acknowledgeAndSendMessage(message: String, pACKRequired: Boolean) {
@@ -125,7 +125,7 @@ class ConnectionHandler(val remoteCallsign: String,
             true -> newResponseFrame(KissFrame.ControlFrame.S_8_RECEIVE_READY_P, false)
             false -> newResponseFrame(KissFrame.ControlFrame.S_8_RECEIVE_READY, false)
         }
-        networkInterface.queueFrameForDelivery(frame)
+        linkInterface.queueFrameForDelivery(frame)
     }
 
     private fun realignSendSequenceNumber(incomingFrame: KissFrame) {
@@ -143,13 +143,13 @@ class ConnectionHandler(val remoteCallsign: String,
     private fun handleDisconnectRequest() {
         logger.trace("Disconnecting from $remoteCallsign")
         val frame = newResponseFrame(KissFrame.ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
-        networkInterface.queueFrameForDelivery(frame)
-        networkInterface.closeConnection(this)
+        linkInterface.queueFrameForDelivery(frame)
+        linkInterface.closeConnection(remoteCallsign, myCallsign)
     }
 
     private fun ignoreFrame(incomingFrame: KissFrame) {
         logger.error("No handler for frame. Ignored. ${incomingFrame.toString()}")
-        networkInterface.closeConnection(this)
+        linkInterface.closeConnection(remoteCallsign, myCallsign)
     }
 
     /* Application Interface methods */
@@ -160,7 +160,7 @@ class ConnectionHandler(val remoteCallsign: String,
             false -> newResponseFrame(KissFrame.ControlFrame.INFORMATION_8, false)
         }
         frame.setPayloadMessage(messageWithEOL)
-        networkInterface.queueFrameForDelivery(frame)
+        linkInterface.queueFrameForDelivery(frame)
     }
 
     /* Factory methods */

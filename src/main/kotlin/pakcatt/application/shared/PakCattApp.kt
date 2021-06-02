@@ -1,17 +1,21 @@
 package pakcatt.application.shared
 
+import pakcatt.network.packet.link.model.LinkRequest
+import pakcatt.network.packet.link.model.ConnectionResponse
+import pakcatt.network.packet.link.model.InteractionResponse
+
 abstract class PakCattApp {
 
-    protected fun isAddressedToMe(request: AppRequest, myCallsign: String): Boolean {
+    protected fun isAddressedToMe(request: LinkRequest, myCallsign: String): Boolean {
         return request.addressedToCallsign.equals(myCallsign, ignoreCase = true)
     }
 
-    protected fun notAddressedToMe(request: AppRequest, myCallsign: String): Boolean {
+    protected fun notAddressedToMe(request: LinkRequest, myCallsign: String): Boolean {
         return !isAddressedToMe(request, myCallsign)
     }
 
-    abstract fun decisionOnConnectionRequest(request: AppRequest): ConnectionResponse
+    abstract fun decisionOnConnectionRequest(request: LinkRequest): ConnectionResponse
 
-    abstract fun handleReceivedMessage(request: AppRequest): InteractionResponse
+    abstract fun handleReceivedMessage(request: LinkRequest): InteractionResponse
 
 }

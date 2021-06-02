@@ -3,9 +3,9 @@ package pakcatt.application.simpletest
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
-import pakcatt.application.shared.AppRequest
-import pakcatt.application.shared.ConnectionResponse
-import pakcatt.application.shared.InteractionResponse
+import pakcatt.network.packet.link.model.LinkRequest
+import pakcatt.network.packet.link.model.ConnectionResponse
+import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.application.shared.PakCattApp
 import kotlin.math.sqrt
 
@@ -15,14 +15,14 @@ class SimpleTestApp(val myCall: String): PakCattApp() {
     private val logger = LoggerFactory.getLogger(SimpleTestApp::class.java)
 
 
-    override fun decisionOnConnectionRequest(request: AppRequest): ConnectionResponse {
+    override fun decisionOnConnectionRequest(request: LinkRequest): ConnectionResponse {
         return when (isAddressedToMe(request, myCall)) {
             true -> ConnectionResponse.connectWithMessage("Welcome to PakCatt! Type help to learn more :-)")
             false -> ConnectionResponse.ignore()
         }
     }
 
-    override fun handleReceivedMessage(request: AppRequest): InteractionResponse {
+    override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
        return when {
             notAddressedToMe(request, myCall) -> {
                return InteractionResponse.ignore()

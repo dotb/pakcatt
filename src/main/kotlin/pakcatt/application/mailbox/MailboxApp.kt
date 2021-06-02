@@ -2,10 +2,10 @@ package pakcatt.application.mailbox
 
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
-import pakcatt.application.shared.AppRequest
-import pakcatt.application.shared.ConnectionResponse
-import pakcatt.application.shared.InteractionResponse
-import pakcatt.application.shared.PakCattApp
+import pakcatt.application.shared.*
+import pakcatt.network.packet.link.model.LinkRequest
+import pakcatt.network.packet.link.model.ConnectionResponse
+import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 import java.text.SimpleDateFormat
@@ -20,14 +20,14 @@ class MailboxApp(val myCall: String,
     private val tabSpace = "\t\t"
     private val eol = "\r\n"
 
-    override fun decisionOnConnectionRequest(request: AppRequest): ConnectionResponse {
+    override fun decisionOnConnectionRequest(request: LinkRequest): ConnectionResponse {
         return when (isAddressedToMe(request, myCall)) {
             true -> ConnectionResponse.connectWithMessage("Welcome to PakCatt! Type help to learn more :-)")
             false -> ConnectionResponse.ignore()
         }
     }
 
-    override fun handleReceivedMessage(request: AppRequest): InteractionResponse {
+    override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
         // Check if a message is being edited. Otherwise look for any mail commands.
         return when {
             editingInProgress.containsKey(request.remoteCallsign) -> handleMessageInput(request)
@@ -35,7 +35,7 @@ class MailboxApp(val myCall: String,
         }
     }
 
-    fun handleMessageInput(request: AppRequest): InteractionResponse {
+    fun handleMessageInput(request: LinkRequest): InteractionResponse {
         val editState = editStateForCallsign(request.remoteCallsign)
         return when (editState.state) {
             EditState.MessageEditState.EDITING_SUBJECT -> addSubjectToMessage(editState, request.message)
@@ -43,7 +43,7 @@ class MailboxApp(val myCall: String,
         }
     }
 
-    fun handleMailCommand(request: AppRequest): InteractionResponse {
+    fun handleMailCommand(request: LinkRequest): InteractionResponse {
         val command = parseCommand(request.message)
         return when (command.command) {
             "list" -> listMessages(request)
@@ -54,7 +54,7 @@ class MailboxApp(val myCall: String,
         }
     }
 
-    fun listMessages(request: AppRequest): InteractionResponse {
+    fun listMessages(request: LinkRequest): InteractionResponse {
         val userMessages = mailboxStore.messagesForCallsign(request.remoteCallsign)
         val listResponse = StringBuilder()
         val messageCount = userMessages.size
@@ -82,7 +82,7 @@ class MailboxApp(val myCall: String,
         return InteractionResponse.ignore()
     }
 
-    fun sendMessage(request: AppRequest, arg: String): InteractionResponse {
+    fun sendMessage(request: LinkRequest, arg: String): InteractionResponse {
         val editState = editStateForCallsign(request.remoteCallsign.toUpperCase())
         editState.message.toCallsign = arg.toUpperCase()
         return InteractionResponse.sendText("Subject:")

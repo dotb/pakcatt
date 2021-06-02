@@ -2,23 +2,23 @@ package pakcatt.network.packet.link
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import pakcatt.application.shared.AppRequest
-import pakcatt.application.shared.ConnectionResponse
-import pakcatt.application.shared.InteractionResponse
-import pakcatt.application.shared.PakCattApp
+import pakcatt.application.shared.AppInterface
+import pakcatt.network.packet.link.model.ConnectionResponse
+import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.network.packet.kiss.KissFrame
 import pakcatt.network.packet.kiss.KissService
+import pakcatt.network.packet.link.model.LinkRequest
 
-interface NetworkInterface {
-    fun decisionOnConnectionRequest(request: AppRequest): ConnectionResponse
-    fun handleReceivedMessage(request: AppRequest): InteractionResponse
+interface LinkInterface {
+    fun getDecisionOnConnectionRequest(request: LinkRequest): ConnectionResponse
+    fun getResponseForReceivedMessage(request: LinkRequest): InteractionResponse
     fun queueFrameForDelivery(outgoingFrame: KissFrame)
-    fun closeConnection(connectionHandler: ConnectionHandler)
+    fun closeConnection(remoteCallsign: String, myCallsign: String)
 }
 
 @Service
 class LinkService(var kissService: KissService,
-                  val applications: List<PakCattApp>): NetworkInterface {
+                  var appService: AppInterface): LinkInterface {
 
     private val logger = LoggerFactory.getLogger(LinkService::class.java)
     private var connectionHandlers = HashMap<String, ConnectionHandler>()
@@ -26,16 +26,6 @@ class LinkService(var kissService: KissService,
     init {
         kissService.setReceiveFrameCallback {
             handleReceivedFrame(it)
-        }
-    }
-
-    fun handleRequestToSendMessageFromApp(messageRequest: AppRequest) {
-        if (connectionExistsForConversation(messageRequest.remoteCallsign, messageRequest.addressedToCallsign)) {
-            val connectionHandler =
-                connectionHandlerForConversation(messageRequest.remoteCallsign, messageRequest.addressedToCallsign)
-            connectionHandler.handleRequestToSendMessageFromApp(messageRequest)
-        } else {
-            logger.error("Sending direct unnumbered messages is not yet supported. An existing connection is required.")
         }
     }
 
@@ -56,59 +46,28 @@ class LinkService(var kissService: KissService,
         }
     }
 
-    private fun connectionExistsForConversation(remoteCallsign: String, addressedToCallsign: String): Boolean {
-        val key = connectionHandlerKey(remoteCallsign, addressedToCallsign)
-        return connectionHandlers.containsKey(key)
-    }
-
-    private fun removeConnectionHandler(fromCallsign: String, toCallsign: String) {
-        connectionHandlers.remove(connectionHandlerKey(fromCallsign, toCallsign))
-    }
-
     private fun connectionHandlerKey(fromCallsign: String, toCallsign: String): String {
         return "$fromCallsign $toCallsign"
     }
 
+    /* LinkInterface Methods delegated from ConnectionHandlers */
+    override fun getDecisionOnConnectionRequest(request: LinkRequest): ConnectionResponse {
+        return appService.getDecisionOnConnectionRequest(request)
+    }
+
+    override fun getResponseForReceivedMessage(request: LinkRequest): InteractionResponse {
+        return appService.getResponseForReceivedMessage(request)
+    }
+
     /* Network Interface methods */
-    override fun decisionOnConnectionRequest(request: AppRequest): ConnectionResponse {
-        var finalConnectionDecision = ConnectionResponse.ignore()
-        for (app in applications) {
-            val connectionDecision = app.decisionOnConnectionRequest(request)
-            when (connectionDecision.responseType) {
-                // Return with the commitment to connect with a welcome message
-                ConnectionResponse.ConnectionResponseType.CONNECT_WITH_MESSAGE -> return connectionDecision
-                // Follow through with the connection, but see if another app has a welcome message
-                ConnectionResponse.ConnectionResponseType.CONNECT -> finalConnectionDecision = connectionDecision
-                // Do nothing, this app wants to ignore this connection
-                ConnectionResponse.ConnectionResponseType.IGNORE -> logger.trace("App isn't interested in this connection.")
-            }
-        }
-        return finalConnectionDecision
-    }
-
-    override fun handleReceivedMessage(request: AppRequest): InteractionResponse {
-        var finalInteractionResponse = InteractionResponse.ignore()
-        for (app in applications) {
-            val interactionResponse = app.handleReceivedMessage(request)
-            when (interactionResponse.responseType) {
-                // If an app wants to ACK and send a message, return right away
-                InteractionResponse.InteractionResponseType.SEND_TEXT -> return interactionResponse
-                // If an app wants to ACK, continue to search for an app that wants to return a message, too
-                InteractionResponse.InteractionResponseType.ACK_ONLY -> finalInteractionResponse = interactionResponse
-                // Do nothing, this app doesn't want to handle this request
-                InteractionResponse.InteractionResponseType.IGNORE -> logger.trace("App isn't interested in responding.")
-            }
-        }
-        return finalInteractionResponse
-    }
-
     override fun queueFrameForDelivery(outgoingFrame: KissFrame) {
         kissService.queueFrameForTransmission(outgoingFrame)
     }
 
-    override fun closeConnection(connectionHandler: ConnectionHandler) {
-        removeConnectionHandler(connectionHandler.remoteCallsign, connectionHandler.myCallsign)
-        logger.debug("Disconnected from ${connectionHandler.remoteCallsign}")
+    override fun closeConnection(remoteCallsign: String, myCallsign: String) {
+        appService.closeConnection(remoteCallsign, myCallsign)
+        connectionHandlers.remove(connectionHandlerKey(remoteCallsign, myCallsign))
+        logger.debug("Disconnected from {}", remoteCallsign)
     }
 
 }

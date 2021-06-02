@@ -1,4 +1,4 @@
-package pakcatt.application.shared
+package pakcatt.network.packet.link.model
 
 class InteractionResponse(val responseType: InteractionResponseType,
                           val message: String) {

@@ -1,4 +1,4 @@
-package pakcatt.application.shared
+package pakcatt.network.packet.link.model
 
 class ConnectionResponse(val responseType: ConnectionResponseType,
                          val message: String) {
@@ -18,7 +18,7 @@ class ConnectionResponse(val responseType: ConnectionResponseType,
         /**
          * Accept the connection and send a welcome message.
          */
-        fun connectWithMessage(message: String):ConnectionResponse {
+        fun connectWithMessage(message: String): ConnectionResponse {
             return ConnectionResponse(ConnectionResponseType.CONNECT_WITH_MESSAGE, message)
         }
 
