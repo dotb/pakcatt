@@ -48,6 +48,7 @@ class ConnectionHandler(val remoteCallsign: String,
             KissFrame.ControlFrame.S_8_RECEIVE_READY -> handleIncomingAcknowledgement(incomingFrame)
             KissFrame.ControlFrame.S_8_REJECT -> realignReceiveSequenceNumber(incomingFrame)
             KissFrame.ControlFrame.S_8_REJECT_P -> realignReceiveSequenceNumber(incomingFrame)
+            KissFrame.ControlFrame.U_REJECT -> realignReceiveSequenceNumber(incomingFrame)
             KissFrame.ControlFrame.U_DISCONNECT_P -> handleDisconnectRequest() // Disconnect request
             else -> ignoreFrame(incomingFrame)
         }

@@ -58,15 +58,15 @@ class MailboxApp(val myCall: String,
         val userMessages = mailboxStore.messagesForCallsign(request.remoteCallsign)
         val listResponse = StringBuilder()
         val messageCount = userMessages.size
-        val dateFormatter = SimpleDateFormat("dd/MM/yy hh:mm a")
+        val dateFormatter = SimpleDateFormat("dd MMM HH:mm")
         listResponse.append(messageCount)
         listResponse.append(" messages")
         listResponse.append(eol)
         if (messageCount > 0) {
-            listResponse.append("Date $tabSpace From $tabSpace To $tabSpace Subject $eol")
+            listResponse.append("Date          From${tabSpace}To${tabSpace}Subject${eol}")
             for (message in userMessages) {
                 listResponse.append(dateFormatter.format(message.dateTime.time))
-                listResponse.append(tabSpace)
+                listResponse.append("  ")
                 listResponse.append(message.fromCallsign)
                 listResponse.append(tabSpace)
                 listResponse.append(message.toCallsign)
