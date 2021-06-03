@@ -27,7 +27,7 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
             val connectionDecision = app.decisionOnConnectionRequest(request)
 
             // Update the app focus state in the user context if required.
-            updateAppFocus(connectionDecision.nextApp(), userContext, app)
+            updateAppFocus(connectionDecision.nextApp(), userContext)
 
             // Handle the connection response from the app
             when (connectionDecision.responseType) {
@@ -43,19 +43,26 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
     }
 
     override fun getResponseForReceivedMessage(request: LinkRequest): InteractionResponse {
+        // Get this user's context
         val userContext = contextForConversation(request.remoteCallsign, request.addressedToCallsign)
+        // Get the interaction response from the app
+        val interactionResponse = getResponseForReceivedMessage(request, userContext)
+        // Update any focus state in the user context if required, returned by the selected app.
+        updateAppFocus(interactionResponse.nextApp(), userContext)
+        return interactionResponse
+    }
 
+    private fun getResponseForReceivedMessage(request: LinkRequest, userContext: UserContext): InteractionResponse  {
         // Check if this user is engaged with a specific app
         val app = userContext.engagedApplication()
         if (null != app) {
             // Direct requests to the app this user is engaged with
-            return getResponseForReceivedMessage(request, userContext, app)
+            return app.handleReceivedMessage(request)
         } else {
             // if the user is not engaged with an app, send the request to all apps
             var finalInteractionResponse = InteractionResponse.ignore()
             for (app in rootApplications) {
-                // Handle any response from the app
-                val interactionResponse = getResponseForReceivedMessage(request, userContext, app)
+                val interactionResponse = app.handleReceivedMessage(request)
                 when (interactionResponse.responseType) {
                     // If an app wants to ACK and send a message, return right away
                     InteractionResponseType.SEND_TEXT -> return interactionResponse
@@ -64,18 +71,9 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
                     // Do nothing, this app doesn't want to handle this request
                     InteractionResponseType.IGNORE -> logger.trace("App isn't interested in responding.")
                 }
-
             }
             return finalInteractionResponse
         }
-    }
-
-    private fun getResponseForReceivedMessage(request: LinkRequest, userContext: UserContext, app: SubApp): InteractionResponse {
-        // Get the interaction response from the app
-        val interactionResponse = app.handleReceivedMessage(request)
-        // Update the app focus state in the user context if required.
-        updateAppFocus(interactionResponse.nextApp(), userContext, app)
-        return interactionResponse
     }
 
     override fun closeConnection(remoteCallsign: String, myCallsign: String) {
@@ -86,8 +84,10 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
     /* Methods that handle the user context objects */
 
     // Update the app focus state in the user context if required.
-    private fun updateAppFocus(nextApp: SubApp?, userContext: UserContext, app: SubApp) {
-        if (null != nextApp) {
+    private fun updateAppFocus(nextApp: SubApp?, userContext: UserContext) {
+        if (null != nextApp && nextApp is NavigateBack) {
+            userContext.navigateBack()
+        } else if (null != nextApp) {
             userContext.navigateToApp(nextApp)
         }
     }

@@ -29,10 +29,10 @@ class MainMenuApp(val myCall: String): RootApp() {
                return InteractionResponse.ignore()
             }
             request.message.toLowerCase().contains("help") -> {
-                InteractionResponse.sendText("Your options are: check send, list, read, delete, hello, ping, and sqrt")
+                InteractionResponse.sendText("Your options are: mail, hello, ping, and sqrt <number>")
             }
-            request.message.toLowerCase().contains("check mail") -> {
-                InteractionResponse.sendText("You've always got mail ;-)", MailboxApp(MailboxStore()))
+            request.message.toLowerCase().contains("mail") -> {
+                InteractionResponse.sendText("Launching mail", MailboxApp(MailboxStore()))
             }
             request.message.toLowerCase().contains("hello") -> {
                 InteractionResponse.sendText("Hi, there! *wave*")

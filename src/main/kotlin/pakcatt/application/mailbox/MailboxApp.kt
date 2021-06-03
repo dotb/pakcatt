@@ -33,7 +33,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     fun handleMailCommand(request: LinkRequest): InteractionResponse {
         val command = parseCommand(request.message)
         return when (command.command) {
-            "quit" -> InteractionResponse.sendText("Bye")
+            "quit" -> InteractionResponse.sendText("Bye", NavigateBack())
             "list" -> listMessages(request)
             "read" -> readMessage(command.arg)
             "send" -> sendMessage(request, command.arg)
