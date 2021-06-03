@@ -6,7 +6,7 @@ import pakcatt.network.packet.link.model.LinkRequest
 /**
  * A simple class that represents navigation to any previous app
  */
-class NavigateBack: SubApp() {
+class NavigateBack(val steps: Int): SubApp() {
     override fun returnCommandPrompt(): String {
         return ""
     }

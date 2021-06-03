@@ -1,5 +1,6 @@
 package pakcatt.application.mailbox
 
+import pakcatt.application.mailbox.edit.EditSubjectApp
 import pakcatt.application.shared.*
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.InteractionResponse
@@ -9,7 +10,6 @@ import java.text.SimpleDateFormat
 
 class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
-    private var editingInProgress = HashMap<String, EditState>()
     private val stringUtils = StringUtils()
     private val tabSpace = "\t\t"
     private val eol = "\r\n"
@@ -19,22 +19,6 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
-        // Check if a message is being edited. Otherwise look for any mail commands.
-        return when {
-            editingInProgress.containsKey(request.remoteCallsign) -> handleMessageInput(request)
-            else -> handleMailCommand(request)
-        }
-    }
-
-    fun handleMessageInput(request: LinkRequest): InteractionResponse {
-        val editState = editStateForCallsign(request.remoteCallsign)
-        return when (editState.state) {
-            EditState.MessageEditState.EDITING_SUBJECT -> addSubjectToMessage(editState, request.message)
-            EditState.MessageEditState.EDITING_MESSAGE -> addBodyToMessage(editState, request.message)
-        }
-    }
-
-    fun handleMailCommand(request: LinkRequest): InteractionResponse {
         val command = parseCommand(request.message)
         return when (command.command) {
             "list" -> listMessages(request)
@@ -42,12 +26,12 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
             "send" -> sendMessage(request, command.arg)
             "del" -> deleteMessage(command.arg)
             "help" -> InteractionResponse.sendText("list, read, send, del, quit")
-            "quit" -> InteractionResponse.sendText("Bye", NavigateBack())
+            "quit" -> InteractionResponse.sendText("Bye", NavigateBack(1))
             else -> InteractionResponse.sendText("?? - try help")
         }
     }
 
-    fun listMessages(request: LinkRequest): InteractionResponse {
+    private fun listMessages(request: LinkRequest): InteractionResponse {
         val userMessages = mailboxStore.messagesForCallsign(request.remoteCallsign)
         val listResponse = StringBuilder()
         val messageCount = userMessages.size
@@ -71,17 +55,15 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         return InteractionResponse.sendText(listResponse.toString())
     }
 
-    fun readMessage(arg: String): InteractionResponse {
+    private fun readMessage(arg: String): InteractionResponse {
         return InteractionResponse.ignore()
     }
 
-    fun sendMessage(request: LinkRequest, arg: String): InteractionResponse {
-        val editState = editStateForCallsign(request.remoteCallsign.toUpperCase())
-        editState.message.toCallsign = arg.toUpperCase()
-        return InteractionResponse.sendText("Subject:")
+    private fun sendMessage(request: LinkRequest, arg: String): InteractionResponse {
+        return InteractionResponse.sendText("", EditSubjectApp(MailMessage(request.remoteCallsign, arg), mailboxStore))
     }
 
-    fun deleteMessage(arg: String): InteractionResponse {
+    private fun deleteMessage(arg: String): InteractionResponse {
         return InteractionResponse.ignore()
     }
 
@@ -93,34 +75,6 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
             return Command(command, arg)
         } else {
             return Command(stringUtils.chompString(inputLine), "")
-        }
-    }
-
-    private fun editStateForCallsign(userCallsign: String): EditState {
-        var editState = editingInProgress[userCallsign]
-        if (null == editState) {
-            editState = EditState(userCallsign)
-            editingInProgress.put(userCallsign, editState)
-        }
-        return editState
-    }
-
-    private fun addSubjectToMessage(editState: EditState, subject: String): InteractionResponse {
-        editState.message.subject = stringUtils.chompString(subject)
-        editState.state = EditState.MessageEditState.EDITING_MESSAGE
-        return InteractionResponse.sendText("Thanks. Now compose your message and finish with . on a line of it's own.")
-    }
-
-    private fun addBodyToMessage(editState: EditState, body: String): InteractionResponse {
-        val chompedBody = stringUtils.chompString(body)
-        return if (chompedBody == ".") {
-            mailboxStore.storeMessage(editState.message)
-            editingInProgress.remove(editState.userCallsign)
-            InteractionResponse.sendText("Thanks! Your message has been stored.")
-        } else {
-            editState.message.message.append(chompedBody)
-            editState.message.message.append(eol)
-            InteractionResponse.acknowledgeOnly()
         }
     }
 

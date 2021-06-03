@@ -91,7 +91,9 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
     // Update the app focus state in the user context if required.
     private fun updateAppFocus(nextApp: SubApp?, userContext: UserContext) {
         if (null != nextApp && nextApp is NavigateBack) {
-            userContext.navigateBack()
+            for (i in 1..nextApp.steps) {
+                userContext.navigateBack()
+            }
         } else if (null != nextApp) {
             userContext.navigateToApp(nextApp)
         }

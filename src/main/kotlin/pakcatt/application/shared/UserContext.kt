@@ -11,7 +11,9 @@ class UserContext(remoteCallsign: String, myCallsign: String) {
     }
 
     fun navigateBack() {
-        navigationStack.pop()
+        if (navigationStack.size >= 2) {
+            navigationStack.pop()
+        }
     }
 
     fun engagedApplication(): SubApp? {

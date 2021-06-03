@@ -7,6 +7,6 @@ data class MailMessage(val fromCallsign: String,
                        var toCallsign: String = "",
                        val dateTime: Calendar = Calendar.getInstance(),
                        var subject: String = "",
-                       val message: StringBuilder = StringBuilder()
+                       val body: StringBuilder = StringBuilder()
 ) {
 }
