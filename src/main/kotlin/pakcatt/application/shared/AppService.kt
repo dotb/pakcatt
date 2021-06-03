@@ -18,24 +18,28 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
 
     /* AppInterface methods delegated from the LinkService */
     override fun getDecisionOnConnectionRequest(request: LinkRequest): ConnectionResponse {
+        // Ensure any previous connection is closed, and open a new one
+        closeConnection(request.remoteCallsign, request.addressedToCallsign)
         val userContext = contextForConversation(request.remoteCallsign, request.addressedToCallsign)
 
-        // Start with the decision to ignore
+        // Find an app who is willing to connect
+        val connectionResponse = findAppWillingToAcceptConnection(request)
+
+        // Update the app focus state in the user context if required.
+        updateAppFocus(connectionResponse.nextApp(), userContext)
+        return addPromptToResponse(userContext.engagedApplication(), connectionResponse) as ConnectionResponse
+    }
+
+    private fun findAppWillingToAcceptConnection(request: LinkRequest): ConnectionResponse {
+        // Start with the default decision to ignore this connect request
         var finalConnectionDecision = ConnectionResponse.ignore()
 
+        // Find a root application who wants to accept the connection
         for (app in rootApplications) {
             val connectionDecision = app.decisionOnConnectionRequest(request)
-
-            // Update the app focus state in the user context if required.
-            updateAppFocus(connectionDecision.nextApp(), userContext)
-
-            // Handle the connection response from the app
             when (connectionDecision.responseType) {
-                // Return with the commitment to connect with a welcome message
-                ConnectionResponseType.CONNECT_WITH_MESSAGE -> return connectionDecision
-                // Follow through with the connection, but see if another app has a welcome message
+                ConnectionResponseType.CONNECT_WITH_MESSAGE -> finalConnectionDecision = connectionDecision
                 ConnectionResponseType.CONNECT -> finalConnectionDecision = connectionDecision
-                // Do nothing, this app wants to ignore this connection
                 ConnectionResponseType.IGNORE -> logger.trace("App isn't interested in this connection.")
             }
         }
@@ -49,31 +53,32 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         val interactionResponse = getResponseForReceivedMessage(request, userContext)
         // Update any focus state in the user context if required, returned by the selected app.
         updateAppFocus(interactionResponse.nextApp(), userContext)
-        return interactionResponse
+        // Return any response with an included command prompt string
+        return addPromptToResponse(userContext.engagedApplication(), interactionResponse) as InteractionResponse
     }
 
     private fun getResponseForReceivedMessage(request: LinkRequest, userContext: UserContext): InteractionResponse  {
-        // Check if this user is engaged with a specific app
+        // Start with a default response to ignored the incoming request
+        var finalInteractionResponse = InteractionResponse.ignore()
+
+        // Share the request with app registered root level apps for processing
+        for (app in rootApplications) {
+            val interactionResponse = app.handleReceivedMessage(request)
+            when (interactionResponse.responseType) {
+                InteractionResponseType.SEND_TEXT -> finalInteractionResponse = interactionResponse
+                InteractionResponseType.ACK_ONLY -> finalInteractionResponse = interactionResponse
+                InteractionResponseType.IGNORE -> logger.trace("App isn't interested in responding.")
+            }
+        }
+
+        // Check if this user is engaged with a specific app. This app response will take priority
         val app = userContext.engagedApplication()
         if (null != app) {
             // Direct requests to the app this user is engaged with
-            return app.handleReceivedMessage(request)
-        } else {
-            // if the user is not engaged with an app, send the request to all apps
-            var finalInteractionResponse = InteractionResponse.ignore()
-            for (app in rootApplications) {
-                val interactionResponse = app.handleReceivedMessage(request)
-                when (interactionResponse.responseType) {
-                    // If an app wants to ACK and send a message, return right away
-                    InteractionResponseType.SEND_TEXT -> return interactionResponse
-                    // If an app wants to ACK, continue to search for an app that wants to return a message, too
-                    InteractionResponseType.ACK_ONLY -> finalInteractionResponse = interactionResponse
-                    // Do nothing, this app doesn't want to handle this request
-                    InteractionResponseType.IGNORE -> logger.trace("App isn't interested in responding.")
-                }
-            }
-            return finalInteractionResponse
+            finalInteractionResponse = app.handleReceivedMessage(request)
         }
+
+        return finalInteractionResponse
     }
 
     override fun closeConnection(remoteCallsign: String, myCallsign: String) {
@@ -90,6 +95,18 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         } else if (null != nextApp) {
             userContext.navigateToApp(nextApp)
         }
+    }
+
+    // Rewrite the prompt string into the textual response
+    private fun addPromptToResponse(app: SubApp?, response: LinkResponse): LinkResponse {
+        val message = response.responseString()
+        val prompt = when {
+            null != app -> "${app.returnCommandPrompt()} "
+            else -> ""
+        }
+        val newReturnedString = "$message\n\r$prompt"
+        response.updateResponseString(newReturnedString)
+        return response
     }
 
     private fun contextForConversation(remoteCallsign: String, myCallsign: String): UserContext {

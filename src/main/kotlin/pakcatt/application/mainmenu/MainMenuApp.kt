@@ -16,6 +16,10 @@ import kotlin.math.sqrt
 class MainMenuApp(val myCall: String): RootApp() {
     private val logger = LoggerFactory.getLogger(MainMenuApp::class.java)
 
+    override fun returnCommandPrompt(): String {
+        return "menu>"
+    }
+
     override fun decisionOnConnectionRequest(request: LinkRequest): ConnectionResponse {
         return when (isAddressedToMe(request, myCall)) {
             true -> ConnectionResponse.connectWithMessage("Welcome to PakCatt! Type help to learn more :-)", this)
@@ -50,7 +54,7 @@ class MainMenuApp(val myCall: String): RootApp() {
             request.message.toLowerCase().contains("nop") -> {
                 return InteractionResponse.acknowledgeOnly()
             } else -> {
-                InteractionResponse.ignore()
+               InteractionResponse.sendText("?? Type help for a list of commands")
             }
         }
     }

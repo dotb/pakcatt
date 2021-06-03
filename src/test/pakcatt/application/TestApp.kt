@@ -10,7 +10,11 @@ import pakcatt.application.shared.RootApp
 @Component
 @Profile("test")
 class TestApp: RootApp() {
-    
+
+    override fun returnCommandPrompt(): String {
+        return "test>"
+    }
+
     override fun decisionOnConnectionRequest(request: LinkRequest): ConnectionResponse {
         return ConnectionResponse.connect()
     }

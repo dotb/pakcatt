@@ -7,8 +7,8 @@ enum class ConnectionResponseType {
 }
 
 class ConnectionResponse(val responseType: ConnectionResponseType,
-                         val message: String,
-                         nextApp: SubApp? = null): LinkResponse(nextApp) {
+                         responseString: String,
+                         nextApp: SubApp? = null): LinkResponse(responseString, nextApp) {
 
     companion object {
         /**

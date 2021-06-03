@@ -5,6 +5,8 @@ import pakcatt.network.packet.link.model.LinkRequest
 
 abstract class SubApp {
 
+    abstract fun returnCommandPrompt(): String
+
     abstract fun handleReceivedMessage(request: LinkRequest): InteractionResponse
 
 }

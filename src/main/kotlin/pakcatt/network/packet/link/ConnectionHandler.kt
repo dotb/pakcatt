@@ -60,7 +60,7 @@ class ConnectionHandler(val remoteCallsign: String,
             // Share the payload with any listening applications to process
             val  appResponse = linkInterface.getResponseForReceivedMessage(LinkRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
             when (appResponse.responseType) {
-                InteractionResponseType.SEND_TEXT -> acknowledgeAndSendMessage(appResponse.message, pACKRequired)
+                InteractionResponseType.SEND_TEXT -> acknowledgeAndSendMessage(appResponse.responseString(), pACKRequired)
                 InteractionResponseType.ACK_ONLY -> acknowledgeBySendingReadyReceive(pACKRequired)
                 InteractionResponseType.IGNORE -> logger.trace("Apps ignored frame: ${incomingFrame.toString()}")
             }
@@ -76,7 +76,7 @@ class ConnectionHandler(val remoteCallsign: String,
         val appResponse = linkInterface.getDecisionOnConnectionRequest(LinkRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
         when (appResponse.responseType) {
             ConnectionResponseType.CONNECT -> acceptIncomingConnection()
-            ConnectionResponseType.CONNECT_WITH_MESSAGE -> acceptIncomingConnectionWithMessage(appResponse.message)
+            ConnectionResponseType.CONNECT_WITH_MESSAGE -> acceptIncomingConnectionWithMessage(appResponse.responseString())
             ConnectionResponseType.IGNORE -> logger.trace("Ignored connection request from: $remoteCallsign to :$myCallsign")
         }
     }
@@ -152,12 +152,11 @@ class ConnectionHandler(val remoteCallsign: String,
 
     /* Application Interface methods */
     private fun sendMessage(message: String, pACKRequired: Boolean) {
-        val messageWithEOL = "$message\n\r" // And EOL characters
         val frame = when (pACKRequired) {
             true -> newResponseFrame(KissFrame.ControlFrame.INFORMATION_8_P, false)
             false -> newResponseFrame(KissFrame.ControlFrame.INFORMATION_8, false)
         }
-        frame.setPayloadMessage(messageWithEOL)
+        frame.setPayloadMessage(message)
         linkInterface.queueFrameForDelivery(frame)
     }
 

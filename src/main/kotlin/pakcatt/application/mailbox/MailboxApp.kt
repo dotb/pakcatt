@@ -14,6 +14,10 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     private val tabSpace = "\t\t"
     private val eol = "\r\n"
 
+    override fun returnCommandPrompt(): String {
+        return "mail>"
+    }
+
     override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
         // Check if a message is being edited. Otherwise look for any mail commands.
         return when {
@@ -33,12 +37,13 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     fun handleMailCommand(request: LinkRequest): InteractionResponse {
         val command = parseCommand(request.message)
         return when (command.command) {
-            "quit" -> InteractionResponse.sendText("Bye", NavigateBack())
             "list" -> listMessages(request)
             "read" -> readMessage(command.arg)
             "send" -> sendMessage(request, command.arg)
             "del" -> deleteMessage(command.arg)
-            else -> InteractionResponse.ignore()
+            "help" -> InteractionResponse.sendText("list, read, send, del, quit")
+            "quit" -> InteractionResponse.sendText("Bye", NavigateBack())
+            else -> InteractionResponse.sendText("?? - try help")
         }
     }
 

@@ -16,7 +16,7 @@ class UserContext(remoteCallsign: String, myCallsign: String) {
 
     fun engagedApplication(): SubApp? {
         return if (navigationStack.size > 0) {
-            navigationStack.last
+            navigationStack.first
         } else {
             null
         }
