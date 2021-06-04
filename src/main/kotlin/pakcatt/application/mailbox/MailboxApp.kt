@@ -1,15 +1,18 @@
 package pakcatt.application.mailbox
 
+import org.slf4j.LoggerFactory
 import pakcatt.application.mailbox.edit.EditSubjectApp
 import pakcatt.application.shared.*
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.util.StringUtils
+import java.lang.NumberFormatException
 import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 
 class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
+    private val logger = LoggerFactory.getLogger(MailboxApp::class.java)
     private val stringUtils = StringUtils()
     private val tabSpace = "\t\t"
     private val eol = "\r\n"
@@ -20,14 +23,19 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
     override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
         val command = parseCommand(request.message)
-        return when (command.command) {
-            "list" -> listMessages(request)
-            "read" -> readMessage(command.arg)
-            "send" -> sendMessage(request, command.arg)
-            "del" -> deleteMessage(command.arg)
-            "help" -> InteractionResponse.sendText("list, read, send, del, quit")
-            "quit" -> InteractionResponse.sendText("Bye", NavigateBack(1))
-            else -> InteractionResponse.sendText("?? - try help")
+        return try {
+            when (command.command) {
+                "list" -> listMessages(request)
+                "read" -> readMessage(command.arg)
+                "send" -> sendMessage(request, command.arg)
+                "del" -> deleteMessage(command.arg)
+                "help" -> InteractionResponse.sendText("list, read, send, del, quit")
+                "quit" -> InteractionResponse.sendText("Bye", NavigateBack(1))
+                else -> InteractionResponse.sendText("?? - try help")
+            }
+        } catch (e: NumberFormatException) {
+            logger.error("Argument from {} for command {} {} was not an int", request.remoteCallsign, command.command, command.arg)
+            InteractionResponse.sendText("Invalid argument")
         }
     }
 
@@ -39,8 +47,10 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
         if (messageCount > 0) {
             listResponse.append(eol)
-            listResponse.append("Date          From${tabSpace}To${tabSpace}Subject${eol}")
+            listResponse.append("No${tabSpace}Date          From${tabSpace}To${tabSpace}Subject${eol}")
             for (message in userMessages) {
+                listResponse.append(message.messageNumber)
+                listResponse.append(tabSpace)
                 listResponse.append(dateFormatter.format(message.dateTime.time))
                 listResponse.append("  ")
                 listResponse.append(message.fromCallsign)
@@ -58,7 +68,11 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun readMessage(arg: String): InteractionResponse {
-        return InteractionResponse.ignore()
+        val messageNumber = arg.toInt()
+        return when (val message = mailboxStore.getMessage(messageNumber)) {
+            null -> InteractionResponse.sendText("No message for $arg")
+            else -> InteractionResponse.sendText("\r\nSubject: ${message.subject}\r\n${message.body.toString()}")
+        }
     }
 
     private fun sendMessage(request: LinkRequest, arg: String): InteractionResponse {
@@ -66,17 +80,21 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun deleteMessage(arg: String): InteractionResponse {
-        return InteractionResponse.ignore()
+        val messageNumber = arg.toInt()
+        return when (val message = mailboxStore.deleteMessage(messageNumber)) {
+            null -> InteractionResponse.sendText("No message for $arg")
+            else -> return InteractionResponse.sendText("Deleted $messageNumber ${message.subject}")
+        }
     }
 
     private fun parseCommand(inputLine: String): Command {
         val commandComponents = stringUtils.chompString(inputLine).split(" ")
-        if (commandComponents.size >= 2) {
+        return if (commandComponents.size >= 2) {
             val command = commandComponents[0]
             val arg = commandComponents[1]
-            return Command(command, arg)
+            Command(command, arg)
         } else {
-            return Command(stringUtils.chompString(inputLine), "")
+            Command(stringUtils.chompString(inputLine), "")
         }
     }
 
