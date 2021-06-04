@@ -102,12 +102,13 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
     // Rewrite the prompt string into the textual response
     private fun addPromptToResponse(app: SubApp?, response: LinkResponse): LinkResponse {
         val message = response.responseString()
-        val prompt = when {
-            null != app -> "${app.returnCommandPrompt()} "
-            else -> ""
+
+        when (val prompt = app?.returnCommandPrompt()) {
+            null -> response.updateResponseString("$message\n\r")
+            "" -> response.updateResponseString("$message\n\r")
+            else -> response.updateResponseString("$message\n\r$prompt")
         }
-        val newReturnedString = "$message\n\r$prompt"
-        response.updateResponseString(newReturnedString)
+
         return response
     }
 

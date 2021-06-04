@@ -36,10 +36,9 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         val listResponse = StringBuilder()
         val messageCount = userMessages.size
         val dateFormatter = SimpleDateFormat("dd MMM HH:mm")
-        listResponse.append(messageCount)
-        listResponse.append(" messages")
-        listResponse.append(eol)
+
         if (messageCount > 0) {
+            listResponse.append(eol)
             listResponse.append("Date          From${tabSpace}To${tabSpace}Subject${eol}")
             for (message in userMessages) {
                 listResponse.append(dateFormatter.format(message.dateTime.time))
@@ -52,6 +51,9 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
                 listResponse.append(eol)
             }
         }
+        listResponse.append(messageCount)
+        listResponse.append(" messages")
+        listResponse.append(eol)
         return InteractionResponse.sendText(listResponse.toString())
     }
 
