@@ -21,11 +21,11 @@ class EditBodyApp(private val mailMessage: MailMessage, private val mailboxStore
         val chompedBody = stringUtils.chompString(request.message)
         return if (chompedBody == ".") { // Finish editing the body
             mailboxStore.storeMessage(mailMessage)
-            InteractionResponse.sendText("Thanks! Your message has been stored.", NavigateBack(2))
+            InteractionResponse.sendText("Thanks. Your message has been stored.", NavigateBack(2))
         } else {
             mailMessage.body.append(chompedBody)
             mailMessage.body.append(eol)
-            InteractionResponse.sendText("")
+            InteractionResponse.acknowledgeOnly()
         }
     }
 

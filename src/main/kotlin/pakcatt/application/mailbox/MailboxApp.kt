@@ -26,9 +26,9 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         return try {
             when (command.command) {
                 "list" -> listMessages(request)
-                "read" -> readMessage(command.arg)
+                "read" -> readMessage(request.remoteCallsign, command.arg)
                 "send" -> sendMessage(request, command.arg)
-                "del" -> deleteMessage(command.arg)
+                "del" -> deleteMessage(request.remoteCallsign, command.arg)
                 "help" -> InteractionResponse.sendText("list, read, send, del, quit")
                 "quit" -> InteractionResponse.sendText("Bye", NavigateBack(1))
                 else -> InteractionResponse.sendText("?? - try help")
@@ -40,7 +40,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun listMessages(request: LinkRequest): InteractionResponse {
-        val userMessages = mailboxStore.messagesForCallsign(request.remoteCallsign)
+        val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign)
         val listResponse = StringBuilder()
         val messageCount = userMessages.size
         val dateFormatter = SimpleDateFormat("dd MMM HH:mm")
@@ -67,21 +67,23 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         return InteractionResponse.sendText(listResponse.toString())
     }
 
-    private fun readMessage(arg: String): InteractionResponse {
+    private fun readMessage(userCallsign: String, arg: String): InteractionResponse {
         val messageNumber = arg.toInt()
-        return when (val message = mailboxStore.getMessage(messageNumber)) {
+        return when (val message = mailboxStore.getMessage(userCallsign, messageNumber)) {
             null -> InteractionResponse.sendText("No message for $arg")
             else -> InteractionResponse.sendText("\r\nSubject: ${message.subject}\r\n${message.body.toString()}")
         }
     }
 
     private fun sendMessage(request: LinkRequest, arg: String): InteractionResponse {
-        return InteractionResponse.sendText("", EditSubjectApp(MailMessage(request.remoteCallsign, arg), mailboxStore))
+        val fromCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
+        val toCallsign = stringUtils.formatCallsignRemoveSSID(arg)
+        return InteractionResponse.sendText("", EditSubjectApp(MailMessage(fromCallsign, toCallsign), mailboxStore))
     }
 
-    private fun deleteMessage(arg: String): InteractionResponse {
+    private fun deleteMessage(userCallsign: String, arg: String): InteractionResponse {
         val messageNumber = arg.toInt()
-        return when (val message = mailboxStore.deleteMessage(messageNumber)) {
+        return when (val message = mailboxStore.deleteMessage(userCallsign, messageNumber)) {
             null -> InteractionResponse.sendText("No message for $arg")
             else -> return InteractionResponse.sendText("Deleted $messageNumber ${message.subject}")
         }

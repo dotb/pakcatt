@@ -50,4 +50,15 @@ class StringUtils {
         return chompedString
     }
 
+    /**
+     * Remove any SSID number and make the callsign uppercase
+     */
+    fun formatCallsignRemoveSSID(callsign: String): String {
+        val callsignOnly = when (callsign.contains("-")) {
+            true -> callsign.split("-")[0]
+            false -> callsign
+        }
+        return  callsignOnly.toUpperCase()
+    }
+
 }
