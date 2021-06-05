@@ -1,6 +1,7 @@
 package pakcatt.network.packet.link
 
 import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import pakcatt.application.shared.AppInterface
 import pakcatt.network.packet.link.model.ConnectionResponse
@@ -12,7 +13,6 @@ import pakcatt.network.packet.link.model.LinkRequest
 interface LinkInterface {
     fun getDecisionOnConnectionRequest(request: LinkRequest): ConnectionResponse
     fun getResponseForReceivedMessage(request: LinkRequest): InteractionResponse
-    fun queueFrameForDelivery(outgoingFrame: KissFrame)
     fun closeConnection(remoteCallsign: String, myCallsign: String)
 }
 
@@ -26,6 +26,14 @@ class LinkService(var kissService: KissService,
     init {
         kissService.setReceiveFrameCallback {
             handleReceivedFrame(it)
+        }
+    }
+
+    @Scheduled(fixedRate = 2000)
+    private fun serviceTransmitQueues() {
+        for (connectionHandler in connectionHandlers.values) {
+            val nextFrame = connectionHandler.transmitQueue.peekFirst()
+            kissService.transmitFrame(nextFrame)
         }
     }
 
@@ -57,11 +65,6 @@ class LinkService(var kissService: KissService,
 
     override fun getResponseForReceivedMessage(request: LinkRequest): InteractionResponse {
         return appService.getResponseForReceivedMessage(request)
-    }
-
-    /* Network Interface methods */
-    override fun queueFrameForDelivery(outgoingFrame: KissFrame) {
-        kissService.queueFrameForTransmission(outgoingFrame)
     }
 
     override fun closeConnection(remoteCallsign: String, myCallsign: String) {

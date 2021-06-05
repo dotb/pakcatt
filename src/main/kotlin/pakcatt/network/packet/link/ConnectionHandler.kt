@@ -5,18 +5,20 @@ import pakcatt.network.packet.kiss.KissFrame
 import pakcatt.network.packet.kiss.KissFrameExtended
 import pakcatt.network.packet.kiss.KissFrameStandard
 import pakcatt.network.packet.link.model.*
+import java.util.*
+import kotlin.collections.ArrayList
+
+enum class ControlMode {
+    MODULO_8, MODULO_128
+}
 
 class ConnectionHandler(val remoteCallsign: String,
                         val myCallsign: String,
                         val linkInterface: LinkInterface) {
 
     private val logger = LoggerFactory.getLogger(ConnectionHandler::class.java)
-
-    enum class ControlMode {
-        MODULO_8, MODULO_128
-    }
-
     private var controlMode = ControlMode.MODULO_8
+    var transmitQueue = LinkedList<KissFrame>()
 
      /* Section 4.2.4 Frame Variables and Sequence Numbers, Beech et all */
      /* The send state variable contains the next sequential number to be assigned to the next transmitted I frame.
@@ -84,7 +86,7 @@ class ConnectionHandler(val remoteCallsign: String,
         nextSendSequenceNumber = 0
         lastSentSequenceNumberAcknowledged = 0
         val frame = newResponseFrame(KissFrame.ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
-        linkInterface.queueFrameForDelivery(frame)
+        queueFrameForTransmission(frame)
     }
 
     private fun acknowledgeAndSendMessage(message: String, pACKRequired: Boolean) {
@@ -118,7 +120,7 @@ class ConnectionHandler(val remoteCallsign: String,
             true -> newResponseFrame(KissFrame.ControlFrame.S_8_RECEIVE_READY_P, false)
             false -> newResponseFrame(KissFrame.ControlFrame.S_8_RECEIVE_READY, false)
         }
-        linkInterface.queueFrameForDelivery(frame)
+        queueFrameForTransmission(frame)
     }
 
     private fun realignSendSequenceNumber(incomingFrame: KissFrame) {
@@ -136,13 +138,17 @@ class ConnectionHandler(val remoteCallsign: String,
     private fun handleDisconnectRequest() {
         logger.trace("Disconnecting from $remoteCallsign")
         val frame = newResponseFrame(KissFrame.ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
-        linkInterface.queueFrameForDelivery(frame)
+        queueFrameForTransmission(frame)
         linkInterface.closeConnection(remoteCallsign, myCallsign)
     }
 
     private fun ignoreFrame(incomingFrame: KissFrame) {
         logger.error("No handler for frame. Ignored. ${incomingFrame.toString()}")
         linkInterface.closeConnection(remoteCallsign, myCallsign)
+    }
+
+    private fun queueFrameForTransmission(frame: KissFrame) {
+        transmitQueue.add(frame)
     }
 
     /* Application Interface methods */
@@ -154,7 +160,7 @@ class ConnectionHandler(val remoteCallsign: String,
                 false -> newResponseFrame(KissFrame.ControlFrame.INFORMATION_8, false)
             }
             frame.setPayloadMessage(payloadChunk)
-            linkInterface.queueFrameForDelivery(frame)
+            queueFrameForTransmission(frame)
         }
     }
 
