@@ -12,7 +12,7 @@ class StringUtilsTest : TestCase() {
     @Test
     fun testChompString() {
         val testString = "\r\ntest\n\r"
-        val result = subject.chompString(testString)
+        val result = subject.removeEOLChars(testString)
         assertEquals("test", result)
     }
 }

@@ -6,13 +6,14 @@ import pakcatt.util.ByteUtils
 @Component
 class TNCMocked: TNC() {
 
+    private val maxBufferSize = 8192
     private val byteUtils = ByteUtils()
     private var isConnected = false
-    private var dataBuffer = ByteArray(1024)
+    private var dataBuffer = ByteArray(maxBufferSize)
     private var dataIndex = 0
 
     fun clearDataBuffer() {
-        dataBuffer = ByteArray(1024)
+        dataBuffer = ByteArray(maxBufferSize)
         dataIndex = 0
     }
 

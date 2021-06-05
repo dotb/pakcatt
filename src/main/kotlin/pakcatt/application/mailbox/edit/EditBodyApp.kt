@@ -19,7 +19,7 @@ class EditBodyApp(private val mailMessage: MailMessage, private val mailboxStore
     }
 
     override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
-        val chompedBody = stringUtils.chompString(request.message)
+        val chompedBody = stringUtils.removeEOLChars(request.message)
         return if (chompedBody == ".") { // Finish editing the body
             mailMessage.body = composedBody.toString()
             mailboxStore.storeMessage(mailMessage)

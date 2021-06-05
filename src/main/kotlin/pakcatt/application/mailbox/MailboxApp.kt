@@ -16,7 +16,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
     private val logger = LoggerFactory.getLogger(MailboxApp::class.java)
     private val stringUtils = StringUtils()
-    private val tabSpace = "\t\t"
+    private val tabSpace = "\t"
     private val eol = "\r\n"
 
     override fun returnCommandPrompt(): String {
@@ -92,13 +92,13 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun parseCommand(inputLine: String): Command {
-        val commandComponents = stringUtils.chompString(inputLine).split(" ")
+        val commandComponents = stringUtils.removeEOLChars(inputLine).split(" ")
         return if (commandComponents.size >= 2) {
             val command = commandComponents[0]
             val arg = commandComponents[1]
             Command(command, arg)
         } else {
-            Command(stringUtils.chompString(inputLine), "")
+            Command(stringUtils.removeEOLChars(inputLine), "")
         }
     }
 

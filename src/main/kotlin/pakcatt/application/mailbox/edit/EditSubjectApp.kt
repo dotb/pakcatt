@@ -16,7 +16,7 @@ class EditSubjectApp(private val mailMessage: MailMessage, private val mailboxSt
     }
 
     override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
-        mailMessage.subject = stringUtils.chompString(request.message)
+        mailMessage.subject = stringUtils.removeEOLChars(request.message)
         return InteractionResponse.sendText("Compose your message and finish with . on a line of it's own.", EditBodyApp(mailMessage, mailboxStore))
     }
 

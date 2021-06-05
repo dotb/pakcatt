@@ -44,7 +44,10 @@ class StringUtils {
         return paddedString.toString()
     }
 
-    fun chompString(input: String): String {
+    /**
+     * Remove any end-of-line characters from a string
+     */
+    fun removeEOLChars(input: String): String {
         var chompedString = input.replace("\r","")
         chompedString = chompedString.replace("\n", "")
         return chompedString

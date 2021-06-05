@@ -9,6 +9,7 @@ import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.ConnectionResponse
 import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.application.shared.RootApp
+import java.lang.StringBuilder
 import kotlin.math.sqrt
 
 @Component
@@ -17,6 +18,8 @@ class MainMenuApp(val myCall: String,
                   val mailboxStore: MailboxStore): RootApp() {
 
     private val logger = LoggerFactory.getLogger(MainMenuApp::class.java)
+    private val beepChar = 7.toChar()
+    private val escapeChar = 27.toChar()
 
     override fun returnCommandPrompt(): String {
         return "menu>"
@@ -55,6 +58,15 @@ class MainMenuApp(val myCall: String,
             }
             request.message.toLowerCase().contains("nop") -> {
                 return InteractionResponse.acknowledgeOnly()
+            }
+            request.message.toLowerCase().contains("beep") -> {
+                return InteractionResponse.sendText("beep! $beepChar")
+            }
+            request.message.toLowerCase().contains("bold") -> {
+                return InteractionResponse.sendText("This should be $escapeChar[1mBOLD$escapeChar[0m and this, should not be bold.")
+            }
+            request.message.toLowerCase().contains("styles") -> {
+               return InteractionResponse.sendText(allTheStyles())
             } else -> {
                InteractionResponse.sendText("?? Type help for a list of commands")
             }
@@ -65,6 +77,14 @@ class MainMenuApp(val myCall: String,
         val arg = inputLine.split(" ")[1]
         val result = sqrt(arg.toDouble()).toString()
         return "Square root of $arg is $result"
+    }
+
+    private fun allTheStyles(): String {
+        val returnString = StringBuilder()
+        for (style in 1..8) {
+            returnString.append("$escapeChar[${style}m Style $style $escapeChar[0m\r\n")
+        }
+        return returnString.toString()
     }
 
 }
