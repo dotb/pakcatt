@@ -51,6 +51,7 @@ abstract class KissFrame() {
     companion object {
         const val FRAME_END = -64
         const val SIZE_MIN = 15
+        const val PAYLOAD_MAX = 238 // (max of 256 - 18 bytes of headers)
 
         fun parseRawKISSFrame(frame: ByteArray): KissFrame {
             // Mandatory fields

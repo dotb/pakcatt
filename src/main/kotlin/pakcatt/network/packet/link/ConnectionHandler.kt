@@ -32,11 +32,6 @@ class ConnectionHandler(val remoteCallsign: String,
      * frame acknowledged by its peer [V(A)-1 equals the N(S) of the last acknowledged I frame]. */
     private var lastSentSequenceNumberAcknowledged = 0
 
-
-    fun handleRequestToSendMessageFromApp(request: LinkRequest) {
-        sendMessage(request.message, false)
-    }
-
     fun handleIncomingFrame(incomingFrame: KissFrame) {
         when (incomingFrame.controlFrame()) {
             KissFrame.ControlFrame.U_SET_ASYNC_BALANCED_MODE_P -> handleConnectionRequest(incomingFrame) // Connection request
@@ -152,12 +147,15 @@ class ConnectionHandler(val remoteCallsign: String,
 
     /* Application Interface methods */
     private fun sendMessage(message: String, pACKRequired: Boolean) {
-        val frame = when (pACKRequired) {
-            true -> newResponseFrame(KissFrame.ControlFrame.INFORMATION_8_P, false)
-            false -> newResponseFrame(KissFrame.ControlFrame.INFORMATION_8, false)
+        val payloadChunks = chunkUpPayload(message)
+        for (payloadChunk in payloadChunks) {
+            val frame = when (pACKRequired) {
+                true -> newResponseFrame(KissFrame.ControlFrame.INFORMATION_8_P, false)
+                false -> newResponseFrame(KissFrame.ControlFrame.INFORMATION_8, false)
+            }
+            frame.setPayloadMessage(payloadChunk)
+            linkInterface.queueFrameForDelivery(frame)
         }
-        frame.setPayloadMessage(message)
-        linkInterface.queueFrameForDelivery(frame)
     }
 
     /* Factory methods */
@@ -217,6 +215,27 @@ class ConnectionHandler(val remoteCallsign: String,
             ControlMode.MODULO_8 -> 7
             ControlMode.MODULO_128 -> 128
         }
+    }
+
+    /* Frame utility methods */
+    /**
+     * This method breaks a payload up into smaller chunks so that
+     * the max receive size of a frame is not reached. Typically the
+     * maximum frame size is 256 bytes, however, in the future we need
+     * to implement the XID frame handler so that this value can be
+     * agreed dynamically with the client TNC.
+     */
+    fun chunkUpPayload(payload: String): List<String> {
+        var remainingPayload = payload
+        var splitPayload = ArrayList<String>()
+        // Break the playload into smaller parts
+        while (remainingPayload.length > KissFrame.PAYLOAD_MAX) {
+            splitPayload.add(remainingPayload.substring(0, KissFrame.PAYLOAD_MAX))
+            remainingPayload = remainingPayload.substring(KissFrame.PAYLOAD_MAX, remainingPayload.length)
+        }
+        // Add any remaining payload data that falls within the maximum payload size
+        splitPayload.add(remainingPayload)
+        return splitPayload
     }
 
 }
