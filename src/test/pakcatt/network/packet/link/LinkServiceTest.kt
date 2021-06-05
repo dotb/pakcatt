@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner
 import pakcatt.application.TestApp
+import pakcatt.network.packet.kiss.ControlFrame
 import pakcatt.network.packet.kiss.KissFrame
 import pakcatt.network.packet.kiss.KissFrameStandard
 import pakcatt.network.packet.tnc.TNC
@@ -75,7 +76,7 @@ class LinkServiceTest: TestCase() {
         // Send multiple message exchanges to ensure sequence numbers increment and roll over properly after 7 (a 3 bit value)
         var rxSequenceNumber = 0
         for (sendSequenceNumber in 0..6) {
-            sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.INFORMATION_8, sendSequenceNumber, rxSequenceNumber, "hello")
+            sendFrameAndWaitResponse(mockedTNC, ControlFrame.INFORMATION_8, sendSequenceNumber, rxSequenceNumber, "hello")
             val responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.sentDataBuffer())
             rxSequenceNumber = sendSequenceNumber + 1
             assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", sendSequenceNumber + 1, responseFrame.receiveSequenceNumber())
@@ -83,13 +84,13 @@ class LinkServiceTest: TestCase() {
         }
 
         // The 7th exchange should roll-over the received sequence number
-        sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.INFORMATION_8, 7, rxSequenceNumber, "hello")
+        sendFrameAndWaitResponse(mockedTNC, ControlFrame.INFORMATION_8, 7, rxSequenceNumber, "hello")
         var responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.sentDataBuffer())
         assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 0, responseFrame.receiveSequenceNumber())
         assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 7, responseFrame.sendSequenceNumber())
 
         // The 8th exchange should roll-over the sent sequence number
-        sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.INFORMATION_8, 0, rxSequenceNumber, "hello")
+        sendFrameAndWaitResponse(mockedTNC, ControlFrame.INFORMATION_8, 0, rxSequenceNumber, "hello")
         responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.sentDataBuffer())
         assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 1, responseFrame.receiveSequenceNumber())
         assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 0, responseFrame.sendSequenceNumber())
@@ -101,10 +102,10 @@ class LinkServiceTest: TestCase() {
         val mockedTNC = tnc as TNCMocked
 
         // Establish a link
-        sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.U_SET_ASYNC_BALANCED_MODE_P, 0, 0)
+        sendFrameAndWaitResponse(mockedTNC, ControlFrame.U_SET_ASYNC_BALANCED_MODE_P, 0, 0)
 
         // Send request
-        sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.INFORMATION_8, 0, 0, "ping")
+        sendFrameAndWaitResponse(mockedTNC, ControlFrame.INFORMATION_8, 0, 0, "ping")
         val parsedFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
         val constructedPayload = constructPayloadFromFrames(parsedFrames)
         assertEquals("pong\n\r", constructedPayload)
@@ -115,17 +116,17 @@ class LinkServiceTest: TestCase() {
         val mockedTNC = tnc as TNCMocked
 
         // Establish a link
-        sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.U_SET_ASYNC_BALANCED_MODE_P, 0, 0)
+        sendFrameAndWaitResponse(mockedTNC, ControlFrame.U_SET_ASYNC_BALANCED_MODE_P, 0, 0)
 
         // Send request for a large response
-        sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.INFORMATION_8, 0, 0, "longtest")
+        sendFrameAndWaitResponse(mockedTNC, ControlFrame.INFORMATION_8, 0, 0, "longtest")
         val parsedFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
         val constructedPayload = constructPayloadFromFrames(parsedFrames)
         val expectedResponseString = "${TestApp.longResponseString}\n\r"
         assertEquals(expectedResponseString, constructedPayload)
     }
 
-    private fun sendFrameAndWaitResponse(mockedTNC: TNCMocked, controlType: KissFrame.ControlFrame, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null) {
+    private fun sendFrameAndWaitResponse(mockedTNC: TNCMocked, controlType: ControlFrame, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null) {
         val requestFrame = KissFrameStandard()
         requestFrame.setDestCallsign("VK3LIT-1")
         requestFrame.setSourceCallsign("VK3LIT-2")

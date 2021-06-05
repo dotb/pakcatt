@@ -1,6 +1,7 @@
 package pakcatt.network.packet.link
 
 import org.slf4j.LoggerFactory
+import pakcatt.network.packet.kiss.ControlFrame
 import pakcatt.network.packet.kiss.KissFrame
 import pakcatt.network.packet.kiss.KissFrameExtended
 import pakcatt.network.packet.kiss.KissFrameStandard
@@ -36,15 +37,15 @@ class ConnectionHandler(val remoteCallsign: String,
 
     fun handleIncomingFrame(incomingFrame: KissFrame) {
         when (incomingFrame.controlFrame()) {
-            KissFrame.ControlFrame.U_SET_ASYNC_BALANCED_MODE_P -> handleConnectionRequest(incomingFrame) // Connection request
-            KissFrame.ControlFrame.INFORMATION_8_P -> handleNumberedInformationFrame(incomingFrame, true) // Application info frame
-            KissFrame.ControlFrame.INFORMATION_8 -> handleNumberedInformationFrame(incomingFrame, false) // Application info frame
-            KissFrame.ControlFrame.S_8_RECEIVE_READY_P -> handleIncomingAcknowledgement(incomingFrame)
-            KissFrame.ControlFrame.S_8_RECEIVE_READY -> handleIncomingAcknowledgement(incomingFrame)
-            KissFrame.ControlFrame.S_8_REJECT -> realignReceiveSequenceNumber(incomingFrame)
-            KissFrame.ControlFrame.S_8_REJECT_P -> realignReceiveSequenceNumber(incomingFrame)
-            KissFrame.ControlFrame.U_REJECT -> realignReceiveSequenceNumber(incomingFrame)
-            KissFrame.ControlFrame.U_DISCONNECT_P -> handleDisconnectRequest() // Disconnect request
+            ControlFrame.U_SET_ASYNC_BALANCED_MODE_P -> handleConnectionRequest(incomingFrame) // Connection request
+            ControlFrame.INFORMATION_8_P -> handleNumberedInformationFrame(incomingFrame, true) // Application info frame
+            ControlFrame.INFORMATION_8 -> handleNumberedInformationFrame(incomingFrame, false) // Application info frame
+            ControlFrame.S_8_RECEIVE_READY_P -> handleIncomingAcknowledgement(incomingFrame)
+            ControlFrame.S_8_RECEIVE_READY -> handleIncomingAcknowledgement(incomingFrame)
+            ControlFrame.S_8_REJECT -> realignReceiveSequenceNumber(incomingFrame)
+            ControlFrame.S_8_REJECT_P -> realignReceiveSequenceNumber(incomingFrame)
+            ControlFrame.U_REJECT -> realignReceiveSequenceNumber(incomingFrame)
+            ControlFrame.U_DISCONNECT_P -> handleDisconnectRequest() // Disconnect request
             else -> ignoreFrame(incomingFrame)
         }
     }
@@ -85,7 +86,7 @@ class ConnectionHandler(val remoteCallsign: String,
         nextExpectedReceiveSequenceNumber = 0
         nextSendSequenceNumber = 0
         lastSentSequenceNumberAcknowledged = 0
-        val frame = newResponseFrame(KissFrame.ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
+        val frame = newResponseFrame(ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
         queueFrameForTransmission(frame)
     }
 
@@ -117,8 +118,8 @@ class ConnectionHandler(val remoteCallsign: String,
 
     private fun acknowledgeBySendingReadyReceive(pACKRequired: Boolean) {
         val frame = when (pACKRequired) {
-            true -> newResponseFrame(KissFrame.ControlFrame.S_8_RECEIVE_READY_P, false)
-            false -> newResponseFrame(KissFrame.ControlFrame.S_8_RECEIVE_READY, false)
+            true -> newResponseFrame(ControlFrame.S_8_RECEIVE_READY_P, false)
+            false -> newResponseFrame(ControlFrame.S_8_RECEIVE_READY, false)
         }
         queueFrameForTransmission(frame)
     }
@@ -137,7 +138,7 @@ class ConnectionHandler(val remoteCallsign: String,
 
     private fun handleDisconnectRequest() {
         logger.trace("Disconnecting from $remoteCallsign")
-        val frame = newResponseFrame(KissFrame.ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
+        val frame = newResponseFrame(ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
         queueFrameForTransmission(frame)
         linkInterface.closeConnection(remoteCallsign, myCallsign)
     }
@@ -156,8 +157,8 @@ class ConnectionHandler(val remoteCallsign: String,
         val payloadChunks = chunkUpPayload(message)
         for (payloadChunk in payloadChunks) {
             val frame = when (pACKRequired) {
-                true -> newResponseFrame(KissFrame.ControlFrame.INFORMATION_8_P, false)
-                false -> newResponseFrame(KissFrame.ControlFrame.INFORMATION_8, false)
+                true -> newResponseFrame(ControlFrame.INFORMATION_8_P, false)
+                false -> newResponseFrame(ControlFrame.INFORMATION_8, false)
             }
             frame.setPayloadMessage(payloadChunk)
             queueFrameForTransmission(frame)
@@ -165,7 +166,7 @@ class ConnectionHandler(val remoteCallsign: String,
     }
 
     /* Factory methods */
-    private fun newResponseFrame(frameType: KissFrame.ControlFrame, extended: Boolean): KissFrame {
+    private fun newResponseFrame(frameType: ControlFrame, extended: Boolean): KissFrame {
         val newFrame = when (extended) {
             false -> KissFrameStandard()
             true -> KissFrameExtended()
@@ -175,22 +176,22 @@ class ConnectionHandler(val remoteCallsign: String,
         newFrame.setControlType(frameType)
 
         // Set the receive sequence number on frames that require it
-        if (listOf(KissFrame.ControlFrame.INFORMATION_8, KissFrame.ControlFrame.INFORMATION_8_P,
-                KissFrame.ControlFrame.INFORMATION_128, KissFrame.ControlFrame.INFORMATION_128_P,
-                KissFrame.ControlFrame.S_8_RECEIVE_READY, KissFrame.ControlFrame.S_8_RECEIVE_READY_P,
-                KissFrame.ControlFrame.S_8_RECEIVE_NOT_READY, KissFrame.ControlFrame.S_8_RECEIVE_NOT_READY_P,
-                KissFrame.ControlFrame.S_8_REJECT, KissFrame.ControlFrame.S_8_REJECT_P,
-                KissFrame.ControlFrame.S_8_SELECTIVE_REJECT, KissFrame.ControlFrame.S_8_SELECTIVE_REJECT_P,
-                KissFrame.ControlFrame.S_128_RECEIVE_NOT_READY, KissFrame.ControlFrame.S_128_RECEIVE_READY_P,
-                KissFrame.ControlFrame.S_128_RECEIVE_READY, KissFrame.ControlFrame.S_128_RECEIVE_READY_P,
-                KissFrame.ControlFrame.S_128_REJECT, KissFrame.ControlFrame.S_128_REJECT_P,
-                KissFrame.ControlFrame.S_128_SELECTIVE_REJECT, KissFrame.ControlFrame.S_128_SELECTIVE_REJECT_P).contains(frameType)) {
+        if (listOf(ControlFrame.INFORMATION_8, ControlFrame.INFORMATION_8_P,
+                ControlFrame.INFORMATION_128, ControlFrame.INFORMATION_128_P,
+                ControlFrame.S_8_RECEIVE_READY, ControlFrame.S_8_RECEIVE_READY_P,
+                ControlFrame.S_8_RECEIVE_NOT_READY, ControlFrame.S_8_RECEIVE_NOT_READY_P,
+                ControlFrame.S_8_REJECT, ControlFrame.S_8_REJECT_P,
+                ControlFrame.S_8_SELECTIVE_REJECT, ControlFrame.S_8_SELECTIVE_REJECT_P,
+                ControlFrame.S_128_RECEIVE_NOT_READY, ControlFrame.S_128_RECEIVE_READY_P,
+                ControlFrame.S_128_RECEIVE_READY, ControlFrame.S_128_RECEIVE_READY_P,
+                ControlFrame.S_128_REJECT, ControlFrame.S_128_REJECT_P,
+                ControlFrame.S_128_SELECTIVE_REJECT, ControlFrame.S_128_SELECTIVE_REJECT_P).contains(frameType)) {
                 newFrame.setReceiveSequenceNumber(nextExpectedReceiveSequenceNumber)
         }
 
         // Set the send sequence number on frames that require it
-        if (listOf(KissFrame.ControlFrame.INFORMATION_8, KissFrame.ControlFrame.INFORMATION_8_P,
-                KissFrame.ControlFrame.INFORMATION_128, KissFrame.ControlFrame.INFORMATION_128_P).contains(frameType)) {
+        if (listOf(ControlFrame.INFORMATION_8, ControlFrame.INFORMATION_8_P,
+                ControlFrame.INFORMATION_128, ControlFrame.INFORMATION_128_P).contains(frameType)) {
             newFrame.setSendSequenceNumber(nextSendSequenceNumber)
             incrementSendSequenceNumber()
         }
