@@ -121,42 +121,4 @@ class ByteUtils {
         return index
     }
 
-    /**
-     * Parse an input array of bytes and fix any End Of Line (EOL)
-     * characters, replacing single instances of \r or \n
-     * with both \r\n.
-     */
-    fun fixEndOfLineCharacters(inputBytes: ByteArray): ByteArray {
-        val lineFeed = intToByte(10)
-        val carriageReturn = intToByte(13)
-        var updatedArray = ArrayList<Byte>()
-
-        // Run through the remaining bytes and look for missing EOL characters
-        for ((index, currentByte) in inputBytes.withIndex()) {
-            val previousByte = when {
-                index - 1 >= 0 -> inputBytes[index - 1]
-                else -> 0
-            }
-            val nextByte = when {
-                index + 1 < inputBytes.size -> inputBytes[index + 1]
-                else -> 0
-            }
-
-            // Fix any single instances of CR or LF with both
-            when {
-                currentByte == lineFeed && previousByte != carriageReturn && nextByte != carriageReturn -> {
-                    updatedArray.add(carriageReturn)
-                    updatedArray.add(lineFeed)
-                }
-                currentByte == carriageReturn && previousByte != lineFeed && nextByte != lineFeed -> {
-                    updatedArray.add(carriageReturn)
-                    updatedArray.add(lineFeed)
-                }
-                else -> updatedArray.add(currentByte)
-            }
-        }
-
-        return updatedArray.toByteArray()
-    }
-
 }

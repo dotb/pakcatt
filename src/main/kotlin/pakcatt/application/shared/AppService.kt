@@ -3,6 +3,7 @@ package pakcatt.application.shared
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import pakcatt.network.packet.link.model.*
+import pakcatt.util.StringUtils
 
 interface AppInterface {
     fun getDecisionOnConnectionRequest(request: LinkRequest): ConnectionResponse
@@ -14,6 +15,7 @@ interface AppInterface {
 class AppService(val rootApplications: List<RootApp>): AppInterface {
 
     private val logger = LoggerFactory.getLogger(AppService::class.java)
+    private val stringUtils = StringUtils()
     private var currentUsers = HashMap<String, UserContext>()
 
     /* AppInterface methods delegated from the LinkService */
@@ -46,11 +48,14 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         return finalConnectionDecision
     }
 
+    // We've received data from a client, share it with listening apps and get a response for the client
     override fun getResponseForReceivedMessage(request: LinkRequest): InteractionResponse {
+        // Sometimes a TNC will send is only \r, we rewrite these to \n\r
+        val cleanedRequest = LinkRequest(request.remoteCallsign, request.addressedToCallsign, stringUtils.fixEndOfLineCharacters(request.message))
         // Get this user's context
-        val userContext = contextForConversation(request.remoteCallsign, request.addressedToCallsign)
+        val userContext = contextForConversation(cleanedRequest.remoteCallsign, cleanedRequest.addressedToCallsign)
         // Get the interaction response from the app
-        val interactionResponse = getResponseForReceivedMessage(request, userContext)
+        val interactionResponse = getResponseForReceivedMessage(cleanedRequest, userContext)
         // Update any focus state in the user context if required, returned by the selected app.
         updateAppFocus(interactionResponse.nextApp(), userContext)
         // Return any response with an included command prompt string
@@ -106,7 +111,7 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         when (val prompt = app?.returnCommandPrompt()) {
             "" -> response.updateResponseString("$message\n\r")
             null -> response.updateResponseString("$message\n\r")
-            else -> response.updateResponseString("$message\n\r$prompt")
+            else -> response.updateResponseString("$message\n\r$prompt ")
         }
 
         return response

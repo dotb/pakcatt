@@ -11,7 +11,6 @@ import pakcatt.util.StringUtils
 class EditBodyApp(private val mailMessage: MailMessage, private val mailboxStore: MailboxStore): SubApp() {
 
     private val stringUtils = StringUtils()
-    private val eol = "\r\n"
     private var composedBody = StringBuilder()
 
     override fun returnCommandPrompt(): String {
@@ -19,14 +18,14 @@ class EditBodyApp(private val mailMessage: MailMessage, private val mailboxStore
     }
 
     override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
-        val chompedBody = stringUtils.removeEOLChars(request.message)
-        return if (chompedBody == ".") { // Finish editing the body
+        val bodyText = request.message
+        return if (stringUtils.removeEOLChars(bodyText) == ".") {
+            // Finish editing the body
             mailMessage.body = composedBody.toString()
             mailboxStore.storeMessage(mailMessage)
             InteractionResponse.sendText("Thanks. Your message has been stored.", NavigateBack(2))
         } else {
-            composedBody.append(chompedBody)
-            composedBody.append(eol)
+            composedBody.append(bodyText)
             InteractionResponse.acknowledgeOnly()
         }
     }

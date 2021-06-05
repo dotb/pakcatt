@@ -17,7 +17,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     private val logger = LoggerFactory.getLogger(MailboxApp::class.java)
     private val stringUtils = StringUtils()
     private val tabSpace = "\t"
-    private val eol = "\r\n"
+    private val eol = "\n\r"
 
     override fun returnCommandPrompt(): String {
         return "mail>"
@@ -73,7 +73,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         val messageNumber = arg.toInt()
         return when (val message = mailboxStore.getMessage(userCallsign, messageNumber)) {
             null -> InteractionResponse.sendText("No message for $arg")
-            else -> InteractionResponse.sendText("\r\nSubject: ${message.subject}\r\n${message.body.toString()}")
+            else -> InteractionResponse.sendText("${eol}Subject: ${message.subject}${eol}${message.body.toString()}")
         }
     }
 

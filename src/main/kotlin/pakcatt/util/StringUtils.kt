@@ -24,6 +24,16 @@ class StringUtils {
         return stringBuilder.toString()
     }
 
+    fun stringToHex(string: String): String {
+        var stringBuilder = StringBuilder()
+        for (char in string) {
+            val hexChar = byteToHex(char.toByte())
+            stringBuilder.append(hexChar)
+            stringBuilder.append(" ")
+        }
+        return stringBuilder.toString()
+    }
+
     fun removeWhitespace(string: String): String {
         return string.replace(" ", "")
     }
@@ -62,6 +72,45 @@ class StringUtils {
             false -> callsign
         }
         return  callsignOnly.toUpperCase()
+    }
+
+    /**
+     * Parse an input array of bytes and fix any End Of Line (EOL)
+     * characters, replacing single instances of \r or \n
+     * with both \n\r.
+     */
+    fun fixEndOfLineCharacters(inputString: String): String {
+        val lineFeed = '\r'
+        val carriageReturn = '\n'
+        var fixedString = StringBuilder()
+
+        // Run through the remaining bytes and look for missing EOL characters
+        for ((index, currentChar) in inputString.withIndex()) {
+            val previousChar = when {
+                index - 1 >= 0 -> inputString[index - 1]
+                else -> 0
+            }
+            val nextChar = when {
+                index + 1 < inputString.length -> inputString[index + 1]
+                else -> 0
+            }
+
+            // Fix any single instances of CR or LF with both
+            when {
+                currentChar == lineFeed && previousChar != carriageReturn && nextChar != carriageReturn -> {
+                    fixedString.append(lineFeed)
+                    fixedString.append(carriageReturn)
+
+                }
+                currentChar == carriageReturn && previousChar != lineFeed && nextChar != lineFeed -> {
+                    fixedString.append(lineFeed)
+                    fixedString.append(carriageReturn)
+                }
+                else -> fixedString.append(currentChar)
+            }
+        }
+
+        return fixedString.toString()
     }
 
 }
