@@ -1,7 +1,7 @@
 package pakcatt.application.mailbox.edit
 
-import pakcatt.application.mailbox.MailMessage
-import pakcatt.application.mailbox.MailboxStore
+import pakcatt.application.mailbox.persistence.MailMessage
+import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.shared.NavigateBack
 import pakcatt.application.shared.SubApp
 import pakcatt.network.packet.link.model.InteractionResponse
@@ -12,6 +12,7 @@ class EditBodyApp(private val mailMessage: MailMessage, private val mailboxStore
 
     private val stringUtils = StringUtils()
     private val eol = "\r\n"
+    private var composedBody = StringBuilder()
 
     override fun returnCommandPrompt(): String {
         return ""
@@ -20,11 +21,12 @@ class EditBodyApp(private val mailMessage: MailMessage, private val mailboxStore
     override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
         val chompedBody = stringUtils.chompString(request.message)
         return if (chompedBody == ".") { // Finish editing the body
+            mailMessage.body = composedBody.toString()
             mailboxStore.storeMessage(mailMessage)
             InteractionResponse.sendText("Thanks. Your message has been stored.", NavigateBack(2))
         } else {
-            mailMessage.body.append(chompedBody)
-            mailMessage.body.append(eol)
+            composedBody.append(chompedBody)
+            composedBody.append(eol)
             InteractionResponse.acknowledgeOnly()
         }
     }

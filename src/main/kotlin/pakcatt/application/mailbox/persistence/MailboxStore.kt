@@ -1,34 +1,37 @@
-package pakcatt.application.mailbox
+package pakcatt.application.mailbox.persistence
 
+import org.springframework.data.domain.Sort
 import org.springframework.stereotype.Component
 import pakcatt.util.StringUtils
 
 @Component
-class MailboxStore {
+class MailboxStore(val mailMessageRepository: MailMessageRepository) {
 
     private var stringUtils = StringUtils()
-    private var messages = ArrayList<MailMessage>()
-    private var messageCounter = 1
 
     fun messageListForCallsign(userCallsign: String): List<MailMessage> {
         return filteredMessages(userCallsign)
     }
 
     fun storeMessage(message: MailMessage) {
-        message.messageNumber = messageCounter
-        messageCounter++
-        messages.add(message)
+        var nextMessageNumber = 1
+        val allMessages = mailMessageRepository.findAll(Sort.by(Sort.Direction.DESC, "messageNumber"))
+        if (allMessages.size > 0) {
+            val lastMessage = allMessages.first()
+            nextMessageNumber = lastMessage.messageNumber + 1
+        }
+        message.messageNumber = nextMessageNumber
+        mailMessageRepository.insert(message)
     }
 
     fun getMessage(userCallsign: String, messageNumber: Int): MailMessage? {
-        val message = messageNumbered(userCallsign, messageNumber)
-        return message
+        return messageNumbered(userCallsign, messageNumber)
     }
 
     fun deleteMessage(userCallsign: String, messageNumber: Int): MailMessage? {
         val message = messageNumbered(userCallsign, messageNumber)
         if (null != message) {
-            messages.remove(message)
+            mailMessageRepository.delete(message)
             return message
         }
         return null
@@ -44,15 +47,9 @@ class MailboxStore {
         return null
     }
 
-    private fun filteredMessages(userCallsign: String): List<MailMessage> {
-        val formattedUserCallsign = stringUtils.formatCallsignRemoveSSID(userCallsign)
-        var filteredMessages = ArrayList<MailMessage>()
-        for (message in messages) {
-            if (message.toCallsign.compareTo(formattedUserCallsign, true) == 0 || message.fromCallsign.compareTo(formattedUserCallsign, true) == 0) {
-                filteredMessages.add(message)
-            }
-        }
-        return filteredMessages
+    private fun filteredMessages(forCallsign: String): List<MailMessage> {
+        val formattedUserCallsign = stringUtils.formatCallsignRemoveSSID(forCallsign)
+        return mailMessageRepository.findByFromCallsignOrToCallsign(formattedUserCallsign, formattedUserCallsign)
     }
 
 }

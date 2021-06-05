@@ -4,7 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import pakcatt.application.mailbox.MailboxApp
-import pakcatt.application.mailbox.MailboxStore
+import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.ConnectionResponse
 import pakcatt.network.packet.link.model.InteractionResponse
@@ -13,7 +13,9 @@ import kotlin.math.sqrt
 
 @Component
 @Profile("production")
-class MainMenuApp(val myCall: String): RootApp() {
+class MainMenuApp(val myCall: String,
+                  val mailboxStore: MailboxStore): RootApp() {
+
     private val logger = LoggerFactory.getLogger(MainMenuApp::class.java)
 
     override fun returnCommandPrompt(): String {
@@ -36,7 +38,7 @@ class MainMenuApp(val myCall: String): RootApp() {
                 InteractionResponse.sendText("Your options are: mail, hello, ping, and sqrt <number>")
             }
             request.message.toLowerCase().contains("mail") -> {
-                InteractionResponse.sendText("Launching mail", MailboxApp(MailboxStore()))
+                InteractionResponse.sendText("Launching mail", MailboxApp(mailboxStore))
             }
             request.message.toLowerCase().contains("hello") -> {
                 InteractionResponse.sendText("Hi, there! *wave*")

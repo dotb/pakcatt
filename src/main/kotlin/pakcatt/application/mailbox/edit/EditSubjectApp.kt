@@ -1,7 +1,7 @@
 package pakcatt.application.mailbox.edit
 
-import pakcatt.application.mailbox.MailMessage
-import pakcatt.application.mailbox.MailboxStore
+import pakcatt.application.mailbox.persistence.MailMessage
+import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.shared.SubApp
 import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.network.packet.link.model.LinkRequest
