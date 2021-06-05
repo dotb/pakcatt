@@ -104,8 +104,8 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         val message = response.responseString()
 
         when (val prompt = app?.returnCommandPrompt()) {
-            null -> response.updateResponseString("$message\n\r")
             "" -> response.updateResponseString("$message\n\r")
+            null -> response.updateResponseString("$message\n\r")
             else -> response.updateResponseString("$message\n\r$prompt")
         }
 

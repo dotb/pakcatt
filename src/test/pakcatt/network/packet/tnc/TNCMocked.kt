@@ -9,16 +9,16 @@ class TNCMocked: TNC() {
     private val maxBufferSize = 8192
     private val byteUtils = ByteUtils()
     private var isConnected = false
-    private var dataBuffer = ByteArray(maxBufferSize)
+    private var sentDataBuffer = ByteArray(maxBufferSize)
     private var dataIndex = 0
 
     fun clearDataBuffer() {
-        dataBuffer = ByteArray(maxBufferSize)
+        sentDataBuffer = ByteArray(maxBufferSize)
         dataIndex = 0
     }
 
-    fun dataBuffer(): ByteArray {
-        return dataBuffer.copyOf(dataIndex)
+    fun sentDataBuffer(): ByteArray {
+        return sentDataBuffer.copyOf(dataIndex)
     }
 
     override fun connect() {
@@ -41,7 +41,7 @@ class TNCMocked: TNC() {
     }
 
     override fun sendData(outputData: Int) {
-        dataBuffer[dataIndex] = byteUtils.intToByte(outputData)
+        sentDataBuffer[dataIndex] = byteUtils.intToByte(outputData)
         dataIndex++
     }
 

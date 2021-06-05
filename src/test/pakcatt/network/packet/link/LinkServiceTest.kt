@@ -76,7 +76,7 @@ class LinkServiceTest: TestCase() {
         var rxSequenceNumber = 0
         for (sendSequenceNumber in 0..6) {
             sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.INFORMATION_8, sendSequenceNumber, rxSequenceNumber, "hello")
-            val responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.dataBuffer())
+            val responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.sentDataBuffer())
             rxSequenceNumber = sendSequenceNumber + 1
             assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", sendSequenceNumber + 1, responseFrame.receiveSequenceNumber())
             assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", sendSequenceNumber, responseFrame.sendSequenceNumber())
@@ -84,16 +84,30 @@ class LinkServiceTest: TestCase() {
 
         // The 7th exchange should roll-over the received sequence number
         sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.INFORMATION_8, 7, rxSequenceNumber, "hello")
-        var responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.dataBuffer())
+        var responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.sentDataBuffer())
         assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 0, responseFrame.receiveSequenceNumber())
         assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 7, responseFrame.sendSequenceNumber())
 
         // The 8th exchange should roll-over the sent sequence number
         sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.INFORMATION_8, 0, rxSequenceNumber, "hello")
-        responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.dataBuffer())
+        responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.sentDataBuffer())
         assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 1, responseFrame.receiveSequenceNumber())
         assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 0, responseFrame.sendSequenceNumber())
 
+    }
+
+    @Test
+    fun testShortResponse() {
+        val mockedTNC = tnc as TNCMocked
+
+        // Establish a link
+        sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.U_SET_ASYNC_BALANCED_MODE_P, 0, 0)
+
+        // Send request
+        sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.INFORMATION_8, 0, 0, "ping")
+        val parsedFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
+        val constructedPayload = constructPayloadFromFrames(parsedFrames)
+        assertEquals("pong\n\r", constructedPayload)
     }
 
     @Test
@@ -102,13 +116,13 @@ class LinkServiceTest: TestCase() {
 
         // Establish a link
         sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.U_SET_ASYNC_BALANCED_MODE_P, 0, 0)
-        var responseData = KissFrame.parseRawKISSFrame(mockedTNC.dataBuffer())
 
         // Send request for a large response
         sendFrameAndWaitResponse(mockedTNC, KissFrame.ControlFrame.INFORMATION_8, 0, 0, "longtest")
-        val parsedFrames = parseFramesFromResponse(mockedTNC.dataBuffer())
+        val parsedFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
         val constructedPayload = constructPayloadFromFrames(parsedFrames)
-        assertEquals(TestApp.longResponseString, constructedPayload)
+        val expectedResponseString = "${TestApp.longResponseString}\n\r"
+        assertEquals(expectedResponseString, constructedPayload)
     }
 
     private fun sendFrameAndWaitResponse(mockedTNC: TNCMocked, controlType: KissFrame.ControlFrame, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null) {
@@ -154,7 +168,6 @@ class LinkServiceTest: TestCase() {
 
     private fun parseFramesFromResponse(responseBuffer: ByteArray): List<KissFrame> {
         var responseFrameList = ArrayList<KissFrame>()
-
         var frameStart = 0
         var frameEnd = 0
         for (byte in responseBuffer) {
@@ -167,6 +180,7 @@ class LinkServiceTest: TestCase() {
                     val kissFrame = KissFrame.parseRawKISSFrame(frameBuffer)
                     responseFrameList.add(kissFrame)
                     val payloadString = kissFrame.payloadDataString()
+                    frameEnd++
                     frameStart = frameEnd
                 }
                 // Increase the index so that these bytes are included in the next frame
@@ -179,12 +193,12 @@ class LinkServiceTest: TestCase() {
     private fun waitForResponse(mockedTNC: TNCMocked) {
         // Wait for the response
         await().atMost(Duration.TEN_SECONDS).until {
-            mockedTNC.dataBuffer().size >= 10
+            mockedTNC.sentDataBuffer().size >= 10
         }
     }
 
     private fun assertResponse(expectedResponse: ByteArray, mockedTNC: TNCMocked) {
-        val response = mockedTNC.dataBuffer()
+        val response = mockedTNC.sentDataBuffer()
         assertEquals(stringUtils.byteArrayToHex(expectedResponse), stringUtils.byteArrayToHex(response))
     }
 
