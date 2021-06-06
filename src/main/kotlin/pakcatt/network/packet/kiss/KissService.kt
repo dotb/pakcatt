@@ -30,8 +30,8 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
     fun transmitFrame(frame: KissFrame) {
         tncConnection.sendData(frame.packetData())
         tncConnection.sendData(KissFrame.FRAME_END)
-        logger.debug("Sent frame:\t\t ${frame.toString()}")
         logger.trace("Sent bytes:\t\t ${stringUtils.byteArrayToHex(frame.packetData())}")
+        logger.debug("Sent frame:\t\t ${frame.toString()}")
     }
 
     private fun handleNewByte(newByte: Byte) {

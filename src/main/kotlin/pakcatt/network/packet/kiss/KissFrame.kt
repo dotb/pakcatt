@@ -113,6 +113,8 @@ abstract class KissFrame() {
     protected var sourceSSID: Byte = byteUtils.intToByte(0x00)
     protected var protocolID: Byte = byteUtils.intToByte(0xF0)
     protected var payloadData: ByteArray = ByteArray(0)
+    var lastDeliveryAttemptTimeStamp: Long = 0
+    var deliveryAttempts = 0
 
     protected fun parseRawKISSFrame(portAndCommand: Byte,
                                     destCallsign: ByteArray,
@@ -222,14 +224,30 @@ abstract class KissFrame() {
         }
     }
 
+    /**
+     * Returns true if this frame needs to be acknowledged
+     * be the node receiving it. I.e. It's send sequence number
+     * needs to be acknowledged.
+     */
+    fun requiresAcknowledgement(): Boolean {
+        return arrayListOf(
+                ControlFrame.INFORMATION_8,
+                ControlFrame.INFORMATION_8_P,
+                ControlFrame.INFORMATION_128,
+                ControlFrame.INFORMATION_128_P
+            ).contains(controlFrame())
+    }
+
     override fun toString(): String {
-        var string = "From: ${sourceCallsign()} to: ${destCallsign()} pollFinalBit: ${pollFinalBitString()} " +
-                "control: ${stringUtils.byteArrayToHex(controlField())} controlType: ${controlTypeString()} "
+        val stringBuilder = StringBuilder()
 
         if (listOf(ControlFrame.INFORMATION_8, ControlFrame.INFORMATION_8_P,
                 ControlFrame.INFORMATION_128, ControlFrame.INFORMATION_128_P).contains(calculateControlFrame())) {
-            string += "\t\t\tReceive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()} protocolID: ${stringUtils.byteToHex(protocolID())} "
+            stringBuilder.append("Delivery Attempt: $deliveryAttempts Send Seq: ${sendSequenceNumber()} Receive Seq: ${receiveSequenceNumber()} protocolID: ${stringUtils.byteToHex(protocolID())} ")
         }
+
+        stringBuilder.append("From: ${sourceCallsign()} to: ${destCallsign()} pollFinalBit: ${pollFinalBitString()} " +
+                "control: ${stringUtils.byteArrayToHex(controlField())} controlType: ${controlTypeString()} ")
 
         if (listOf(ControlFrame.S_8_RECEIVE_READY, ControlFrame.S_8_RECEIVE_READY_P, ControlFrame.S_8_RECEIVE_NOT_READY,
                 ControlFrame.S_8_RECEIVE_NOT_READY_P, ControlFrame.S_8_REJECT, ControlFrame.S_8_REJECT_P, ControlFrame.S_8_SELECTIVE_REJECT,
@@ -237,14 +255,14 @@ abstract class KissFrame() {
                 ControlFrame.S_128_RECEIVE_NOT_READY, ControlFrame.S_128_RECEIVE_NOT_READY_P, ControlFrame.S_128_REJECT,
                 ControlFrame.S_128_REJECT_P, ControlFrame.S_128_SELECTIVE_REJECT,
                 ControlFrame.S_128_SELECTIVE_REJECT_P).contains(calculateControlFrame())) {
-            string += "\t\tReceive Seq: ${receiveSequenceNumber()}"
+            stringBuilder.append("\t\tReceive Seq: ${receiveSequenceNumber()}")
         }
 
         if (payloadData.size > 0) {
-            string += " Payload: ${payloadDataString()}"
+            stringBuilder.append(" Payload: ${payloadDataString()}")
         }
 
-        return string
+        return stringBuilder.toString()
     }
 
     private fun constructCallsign(callsignByteArray: ByteArray, callsignSSID: Byte): String {
@@ -342,7 +360,6 @@ abstract class KissFrame() {
      * so that both 1 and 2 byte Control Field parameters
      * can be handled to support Extended mode.
      */
-
     abstract fun controlField(): ByteArray
 
     abstract fun pollFinalBit(): Boolean
