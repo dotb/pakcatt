@@ -84,13 +84,7 @@ class SequencedQueue {
      * 0 and 7.
      */
     private fun convertUnboundedIndexToSequenceNumber(index: Int): Int {
-        return if (ourNextUnboundedSendSequenceNumber < maxSequenceNumberSize) {
-            index
-        } else {
-            val multiplier = index / maxSequenceNumberSize
-            val valueToSubtract = multiplier * maxSequenceNumberSize
-            index - valueToSubtract
-        }
+        return index % 8
     }
 
     /**
