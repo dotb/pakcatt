@@ -1,10 +1,7 @@
 package pakcatt.network.packet.link
 
 import org.slf4j.LoggerFactory
-import pakcatt.network.packet.kiss.ControlFrame
-import pakcatt.network.packet.kiss.KissFrame
-import pakcatt.network.packet.kiss.KissFrameExtended
-import pakcatt.network.packet.kiss.KissFrameStandard
+import pakcatt.network.packet.kiss.*
 import pakcatt.network.packet.link.model.*
 import java.util.*
 import kotlin.collections.ArrayList
@@ -19,22 +16,13 @@ class ConnectionHandler(val remoteCallsign: String,
 
     private val logger = LoggerFactory.getLogger(ConnectionHandler::class.java)
     private var controlMode = ControlMode.MODULO_8
-    var transmitQueue = LinkedList<KissFrame>()
-    var initialQueue = LinkedList<KissFrame>()
-
-     /* Section 4.2.4 Frame Variables and Sequence Numbers, Beech et all */
-     /* The send state variable contains the next sequential number to be assigned to the next transmitted I frame.
-      * This variable is updated with the transmission of each I frame.*/
-    private var nextSendSequenceNumber = 0
+    private var unsequencedFramesForDelivery = LinkedList<KissFrame>()
+    private var sequencedQueue = SequencedQueue()
 
     /* The receive state variable contains the sequence number of the next expected received I frame.
      * This variable is updated upon the reception of an error-free I frame whose send sequence number
      * equals the present received state variable value. */
     private var nextExpectedReceiveSequenceNumber = 0
-
-    /* The acknowledge state variable contains the sequence number of the last
-     * frame acknowledged by its peer [V(A)-1 equals the N(S) of the last acknowledged I frame]. */
-    private var lastSentSequenceNumberAcknowledged = 0
 
     fun handleIncomingFrame(incomingFrame: KissFrame) {
         when (incomingFrame.controlFrame()) {
@@ -51,41 +39,29 @@ class ConnectionHandler(val remoteCallsign: String,
         }
     }
 
-    // Remove frames from our transmit queue that have been delivered / acknowledged
-    // This method allows for one frame to be retransmitted, all other frames are removed.
-    fun removeDeliveredFrames() {
-        var deliveredFrames = LinkedList<KissFrame>()
-        for (frame in transmitQueue) {
-            // Always assume frames are acknowledged when they are below the last acknowledged sequence number sent to us
-            if (frame.requiresAcknowledgement() && frame.sendSequenceNumber() < lastSentSequenceNumberAcknowledged) {
-                logger.trace("Frame acknowledged up to {}, removing from transmit queue {}", lastSentSequenceNumberAcknowledged, frame.toString())
-                deliveredFrames.add(frame)
-            } else if (frame.requiresAcknowledgement() && frame.sendSequenceNumber() > lastSentSequenceNumberAcknowledged + 3) {
-                // If the acknowledged sequence number has rolled over, remove up to 4 previous frames with higher numbers.
-                logger.trace("Frame acknowledged up to {}, removing from transmit queue {}", lastSentSequenceNumberAcknowledged, frame.toString())
-                deliveredFrames.add(frame)
-            }
+    fun deliverUnsequencedFrames(kissService: KissService) {
+        while (unsequencedFramesForDelivery.isNotEmpty()) {
+            val frame = unsequencedFramesForDelivery.removeFirst()
+            kissService.transmitFrame(frame)
         }
-        transmitQueue.removeAll(deliveredFrames)
     }
 
-    fun queueMoreFramesForDelivery() {
-        // Allow a limited number of frames in the transmit queue
-        while (transmitQueue.size < 3 && initialQueue.isNotEmpty()) {
-            // Set the send sequence number on frames that require it
-            val frameForDelivery = initialQueue.removeFirst()
-            if (frameForDelivery.requiresAcknowledgement()) {
-                frameForDelivery.setSendSequenceNumber(nextSendSequenceNumber)
-                logger.debug("Set a send sequence number of {} for frame {}", nextSendSequenceNumber, frameForDelivery.toString())
-                incrementSendSequenceNumber()
+    fun deliverSequencedFrames(kissService: KissService) {
+        val framesForDelivery = sequencedQueue.getSequencedFramesForDelivery()
+        if (framesForDelivery.isNotEmpty()) {
+            for (frame in framesForDelivery) {
+                kissService.transmitFrame(frame)
             }
-            transmitQueue.add(frameForDelivery)
+            kissService.transmitFrame(newResponseFrame(ControlFrame.S_8_RECEIVE_READY, false))
         }
     }
 
     private fun queueFrameForTransmission(frame: KissFrame) {
-        logger.trace("Queueing frame for transmission {}", frame.toString())
-        initialQueue.add(frame)
+        if (frame.requiresAcknowledgement()) {
+            sequencedQueue.addDataFrameForSequencedTransmission(frame)
+        } else {
+            unsequencedFramesForDelivery.add(frame)
+        }
     }
 
     /* Application interface */
@@ -123,11 +99,9 @@ class ConnectionHandler(val remoteCallsign: String,
         logger.info("Accepting connection from remote party: $remoteCallsign local party: $myCallsign")
         // Reset sequence state
         controlMode = ControlMode.MODULO_8
-        initialQueue = LinkedList<KissFrame>()
-        transmitQueue = LinkedList<KissFrame>()
+        sequencedQueue.reset()
+        unsequencedFramesForDelivery = LinkedList<KissFrame>()
         nextExpectedReceiveSequenceNumber = 0
-        nextSendSequenceNumber = 0
-        lastSentSequenceNumberAcknowledged = 0
         val frame = newResponseFrame(ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
         queueFrameForTransmission(frame)
     }
@@ -141,22 +115,13 @@ class ConnectionHandler(val remoteCallsign: String,
     }
 
     private fun handleIncomingAcknowledgement(incomingFrame: KissFrame) {
-        // We expect the remote party to acknowledge the sequence number we last sent by sending us the
-        // send sequence number they next expect from us.
-        if (incomingFrame.receiveSequenceNumber() != nextSendSequenceNumber) {
-            logger.error("Remote party $remoteCallsign is expecting to receive frame ${incomingFrame.receiveSequenceNumber()} next but we will send frame $nextSendSequenceNumber next.")
-        }
-
         // If our record of our last acknowledged sent frame is already updated, then the remote party may be asking us to re-sync with an RR_P
-        if ((incomingFrame.controlFrame() == ControlFrame.S_8_RECEIVE_READY_P
-                    || incomingFrame.controlFrame() == ControlFrame.S_128_RECEIVE_READY_P)
-                    && lastSentSequenceNumberAcknowledged == incomingFrame.receiveSequenceNumber()) {
-            logger.debug("Received multiple of the same acknowledgement sequence number {}, sending an RR_P to re-sync.", lastSentSequenceNumberAcknowledged)
+        if (sequencedQueue.handleIncomingAcknowledgementAndIfRepeated(incomingFrame)
+            && (incomingFrame.controlFrame() == ControlFrame.S_8_RECEIVE_READY_P
+                    || incomingFrame.controlFrame() == ControlFrame.S_128_RECEIVE_READY_P)) {
+            logger.debug("Received multiple of the same acknowledgement sequence number. Sending an Ready_Receive_P to re-sync.")
             acknowledgeBySendingReadyReceive(true)
         }
-
-        // Keep a record of the next send sequence number our remote party expects us to send
-        lastSentSequenceNumberAcknowledged = incomingFrame.receiveSequenceNumber()
     }
 
     private fun acknowledgeBySendingReadyReceive(pACKRequired: Boolean) {
@@ -219,7 +184,6 @@ class ConnectionHandler(val remoteCallsign: String,
                 ControlFrame.S_128_SELECTIVE_REJECT, ControlFrame.S_128_SELECTIVE_REJECT_P).contains(frameType)) {
                 newFrame.setReceiveSequenceNumber(nextExpectedReceiveSequenceNumber)
         }
-
         return newFrame
     }
 
@@ -230,15 +194,6 @@ class ConnectionHandler(val remoteCallsign: String,
             nextExpectedReceiveSequenceNumber++
         } else {
             nextExpectedReceiveSequenceNumber = 0
-        }
-    }
-
-    private fun incrementSendSequenceNumber() {
-        val maxSeq = maxSequenceValue()
-        if (nextSendSequenceNumber < maxSeq) {
-            nextSendSequenceNumber++
-        } else {
-            nextSendSequenceNumber = 0
         }
     }
 
