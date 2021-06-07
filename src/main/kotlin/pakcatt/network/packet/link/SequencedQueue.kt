@@ -8,6 +8,7 @@ import kotlin.math.min
 class SequencedQueue {
 
     private val logger = LoggerFactory.getLogger(SequencedQueue::class.java)
+    private val dataFramesSentPerOver = 2
     private val maxSequenceNumberSize = 8
     private val maxDeliveryAttempts = 10
     private val deliveryRetryTimeMilliseconds = 7000
@@ -33,7 +34,6 @@ class SequencedQueue {
         sequencedFramesForDelivery.add(newFrame)
         ourNextUnboundedSendSequenceNumber++
         val lowerUnboundedAcknowledgeLimit = ourNextUnboundedSendSequenceNumber - maxSequenceNumberSize + 1
-        val lowerBoundedAcknowledgedLimit = convertUnboundedIndexToSequenceNumber(lowerUnboundedAcknowledgeLimit)
         val nextExpectedUnboundedIndexFromPeer = convertBoundedSequenceNumberToIndex(nextSendSequenceNumberExpectedByPeer)
         if (nextExpectedUnboundedIndexFromPeer < lowerUnboundedAcknowledgeLimit) {
             logger.error("The sequenced send queue index {} has advanced too far ahead of the acknowledged frame index {}", ourNextUnboundedSendSequenceNumber, nextExpectedUnboundedIndexFromPeer)
@@ -43,7 +43,7 @@ class SequencedQueue {
     fun getSequencedFramesForDelivery(): LinkedList<KissFrame> {
         val timeStampNow = Date().time
         val startIndex = convertBoundedSequenceNumberToIndex(nextSendSequenceNumberExpectedByPeer)
-        val endIndex = min((startIndex + 2), ourNextUnboundedSendSequenceNumber - 1)
+        val endIndex = min((startIndex + dataFramesSentPerOver - 1), ourNextUnboundedSendSequenceNumber - 1)
         var framesForDelivery = LinkedList<KissFrame>()
 
         if (startIndex >= 0 && endIndex >= 0) {
