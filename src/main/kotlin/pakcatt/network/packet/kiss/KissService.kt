@@ -1,11 +1,9 @@
 package pakcatt.network.packet.kiss
 
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import pakcatt.network.packet.tnc.TNC
 import pakcatt.util.StringUtils
-import java.util.*
 
 @Service
 class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
@@ -14,7 +12,6 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
     private lateinit var receiveFrameCallback:(receivedFrame: KissFrame) -> Unit?
     private var incomingFrame = ByteArray(1024)
     private var incomingFrameIndex = -1
-    private var transmitQueue = LinkedList<KissFrame>()
 
     init {
         tncConnection.setReceiveDataCallback {
@@ -30,19 +27,11 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
         receiveFrameCallback = newCallback
     }
 
-    fun queueFrameForTransmission(frame: KissFrame) {
-        transmitQueue.add(frame)
-    }
-
-    @Scheduled(fixedRate = 1000)
-    private fun serviceTransmitQueue() {
-        while (!transmitQueue.isEmpty()) {
-            val nextFrame = transmitQueue.pollFirst()
-            tncConnection.sendData(nextFrame.packetData())
-            tncConnection.sendData(KissFrame.FRAME_END)
-            logger.debug("Sent frame:\t\t ${nextFrame.toString()}")
-            logger.trace("Sent bytes:\t\t ${stringUtils.byteArrayToHex(nextFrame.packetData())}")
-        }
+    fun transmitFrame(frame: KissFrame) {
+        tncConnection.sendData(frame.packetData())
+        tncConnection.sendData(KissFrame.FRAME_END)
+        logger.trace("Sent bytes:\t\t ${stringUtils.byteArrayToHex(frame.packetData())}")
+        logger.debug("Sent frame:\t\t ${frame.toString()}")
     }
 
     private fun handleNewByte(newByte: Byte) {

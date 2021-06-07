@@ -46,6 +46,22 @@ Information Field  1-256 bytes (payload data) (AX.25)
 Frame End (FEND)   1 byte (0xc0) (KISS)
  */
 
+enum class ControlFrame(val mask: Int, val bitPattern: Int) {
+    INFORMATION_8(0x11, 0x00),
+    INFORMATION_8_P(0x11,0x10),
+    INFORMATION_128(0x0101,0x0000),
+    INFORMATION_128_P(0x0101,0x0100),
+
+    S_8_RECEIVE_READY(0x1F,0x01), S_8_RECEIVE_NOT_READY(0x1F,0x05), S_8_REJECT(0x1F,0x09), S_8_SELECTIVE_REJECT(0x1F,0x0D),
+    S_8_RECEIVE_READY_P(0x1F,0x11), S_8_RECEIVE_NOT_READY_P(0x1F,0x15), S_8_REJECT_P(0x1F,0x019), S_8_SELECTIVE_REJECT_P(0x1F,0x1D),
+    S_128_RECEIVE_READY(0x01FF,0x0001), S_128_RECEIVE_NOT_READY(0x01FF,0x0005), S_128_REJECT(0x01FF,0x0009), S_128_SELECTIVE_REJECT(0x01FF,0x000D),
+    S_128_RECEIVE_READY_P(0x01FF,0x0101), S_128_RECEIVE_NOT_READY_P(0x01FF,0x0105), S_128_REJECT_P(0x01FF,0x0109), S_128_SELECTIVE_REJECT_P(0x01FF,0x010D),
+
+    U_SET_ASYNC_BALANCED_MODE_EXTENDED(0xFF,0x6F), U_SET_ASYNC_BALANCED_MODE(0xFF,0x2F), U_DISCONNECT(0xFF,0x43), U_DISCONNECT_MODE(0xFF,0x0F), U_UNNUMBERED_ACKNOWLEDGE(0xFF,0x63), U_REJECT(0xFF,0x87), U_UNNUMBERED_INFORMATION(0xFF,0x03), U_EXCHANGE_IDENTIFICATION(0xFF,0xAF), U_TEST(0xFF,0xE3),
+    U_SET_ASYNC_BALANCED_MODE_EXTENDED_P(0xFF,0x7F), U_SET_ASYNC_BALANCED_MODE_P(0xFF,0x3F), U_DISCONNECT_P(0xFF,0x53), U_DISCONNECT_MODE_P(0xFF,0x1F), U_UNNUMBERED_ACKNOWLEDGE_P(0xFF,0x73), U_REJECT_P(0xFF,0x97), U_UNNUMBERED_INFORMATION_P(0xFF,0x13), U_EXCHANGE_IDENTIFICATION_P(0xFF,0xBF), U_TEST_P(0xFF,0xF3),
+    UNKNOWN_FRAME(0xFF,0xFF)
+}
+
 abstract class KissFrame() {
 
     companion object {
@@ -88,22 +104,6 @@ abstract class KissFrame() {
 
     }
 
-    enum class ControlFrame(val mask: Int, val bitPattern: Int) {
-        INFORMATION_8(0x11, 0x00),
-        INFORMATION_8_P(0x11,0x10),
-        INFORMATION_128(0x0101,0x0000),
-        INFORMATION_128_P(0x0101,0x0100),
-
-        S_8_RECEIVE_READY(0x1F,0x01), S_8_RECEIVE_NOT_READY(0x1F,0x05), S_8_REJECT(0x1F,0x09), S_8_SELECTIVE_REJECT(0x1F,0x0D),
-        S_8_RECEIVE_READY_P(0x1F,0x11), S_8_RECEIVE_NOT_READY_P(0x1F,0x15), S_8_REJECT_P(0x1F,0x019), S_8_SELECTIVE_REJECT_P(0x1F,0x1D),
-        S_128_RECEIVE_READY(0x01FF,0x0001), S_128_RECEIVE_NOT_READY(0x01FF,0x0005), S_128_REJECT(0x01FF,0x0009), S_128_SELECTIVE_REJECT(0x01FF,0x000D),
-        S_128_RECEIVE_READY_P(0x01FF,0x0101), S_128_RECEIVE_NOT_READY_P(0x01FF,0x0105), S_128_REJECT_P(0x01FF,0x0109), S_128_SELECTIVE_REJECT_P(0x01FF,0x010D),
-
-        U_SET_ASYNC_BALANCED_MODE_EXTENDED(0xFF,0x6F), U_SET_ASYNC_BALANCED_MODE(0xFF,0x2F), U_DISCONNECT(0xFF,0x43), U_DISCONNECT_MODE(0xFF,0x0F), U_UNNUMBERED_ACKNOWLEDGE(0xFF,0x63), U_REJECT(0xFF,0x87), U_UNNUMBERED_INFORMATION(0xFF,0x03), U_EXCHANGE_IDENTIFICATION(0xFF,0xAF), U_TEST(0xFF,0xE3),
-        U_SET_ASYNC_BALANCED_MODE_EXTENDED_P(0xFF,0x7F), U_SET_ASYNC_BALANCED_MODE_P(0xFF,0x3F), U_DISCONNECT_P(0xFF,0x53), U_DISCONNECT_MODE_P(0xFF,0x1F), U_UNNUMBERED_ACKNOWLEDGE_P(0xFF,0x73), U_REJECT_P(0xFF,0x97), U_UNNUMBERED_INFORMATION_P(0xFF,0x13), U_EXCHANGE_IDENTIFICATION_P(0xFF,0xBF), U_TEST_P(0xFF,0xF3),
-        UNKNOWN_FRAME(0xFF,0xFF)
-    }
-
     protected val byteUtils = ByteUtils()
     protected val stringUtils = StringUtils()
     protected var portAndCommand: Byte = byteUtils.intToByte(0x00)
@@ -113,6 +113,8 @@ abstract class KissFrame() {
     protected var sourceSSID: Byte = byteUtils.intToByte(0x00)
     protected var protocolID: Byte = byteUtils.intToByte(0xF0)
     protected var payloadData: ByteArray = ByteArray(0)
+    var lastDeliveryAttemptTimeStamp: Long = 0
+    var deliveryAttempts = 0
 
     protected fun parseRawKISSFrame(portAndCommand: Byte,
                                     destCallsign: ByteArray,
@@ -222,14 +224,30 @@ abstract class KissFrame() {
         }
     }
 
-    override fun toString(): String {
-        var string = "From: ${sourceCallsign()} to: ${destCallsign()} pollFinalBit: ${pollFinalBitString()} " +
-                "control: ${stringUtils.byteArrayToHex(controlField())} controlType: ${controlTypeString()} "
+    /**
+     * Returns true if this frame needs to be acknowledged
+     * be the node receiving it. I.e. It's send sequence number
+     * needs to be acknowledged.
+     */
+    fun requiresAcknowledgement(): Boolean {
+        return arrayListOf(
+                ControlFrame.INFORMATION_8,
+                ControlFrame.INFORMATION_8_P,
+                ControlFrame.INFORMATION_128,
+                ControlFrame.INFORMATION_128_P
+            ).contains(controlFrame())
+    }
 
-        if (listOf(KissFrame.ControlFrame.INFORMATION_8, KissFrame.ControlFrame.INFORMATION_8_P,
-                KissFrame.ControlFrame.INFORMATION_128, KissFrame.ControlFrame.INFORMATION_128_P).contains(calculateControlFrame())) {
-            string += "\t\t\tReceive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()} protocolID: ${stringUtils.byteToHex(protocolID())} "
+    override fun toString(): String {
+        val stringBuilder = StringBuilder()
+
+        if (listOf(ControlFrame.INFORMATION_8, ControlFrame.INFORMATION_8_P,
+                ControlFrame.INFORMATION_128, ControlFrame.INFORMATION_128_P).contains(calculateControlFrame())) {
+            stringBuilder.append("Delivery Attempt: $deliveryAttempts Send Seq: ${sendSequenceNumber()} Receive Seq: ${receiveSequenceNumber()} protocolID: ${stringUtils.byteToHex(protocolID())} ")
         }
+
+        stringBuilder.append("From: ${sourceCallsign()} to: ${destCallsign()} pollFinalBit: ${pollFinalBitString()} " +
+                "control: ${stringUtils.byteArrayToHex(controlField())} controlType: ${controlTypeString()} ")
 
         if (listOf(ControlFrame.S_8_RECEIVE_READY, ControlFrame.S_8_RECEIVE_READY_P, ControlFrame.S_8_RECEIVE_NOT_READY,
                 ControlFrame.S_8_RECEIVE_NOT_READY_P, ControlFrame.S_8_REJECT, ControlFrame.S_8_REJECT_P, ControlFrame.S_8_SELECTIVE_REJECT,
@@ -237,14 +255,14 @@ abstract class KissFrame() {
                 ControlFrame.S_128_RECEIVE_NOT_READY, ControlFrame.S_128_RECEIVE_NOT_READY_P, ControlFrame.S_128_REJECT,
                 ControlFrame.S_128_REJECT_P, ControlFrame.S_128_SELECTIVE_REJECT,
                 ControlFrame.S_128_SELECTIVE_REJECT_P).contains(calculateControlFrame())) {
-            string += "\t\tReceive Seq: ${receiveSequenceNumber()}"
+            stringBuilder.append("\t\tReceive Seq: ${receiveSequenceNumber()}")
         }
 
         if (payloadData.size > 0) {
-            string += " Payload: ${payloadDataString()}"
+            stringBuilder.append(" Payload: ${payloadDataString()}")
         }
 
-        return string
+        return stringBuilder.toString()
     }
 
     private fun constructCallsign(callsignByteArray: ByteArray, callsignSSID: Byte): String {
@@ -342,7 +360,6 @@ abstract class KissFrame() {
      * so that both 1 and 2 byte Control Field parameters
      * can be handled to support Extended mode.
      */
-
     abstract fun controlField(): ByteArray
 
     abstract fun pollFinalBit(): Boolean
