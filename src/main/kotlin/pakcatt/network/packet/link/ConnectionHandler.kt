@@ -16,7 +16,7 @@ class ConnectionHandler(val remoteCallsign: String,
 
     private val logger = LoggerFactory.getLogger(ConnectionHandler::class.java)
     private var controlMode = ControlMode.MODULO_8
-    private var unsequencedFramesForDelivery = LinkedList<KissFrame>()
+    private var nextQueuedControlFrame: KissFrame? = null
     private var sequencedQueue = SequencedQueue()
 
     /* The receive state variable contains the sequence number of the next expected received I frame.
@@ -40,13 +40,14 @@ class ConnectionHandler(val remoteCallsign: String,
     }
 
     fun deliverUnsequencedFrames(kissService: KissService): Int {
-        var deliveryCount = 0
-        while (unsequencedFramesForDelivery.isNotEmpty()) {
-            val frame = unsequencedFramesForDelivery.removeFirst()
-            kissService.transmitFrame(frame)
-            deliveryCount++
+        val controlFrame = nextQueuedControlFrame
+        return if (null != controlFrame) {
+            kissService.transmitFrame(controlFrame)
+            nextQueuedControlFrame = null
+            1
+        } else {
+            0
         }
-        return deliveryCount
     }
 
     fun deliverSequencedFrames(kissService: KissService): Int {
@@ -67,7 +68,7 @@ class ConnectionHandler(val remoteCallsign: String,
         if (frame.requiresAcknowledgement()) {
             sequencedQueue.addFrameForSequencedTransmission(frame)
         } else {
-            unsequencedFramesForDelivery.add(frame)
+            nextQueuedControlFrame = frame
         }
     }
 
@@ -86,7 +87,6 @@ class ConnectionHandler(val remoteCallsign: String,
                 InteractionResponseType.IGNORE -> logger.trace("Apps ignored frame: ${incomingFrame.toString()}")
             }
         } else {
-            logger.error("Received an out of sequence information frame. Expected send sequence number: $nextExpectedSendSequenceNumberFromPeer. Frame: ${incomingFrame.toString()}")
             rejectUnsequencedFrame(incomingFrame)
         }
     }
@@ -107,7 +107,7 @@ class ConnectionHandler(val remoteCallsign: String,
         // Reset sequence state
         controlMode = ControlMode.MODULO_8
         sequencedQueue.reset()
-        unsequencedFramesForDelivery = LinkedList<KissFrame>()
+        nextQueuedControlFrame = null
         nextExpectedSendSequenceNumberFromPeer = 0
         val frame = newResponseFrame(ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
         queueFrameForTransmission(frame)
