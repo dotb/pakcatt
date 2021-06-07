@@ -10,8 +10,8 @@ class SequencedQueue {
     private val logger = LoggerFactory.getLogger(SequencedQueue::class.java)
     private val dataFramesSentPerOver = 2
     private val maxSequenceNumberSize = 8
-    private val maxDeliveryAttempts = 10
-    private val deliveryRetryTimeMilliseconds = 7000
+    private val maxDeliveryAttempts = 5
+    private val deliveryRetryTimeMilliseconds = 5000
     private var sequencedFramesForDelivery = ArrayList<KissFrame>(maxSequenceNumberSize)
 
     /* Section 4.2.4 Frame Variables and Sequence Numbers, Beech et all */

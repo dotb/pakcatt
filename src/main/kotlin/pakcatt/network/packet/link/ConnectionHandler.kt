@@ -22,7 +22,7 @@ class ConnectionHandler(val remoteCallsign: String,
     /* The receive state variable contains the sequence number of the next expected received I frame.
      * This variable is updated upon the reception of an error-free I frame whose send sequence number
      * equals the present received state variable value. */
-    private var nextExpectedReceiveSequenceNumber = 0
+    private var nextExpectedSendSequenceNumberFromPeer = 0
 
     fun handleIncomingFrame(incomingFrame: KissFrame) {
         when (incomingFrame.controlFrame()) {
@@ -74,7 +74,7 @@ class ConnectionHandler(val remoteCallsign: String,
     /* Application interface */
     private fun handleNumberedInformationFrame(incomingFrame: KissFrame, pACKRequired: Boolean) {
         // Check that we expected this frame, and haven't missed any or mixed up the order
-        if (incomingFrame.sendSequenceNumber() == nextExpectedReceiveSequenceNumber) {
+        if (incomingFrame.sendSequenceNumber() == nextExpectedSendSequenceNumberFromPeer) {
             incrementReceiveSequenceNumber()
             handleIncomingAcknowledgement(incomingFrame)
 
@@ -86,8 +86,8 @@ class ConnectionHandler(val remoteCallsign: String,
                 InteractionResponseType.IGNORE -> logger.trace("Apps ignored frame: ${incomingFrame.toString()}")
             }
         } else {
-            logger.error("Received an out of sequence information frame. Expected send sequence number: $nextExpectedReceiveSequenceNumber. Frame: ${incomingFrame.toString()}")
-            realignSendSequenceNumber(incomingFrame)
+            logger.error("Received an out of sequence information frame. Expected send sequence number: $nextExpectedSendSequenceNumberFromPeer. Frame: ${incomingFrame.toString()}")
+            rejectUnsequencedFrame(incomingFrame)
         }
     }
 
@@ -108,7 +108,7 @@ class ConnectionHandler(val remoteCallsign: String,
         controlMode = ControlMode.MODULO_8
         sequencedQueue.reset()
         unsequencedFramesForDelivery = LinkedList<KissFrame>()
-        nextExpectedReceiveSequenceNumber = 0
+        nextExpectedSendSequenceNumberFromPeer = 0
         val frame = newResponseFrame(ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
         queueFrameForTransmission(frame)
     }
@@ -139,10 +139,10 @@ class ConnectionHandler(val remoteCallsign: String,
         queueFrameForTransmission(frame)
     }
 
-    private fun realignSendSequenceNumber(incomingFrame: KissFrame) {
-        logger.error("Re-aligning receive sequence number: ${incomingFrame.toString()}")
-        nextExpectedReceiveSequenceNumber = incomingFrame.sendSequenceNumber()
-        acknowledgeBySendingReadyReceive(true)
+    private fun rejectUnsequencedFrame(incomingFrame: KissFrame) {
+        logger.error("Rejecting frame with unexpected sequence number. Expected: {} Received {}", nextExpectedSendSequenceNumberFromPeer, incomingFrame.sendSequenceNumber())
+        val frame = newResponseFrame(ControlFrame.S_8_REJECT, false)
+        queueFrameForTransmission(frame)
     }
 
     private fun handleDisconnectRequest() {
@@ -189,7 +189,7 @@ class ConnectionHandler(val remoteCallsign: String,
                 ControlFrame.S_128_RECEIVE_READY, ControlFrame.S_128_RECEIVE_READY_P,
                 ControlFrame.S_128_REJECT, ControlFrame.S_128_REJECT_P,
                 ControlFrame.S_128_SELECTIVE_REJECT, ControlFrame.S_128_SELECTIVE_REJECT_P).contains(frameType)) {
-                newFrame.setReceiveSequenceNumber(nextExpectedReceiveSequenceNumber)
+                newFrame.setReceiveSequenceNumber(nextExpectedSendSequenceNumberFromPeer)
         }
         return newFrame
     }
@@ -197,10 +197,10 @@ class ConnectionHandler(val remoteCallsign: String,
     /* State management */
     private fun incrementReceiveSequenceNumber() {
         val maxSeq = maxSequenceValue()
-        if (nextExpectedReceiveSequenceNumber < maxSeq) {
-            nextExpectedReceiveSequenceNumber++
+        if (nextExpectedSendSequenceNumberFromPeer < maxSeq) {
+            nextExpectedSendSequenceNumberFromPeer++
         } else {
-            nextExpectedReceiveSequenceNumber = 0
+            nextExpectedSendSequenceNumberFromPeer = 0
         }
     }
 
