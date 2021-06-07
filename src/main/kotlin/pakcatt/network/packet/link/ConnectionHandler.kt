@@ -39,26 +39,33 @@ class ConnectionHandler(val remoteCallsign: String,
         }
     }
 
-    fun deliverUnsequencedFrames(kissService: KissService) {
+    fun deliverUnsequencedFrames(kissService: KissService): Int {
+        var deliveryCount = 0
         while (unsequencedFramesForDelivery.isNotEmpty()) {
             val frame = unsequencedFramesForDelivery.removeFirst()
             kissService.transmitFrame(frame)
+            deliveryCount++
         }
+        return deliveryCount
     }
 
-    fun deliverSequencedFrames(kissService: KissService) {
+    fun deliverSequencedFrames(kissService: KissService): Int {
+        var deliveryCount = 0
         val framesForDelivery = sequencedQueue.getSequencedFramesForDelivery()
         if (framesForDelivery.isNotEmpty()) {
             for (frame in framesForDelivery) {
                 kissService.transmitFrame(frame)
+                deliveryCount++
             }
             kissService.transmitFrame(newResponseFrame(ControlFrame.S_8_RECEIVE_READY, false))
+            deliveryCount++
         }
+        return deliveryCount
     }
 
     private fun queueFrameForTransmission(frame: KissFrame) {
         if (frame.requiresAcknowledgement()) {
-            sequencedQueue.addDataFrameForSequencedTransmission(frame)
+            sequencedQueue.addFrameForSequencedTransmission(frame)
         } else {
             unsequencedFramesForDelivery.add(frame)
         }

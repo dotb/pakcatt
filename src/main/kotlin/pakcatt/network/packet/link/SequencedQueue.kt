@@ -1,7 +1,6 @@
 package pakcatt.network.packet.link
 
 import org.slf4j.LoggerFactory
-import pakcatt.network.packet.kiss.ControlFrame
 import pakcatt.network.packet.kiss.KissFrame
 import java.util.*
 import kotlin.math.min
@@ -11,7 +10,7 @@ class SequencedQueue {
     private val logger = LoggerFactory.getLogger(SequencedQueue::class.java)
     private val maxSequenceNumberSize = 8
     private val maxDeliveryAttempts = 10
-    private val deliveryRetryTimeMilliseconds = 6000
+    private val deliveryRetryTimeMilliseconds = 7000
     private var sequencedFramesForDelivery = ArrayList<KissFrame>(maxSequenceNumberSize)
 
     /* Section 4.2.4 Frame Variables and Sequence Numbers, Beech et all */
@@ -29,14 +28,15 @@ class SequencedQueue {
         nextSendSequenceNumberExpectedByPeer = 0
     }
 
-    fun addDataFrameForSequencedTransmission(newFrame: KissFrame) {
+    fun addFrameForSequencedTransmission(newFrame: KissFrame) {
         newFrame.setSendSequenceNumber(ourNextBoundedSendSequenceNumber())
         sequencedFramesForDelivery.add(newFrame)
         ourNextUnboundedSendSequenceNumber++
-        val lowerAcknowledgeNumberLimit = ourNextUnboundedSendSequenceNumber - maxSequenceNumberSize + 1
-        val lowerBoundedAcknowledgedNumber = convertUnboundedIndexToSequenceNumber(lowerAcknowledgeNumberLimit)
-        if (lowerBoundedAcknowledgedNumber + maxSequenceNumberSize <= ourNextUnboundedSendSequenceNumber) {
-            logger.error("The sequenced send queue index {} has advanced too far ahead of the acknowledged frame index {}", ourNextUnboundedSendSequenceNumber, lowerBoundedAcknowledgedNumber)
+        val lowerUnboundedAcknowledgeLimit = ourNextUnboundedSendSequenceNumber - maxSequenceNumberSize + 1
+        val lowerBoundedAcknowledgedLimit = convertUnboundedIndexToSequenceNumber(lowerUnboundedAcknowledgeLimit)
+        val nextExpectedUnboundedIndexFromPeer = convertBoundedSequenceNumberToIndex(nextSendSequenceNumberExpectedByPeer)
+        if (nextExpectedUnboundedIndexFromPeer < lowerUnboundedAcknowledgeLimit) {
+            logger.error("The sequenced send queue index {} has advanced too far ahead of the acknowledged frame index {}", ourNextUnboundedSendSequenceNumber, nextExpectedUnboundedIndexFromPeer)
         }
     }
 
@@ -44,16 +44,19 @@ class SequencedQueue {
         val timeStampNow = Date().time
         val startIndex = convertBoundedSequenceNumberToIndex(nextSendSequenceNumberExpectedByPeer)
         val endIndex = min((startIndex + 2), ourNextUnboundedSendSequenceNumber - 1)
-
         var framesForDelivery = LinkedList<KissFrame>()
-        for (index in startIndex..endIndex) {
-            val frameAwaitingDelivery = sequencedFramesForDelivery[index]
-            if (frameAwaitingDelivery.deliveryAttempts < maxDeliveryAttempts
-                && frameAwaitingDelivery.lastDeliveryAttemptTimeStamp < timeStampNow - deliveryRetryTimeMilliseconds) {
-                // Attempt to deliver this frame
-                frameAwaitingDelivery.deliveryAttempts++
-                frameAwaitingDelivery.lastDeliveryAttemptTimeStamp = timeStampNow
-                framesForDelivery.add(frameAwaitingDelivery)
+
+        if (startIndex >= 0 && endIndex >= 0) {
+            for (index in startIndex..endIndex) {
+                val frameAwaitingDelivery = sequencedFramesForDelivery[index]
+                if (frameAwaitingDelivery.deliveryAttempts < maxDeliveryAttempts
+                    && frameAwaitingDelivery.lastDeliveryAttemptTimeStamp < timeStampNow - deliveryRetryTimeMilliseconds
+                ) {
+                    // Attempt to deliver this frame
+                    frameAwaitingDelivery.deliveryAttempts++
+                    frameAwaitingDelivery.lastDeliveryAttemptTimeStamp = timeStampNow
+                    framesForDelivery.add(frameAwaitingDelivery)
+                }
             }
         }
         return framesForDelivery

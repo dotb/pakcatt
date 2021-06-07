@@ -25,7 +25,7 @@ class LinkService(var kissService: KissService,
     private var connectionHandlers = HashMap<String, ConnectionHandler>()
     private var receiveQueue = LinkedList<KissFrame>()
     private var minOvertimeMilliseconds = 2000
-    private var lastOverCompleteTimeStamp: Long = 0
+    private var lastTransmitTimestamp: Long = 0
 
     init {
         kissService.setReceiveFrameCallback {
@@ -51,12 +51,16 @@ class LinkService(var kissService: KissService,
         }
 
         // Handle frames queued for delivery
-        if (Date().time - minOvertimeMilliseconds > lastOverCompleteTimeStamp) {
+        if (Date().time - minOvertimeMilliseconds > lastTransmitTimestamp) {
+            var deliveryCount = 0
             for (connectionHandler in connectionHandlers.values) {
-                connectionHandler.deliverUnsequencedFrames(kissService)
-                connectionHandler.deliverSequencedFrames(kissService)
+                deliveryCount = connectionHandler.deliverUnsequencedFrames(kissService)
+                deliveryCount += connectionHandler.deliverSequencedFrames(kissService)
             }
-            lastOverCompleteTimeStamp = Date().time
+            if (deliveryCount > 0) {
+                logger.debug("Transmitted: {} frames", deliveryCount)
+                lastTransmitTimestamp = Date().time
+            }
         }
     }
 
