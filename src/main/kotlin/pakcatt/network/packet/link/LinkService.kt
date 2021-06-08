@@ -54,7 +54,7 @@ class LinkService(var kissService: KissService,
         if (Date().time - minOvertimeMilliseconds > lastTransmitTimestamp) {
             var deliveryCount = 0
             for (connectionHandler in connectionHandlers.values) {
-                deliveryCount = connectionHandler.deliverUnsequencedFrames(kissService)
+                deliveryCount = connectionHandler.deliverQueuedControlFrame(kissService)
                 deliveryCount += connectionHandler.deliverSequencedFrames(kissService)
             }
             if (deliveryCount > 0) {

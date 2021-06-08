@@ -10,7 +10,7 @@ class SequencedQueue {
     private val logger = LoggerFactory.getLogger(SequencedQueue::class.java)
     private val dataFramesSentPerOver = 2
     private val maxSequenceNumberSize = 8
-    private val maxDeliveryAttempts = 5
+    private val maxDeliveryAttempts = 10
     private val deliveryRetryTimeMilliseconds = 5000
     private var sequencedFramesForDelivery = ArrayList<KissFrame>(maxSequenceNumberSize)
 
@@ -30,14 +30,11 @@ class SequencedQueue {
     }
 
     fun addFrameForSequencedTransmission(newFrame: KissFrame) {
-        newFrame.setSendSequenceNumber(ourNextBoundedSendSequenceNumber())
-        sequencedFramesForDelivery.add(newFrame)
-        ourNextUnboundedSendSequenceNumber++
-        val lowerUnboundedAcknowledgeLimit = ourNextUnboundedSendSequenceNumber - maxSequenceNumberSize + 1
-        val nextExpectedUnboundedIndexFromPeer = convertBoundedSequenceNumberToIndex(nextSendSequenceNumberExpectedByPeer)
-        if (nextExpectedUnboundedIndexFromPeer < lowerUnboundedAcknowledgeLimit) {
-            logger.error("The sequenced send queue index {} has advanced too far ahead of the acknowledged frame index {}", ourNextUnboundedSendSequenceNumber, nextExpectedUnboundedIndexFromPeer)
+        if (newFrame.requiresAcknowledgement()) {
+            newFrame.setSendSequenceNumber(ourNextBoundedSendSequenceNumber())
+            ourNextUnboundedSendSequenceNumber++
         }
+        sequencedFramesForDelivery.add(newFrame)
     }
 
     fun getSequencedFramesForDelivery(): LinkedList<KissFrame> {
@@ -60,6 +57,11 @@ class SequencedQueue {
             }
         }
         return framesForDelivery
+    }
+
+    fun isAtEndOfMessageDelivery(): Boolean {
+        val startIndex = convertBoundedSequenceNumberToIndex(nextSendSequenceNumberExpectedByPeer)
+        return startIndex >= ourNextUnboundedSendSequenceNumber - dataFramesSentPerOver
     }
 
     // Keep a record of the next send sequence number our remote party expects us to send
