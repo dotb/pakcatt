@@ -11,7 +11,7 @@ class SequencedQueue {
     private val dataFramesSentPerOver = 2
     private val maxSequenceNumberSize = 8
     private val maxDeliveryAttempts = 10
-    private val deliveryRetryTimeMilliseconds = 5000
+    private val deliveryRetryTimeMilliseconds = 9000
     private var sequencedFramesForDelivery = ArrayList<KissFrame>(maxSequenceNumberSize)
 
     /* Section 4.2.4 Frame Variables and Sequence Numbers, Beech et all */
