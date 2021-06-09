@@ -31,7 +31,7 @@ class ConnectionHandler(val remoteCallsign: String,
             ControlFrame.S_8_RECEIVE_READY -> handleIncomingAcknowledgement(incomingFrame)
             ControlFrame.S_8_RECEIVE_READY_P -> handleIncomingAcknowledgement(incomingFrame)
             ControlFrame.S_8_REJECT -> handleIncomingAcknowledgement(incomingFrame)
-//            ControlFrame.S_8_REJECT_P -> handleRequestForState() // Works better without transferring state on S_8_REJECT_P
+            ControlFrame.S_8_REJECT_P -> handleIncomingAcknowledgement(incomingFrame)
             ControlFrame.U_REJECT -> handleIncomingAcknowledgement(incomingFrame)
             ControlFrame.U_DISCONNECT_P -> handleDisconnectRequest() // Disconnect request
             else -> ignoreFrame(incomingFrame)

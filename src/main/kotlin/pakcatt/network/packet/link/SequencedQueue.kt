@@ -19,14 +19,16 @@ class SequencedQueue {
      * This variable is updated with the transmission of each I frame.*/
     private var ourNextUnboundedSendSequenceNumber = 0
 
-    /* The acknowledge state variable contains the sequence number of the last
-     * frame acknowledged by its peer [V(A)-1 equals the N(S) of the last acknowledged I frame]. */
-    private var nextSendSequenceNumberExpectedByPeer = 0
+    /* The nextBoundedSendNumberExpectedByPeer state variable contains the sequence number of the last
+     * frame acknowledged by our remote peer [V(A)-1 equals the N(S) of the last acknowledged I frame]. */
+    private var nextBoundedSendNumberExpectedByPeer = 0
+    private var nextUnboundedFrameIndexExpectedByPeer = 0
 
     fun reset() {
         sequencedFramesForDelivery = ArrayList<KissFrame>()
         ourNextUnboundedSendSequenceNumber = 0
-        nextSendSequenceNumberExpectedByPeer = 0
+        nextBoundedSendNumberExpectedByPeer = 0
+        nextUnboundedFrameIndexExpectedByPeer = 0
     }
 
     fun addFrameForSequencedTransmission(newFrame: KissFrame) {
@@ -39,7 +41,7 @@ class SequencedQueue {
 
     fun getSequencedFramesForDelivery(): LinkedList<KissFrame> {
         val timeStampNow = Date().time
-        val startIndex = convertBoundedSequenceNumberToIndex(nextSendSequenceNumberExpectedByPeer)
+        val startIndex = nextUnboundedFrameIndexExpectedByPeer
         val endIndex = min((startIndex + dataFramesSentPerOver - 1), ourNextUnboundedSendSequenceNumber - 1)
         var framesForDelivery = LinkedList<KissFrame>()
 
@@ -59,50 +61,41 @@ class SequencedQueue {
         return framesForDelivery
     }
 
+    /**
+     * Returns true if the current or next call to getSequencedFramesForDelivery
+     * returns the last frames remaining in the delivery queue.
+     */
     fun isAtEndOfMessageDelivery(): Boolean {
-        val startIndex = convertBoundedSequenceNumberToIndex(nextSendSequenceNumberExpectedByPeer)
-        return startIndex >= ourNextUnboundedSendSequenceNumber - dataFramesSentPerOver
+        return nextUnboundedFrameIndexExpectedByPeer >= ourNextUnboundedSendSequenceNumber - dataFramesSentPerOver
     }
 
     // Keep a record of the next send sequence number our remote party expects us to send
     fun handleIncomingAcknowledgementAndIfRepeated(incomingFrame: KissFrame): Boolean {
-        return if (nextSendSequenceNumberExpectedByPeer == incomingFrame.receiveSequenceNumber()) {
+        return if (nextBoundedSendNumberExpectedByPeer == incomingFrame.receiveSequenceNumber()) {
             true
         } else {
-            nextSendSequenceNumberExpectedByPeer = incomingFrame.receiveSequenceNumber()
+            /*
+             * Calculate the difference between this value and the previous received value and
+             * use it to adjust the unbounded index that points to the next frame expected
+             * to be received by our remote peer.
+             */
+            val difference = when {
+                incomingFrame.receiveSequenceNumber() > nextBoundedSendNumberExpectedByPeer -> incomingFrame.receiveSequenceNumber() - nextBoundedSendNumberExpectedByPeer
+                else -> incomingFrame.receiveSequenceNumber() + maxSequenceNumberSize - nextBoundedSendNumberExpectedByPeer
+            }
+            nextUnboundedFrameIndexExpectedByPeer += difference
+            nextBoundedSendNumberExpectedByPeer = incomingFrame.receiveSequenceNumber()
             false
         }
     }
 
     /**
-     * Return the next bounded (0 - 7) send sequence number
-     */
-    private fun ourNextBoundedSendSequenceNumber(): Int {
-        return convertUnboundedIndexToSequenceNumber(ourNextUnboundedSendSequenceNumber)
-    }
-
-    /**
-     * Convert an unbounded positive integer to a value between
+     * Return the next bounded (0 - 7) send sequence number.
+     * Converts an unbounded positive integer to a value between
      * 0 and 7.
      */
-    private fun convertUnboundedIndexToSequenceNumber(index: Int): Int {
-        return index % 8
-    }
-
-    /**
-     * Convert a bounded send sequence number to an unbounded index
-     * that maps to a frame in the sequenced frame array that is at a
-     * position lower than ourNextUnboundedSendSequenceNumber.
-     */
-    private fun convertBoundedSequenceNumberToIndex(boundedSequenceNumber: Int): Int {
-        // We have to assume the bounded number is within the 7 positions <= ourNextUnboundedSendSequenceNumber
-        return if (boundedSequenceNumber <= ourNextBoundedSendSequenceNumber()) {
-            val difference = ourNextBoundedSendSequenceNumber() - boundedSequenceNumber
-            ourNextUnboundedSendSequenceNumber - difference
-        } else {
-            val difference = boundedSequenceNumber - ourNextBoundedSendSequenceNumber()
-            ourNextUnboundedSendSequenceNumber + difference - maxSequenceNumberSize
-        }
+    private fun ourNextBoundedSendSequenceNumber(): Int {
+        return ourNextUnboundedSendSequenceNumber % 8
     }
 
 }
