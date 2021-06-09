@@ -3,21 +3,24 @@ package pakcatt.application.mainmenu
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
+import pakcatt.application.last.LastApp
 import pakcatt.application.mailbox.MailboxApp
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.ConnectionResponse
 import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.application.shared.RootApp
+import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 import kotlin.math.sqrt
 
 @Component
 @Profile("production")
 class MainMenuApp(val myCall: String,
-                  val mailboxStore: MailboxStore): RootApp() {
+                  val mailboxStore: MailboxStore,
+                  val lastApp: LastApp): RootApp() {
 
-    private val logger = LoggerFactory.getLogger(MainMenuApp::class.java)
+    private val stringUtils = StringUtils()
     private val beepChar = 7.toChar()
     private val escapeChar = 27.toChar()
 
@@ -37,11 +40,11 @@ class MainMenuApp(val myCall: String,
             notAddressedToMe(request, myCall) -> {
                return InteractionResponse.ignore()
             }
-            request.message.toLowerCase().contains("help") -> {
-                InteractionResponse.sendText("Your options are: mail, hello, ping, and sqrt <number>")
-            }
             request.message.toLowerCase().contains("mail") -> {
                 InteractionResponse.sendText("Launching mail", MailboxApp(mailboxStore))
+            }
+            request.message.toLowerCase().contains("last") -> {
+                InteractionResponse.sendText(handleLast(request.message))
             }
             request.message.toLowerCase().contains("hello") -> {
                 InteractionResponse.sendText("Hi, there! *wave*")
@@ -53,8 +56,7 @@ class MainMenuApp(val myCall: String,
                 return InteractionResponse.sendText("Ping! haha")
             }
            request.message.toLowerCase().contains("sqrt") -> {
-                val result = handleSQRT(request.message)
-                InteractionResponse.sendText(result)
+                InteractionResponse.sendText(handleSQRT(request.message))
             }
             request.message.toLowerCase().contains("nop") -> {
                 return InteractionResponse.acknowledgeOnly()
@@ -68,15 +70,30 @@ class MainMenuApp(val myCall: String,
             request.message.toLowerCase().contains("styles") -> {
                return InteractionResponse.sendText(allTheStyles())
             } else -> {
-               InteractionResponse.sendText("?? Type help for a list of commands")
+               InteractionResponse.sendText("Try these commands: mail, last, hello, ping, and sqrt <number>")
             }
         }
     }
 
     private fun handleSQRT(inputLine: String): String {
-        val arg = inputLine.split(" ")[1]
+        val arg = getArgument(inputLine, "0")
         val result = sqrt(arg.toDouble()).toString()
         return "Square root of $arg is $result"
+    }
+
+    private fun handleLast(inputLine: String): String {
+        return when (val arg = getArgument(inputLine, "")) {
+            "" -> lastApp.lastEntries()
+            else -> lastApp.lastEntryFor(arg)
+        }
+    }
+
+    private fun getArgument(inputLine: String, defaultArgument: String): String {
+        val stringTokens = inputLine.split(" ")
+        return when (stringTokens.size) {
+            2 -> stringUtils.removeEOLChars(stringTokens[1])
+            else -> defaultArgument
+        }
     }
 
     private fun allTheStyles(): String {
