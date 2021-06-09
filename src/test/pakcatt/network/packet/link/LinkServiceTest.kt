@@ -45,18 +45,19 @@ class LinkServiceTest: TestCase() {
 
 
         /* Receive an incoming message, respond with an Ready Receive ACK*/
-        // From: VK3LIT-2 to: VK3LIT-1 control: 10  controlType: I_8 pollFinalBit: 1 protocolID: f0 Receive Seq: 0 Send Seq: 0 Data: nop
-        sendFrameFromBytesAndWaitResponse(mockedTNC, byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe2, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x10, 0xf0, 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x21, 0x0d))
-        // From: VK3LIT-1 to: VK3LIT-2 control: 20  controlType: I_8 pollFinalBit: 0 protocolID: f0 Receive Seq: 1 Send Seq: 0 -  Hi, there! *wave*
-        assertResponse(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe4, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x63, 0x30, 0xf0, 0x48, 0x69, 0x2c, 0x20, 0x74, 0x68, 0x65, 0x72, 0x65, 0x21, 0x20, 0x2a, 0x77, 0x61, 0x76, 0x65, 0x2a, 0x0a, 0x0d, 0xc0), mockedTNC)
+        // Send nop
+        sendFrameAndWaitResponse(mockedTNC, ControlFrame.INFORMATION_8, 0, 0, "nop")
+        // Receive ACK only
+        assertResponse(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x21, 0xc0), mockedTNC)
 
         /* Receive an Receive Ready P message and transfer rx variable state back to the remote TNC */
-        // From: VK3LIT-2 to: VK3LIT-1 control: 10  controlType: I_8 pollFinalBit: 1 protocolID: f0 Receive Seq: 0 Send Seq: 0 Data: Hello!
-        sendFrameFromBytesAndWaitResponse(mockedTNC, byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe2, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x11))
-        waitForResponse(mockedTNC)
-        // From: VK3LIT-2 to: VK3LIT-1 control: 73  controlType: U_TEST pollFinalBit: 1 protocolID: 80 Receive Seq: 3 Send Seq: 1
-        assertResponse(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x31, 0xC0, 0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x31, 0xc0), mockedTNC)
-
+        // Send Hello!
+        sendFrameAndWaitResponse(mockedTNC, ControlFrame.INFORMATION_8, 1, 0, "Hello!")
+        // Receive two frames - 1 INFORMATION_8 and 2 S_8_RECEIVE_READY_P
+        val responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
+        assertEquals(ControlFrame.INFORMATION_8, responseFrames[0].controlFrame())
+        assertEquals("Hi, there! *wave*", responseFrames[0].payloadDataString())
+        assertEquals(ControlFrame.S_8_RECEIVE_READY_P, responseFrames[1].controlFrame())
 
         /* Receive a disconnect, and respond with an Unnumbered ACK */
         // From: VK3LIT-2 to: VK3LIT-1 control: 53  controlType: U_DISCONNECT_P pollFinalBit: 1 protocolID: 80 Receive Seq: 2 Send Seq: 1
@@ -68,8 +69,8 @@ class LinkServiceTest: TestCase() {
     @Test
     fun testSequenceNumbersAndRollover() {
         val mockedTNC = tnc as TNCMocked
-        // From: VK3LIT-2 to: VK3LIT-1 control: 3f  controlType: U_SET_ASYNC_BALANCED_MODE_P pollFinalBit: 1 protocolID: 80
-        sendFrameFromBytesAndWaitResponse(mockedTNC, byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x62, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x3f))
+        // Establish a link
+        sendFrameAndWaitResponse(mockedTNC, ControlFrame.U_SET_ASYNC_BALANCED_MODE_P, 0, 0)
         // From: VK3LIT-1 to: VK3LIT-2 control: 73  controlType: U_UNNUMBERED_ACKNOWLEDGE_P pollFinalBit: 1
         assertResponse(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0), mockedTNC)
 
@@ -115,13 +116,22 @@ class LinkServiceTest: TestCase() {
     fun testChunkingOfLongResponse() {
         val mockedTNC = tnc as TNCMocked
 
+        var receivedFrames = ArrayList<KissFrame>()
+
         // Establish a link
         sendFrameAndWaitResponse(mockedTNC, ControlFrame.U_SET_ASYNC_BALANCED_MODE_P, 0, 0)
 
         // Send request for a large response
         sendFrameAndWaitResponse(mockedTNC, ControlFrame.INFORMATION_8, 0, 0, "longtest")
-        val parsedFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
-        val constructedPayload = constructPayloadFromFrames(parsedFrames)
+        receivedFrames.addAll(parseFramesFromResponse(mockedTNC.sentDataBuffer()))
+        var lastReceivedFrame = receivedFrames.last()
+        while (lastReceivedFrame.controlFrame() != ControlFrame.S_8_RECEIVE_READY_P) {
+            val nextExpectedSendSequenceNumber = lastReceivedFrame.sendSequenceNumber() + 1
+            sendFrameAndWaitResponse(mockedTNC, ControlFrame.S_8_RECEIVE_READY, 0, nextExpectedSendSequenceNumber)
+            receivedFrames.addAll(parseFramesFromResponse(mockedTNC.sentDataBuffer()))
+            lastReceivedFrame = receivedFrames.last()
+        }
+        val constructedPayload = constructPayloadFromFrames(receivedFrames)
         val expectedResponseString = "${TestApp.longResponseString}\n\r"
         assertEquals(expectedResponseString, constructedPayload)
     }

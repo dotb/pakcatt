@@ -32,7 +32,7 @@ class TestApp: RootApp() {
 
     override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
         return when (stringUtils.removeEOLChars(request.message)) {
-            "nop" -> InteractionResponse.sendText("Hi, there! *wave*")
+            "nop" -> InteractionResponse.acknowledgeOnly()
             "Hello!" -> InteractionResponse.sendText("Hi, there! *wave*")
             "ping" -> InteractionResponse.sendText("pong")
             "longtest" -> InteractionResponse.sendText(largeResponse())
