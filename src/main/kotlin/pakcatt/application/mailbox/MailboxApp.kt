@@ -31,9 +31,8 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
                 "read" -> readMessage(request.remoteCallsign, command.arg)
                 "send" -> sendMessage(request, command.arg)
                 "del" -> deleteMessage(request.remoteCallsign, command.arg)
-                "help" -> InteractionResponse.sendText("list, read, send, del, quit")
                 "quit" -> InteractionResponse.sendText("Bye", NavigateBack(1))
-                else -> InteractionResponse.sendText("?? - try help")
+                else -> InteractionResponse.sendText("Options are: list, read, send, del, quit")
             }
         } catch (e: NumberFormatException) {
             logger.error("Argument from {} for command {} {} was not an int", request.remoteCallsign, command.command, command.arg)
