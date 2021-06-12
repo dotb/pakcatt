@@ -24,6 +24,10 @@ class MailboxStore(val mailMessageRepository: MailMessageRepository) {
         mailMessageRepository.insert(message)
     }
 
+    fun updateMessage(message: MailMessage) {
+        mailMessageRepository.save(message)
+    }
+
     fun getMessage(userCallsign: String, messageNumber: Int): MailMessage? {
         return messageNumbered(userCallsign, messageNumber)
     }
@@ -35,6 +39,10 @@ class MailboxStore(val mailMessageRepository: MailMessageRepository) {
             return message
         }
         return null
+    }
+
+    fun getUnreadMessagesTo(toUserCallsign: String): List<MailMessage> {
+        return filteredUnreadMessagesTo(toUserCallsign)
     }
 
     private fun messageNumbered(userCallsign: String, messageNumber: Int): MailMessage? {
@@ -50,6 +58,19 @@ class MailboxStore(val mailMessageRepository: MailMessageRepository) {
     private fun filteredMessages(forCallsign: String): List<MailMessage> {
         val formattedUserCallsign = stringUtils.formatCallsignRemoveSSID(forCallsign)
         return mailMessageRepository.findByFromCallsignOrToCallsign(formattedUserCallsign, formattedUserCallsign)
+    }
+
+    private fun filteredUnreadMessagesTo(toCallsign: String): List<MailMessage> {
+        val formattedToCallsign = stringUtils.formatCallsignRemoveSSID(toCallsign)
+        val allMessages = filteredMessages(formattedToCallsign)
+        val toMessages = ArrayList<MailMessage>()
+        for (message in allMessages) {
+            if (formattedToCallsign == message.toCallsign
+                && !message.isRead) {
+                toMessages.add(message)
+            }
+        }
+        return toMessages
     }
 
 }

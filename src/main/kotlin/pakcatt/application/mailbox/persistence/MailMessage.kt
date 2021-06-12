@@ -9,4 +9,5 @@ data class MailMessage(val fromCallsign: String,
                        val dateTime: Date = Date(),
                        var subject: String = "",
                        var body: String = "",
+                       var isRead: Boolean = false,
                        @Id var messageNumber: Int = 0)

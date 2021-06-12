@@ -28,9 +28,21 @@ class MainMenuApp(val myCall: String,
     }
 
     override fun decisionOnConnectionRequest(request: LinkRequest): LinkResponse {
-        return when (isAddressedToMe(request, myCall)) {
-            true -> LinkResponse.sendText("Welcome to PakCatt! Type help to learn more :-)", this)
-            false -> LinkResponse.ignore()
+        return if (isAddressedToMe(request, myCall)) {
+            val stringBuilder = StringBuilder()
+            val mailboxApp = MailboxApp(mailboxStore)
+            val unreadMessages = mailboxApp.unreadMessageCount(request)
+
+            stringBuilder.append("Welcome to PakCatt! Type help to learn more :-)")
+            if (unreadMessages > 1) {
+                stringBuilder.append("You have $unreadMessages unread messages.")
+            } else if (unreadMessages > 0) {
+                stringBuilder.append("You have an unread message.")
+            }
+            stringBuilder.append("\r\n")
+            LinkResponse.sendText(stringBuilder.toString(), this)
+        } else {
+            LinkResponse.ignore()
         }
     }
 

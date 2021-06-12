@@ -40,6 +40,11 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         }
     }
 
+    fun unreadMessageCount(request: LinkRequest): Int {
+        val formattedCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
+        return mailboxStore.getUnreadMessagesTo(formattedCallsign).size
+    }
+
     private fun listMessages(request: LinkRequest): LinkResponse {
         val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign)
         val listResponse = StringBuilder()
@@ -48,8 +53,12 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
         if (messageCount > 0) {
             listResponse.append(eol)
-            listResponse.append("No${tabSpace}Date          From${tabSpace}To${tabSpace}Subject${eol}")
+            listResponse.append("  No${tabSpace}Date          From${tabSpace}To${tabSpace}Subject${eol}")
             for (message in userMessages) {
+                listResponse.append(when (message.isRead) {
+                    true -> "  "
+                    false -> "* "
+                })
                 listResponse.append(message.messageNumber)
                 listResponse.append(tabSpace)
                 listResponse.append(dateFormatter.format(message.dateTime.time))
@@ -70,9 +79,16 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
     private fun readMessage(userCallsign: String, arg: String): LinkResponse {
         val messageNumber = arg.toInt()
-        return when (val message = mailboxStore.getMessage(userCallsign, messageNumber)) {
-            null -> LinkResponse.sendText("No message for $arg")
-            else -> LinkResponse.sendText("${eol}Subject: ${message.subject}${eol}${message.body.toString()}")
+        val message = mailboxStore.getMessage(userCallsign, messageNumber)
+        return if (null != message) {
+            // Mark this message as read if it's being accessed by the recipient
+            if (stringUtils.formatCallsignRemoveSSID(userCallsign) == message.toCallsign) {
+                message.isRead = true
+                mailboxStore.updateMessage(message)
+            }
+            LinkResponse.sendText("${eol}Subject: ${message.subject}${eol}${message.body.toString()}")
+        } else {
+            LinkResponse.sendText("No message for $arg")
         }
     }
 
