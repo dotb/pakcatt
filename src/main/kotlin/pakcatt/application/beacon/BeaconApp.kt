@@ -32,7 +32,8 @@ class BeaconApp(private val myCall: String,
     private fun beacon() {
         val timestampNow = Date().time
         val intervalMilliseconds = beaconIntervalMinutes * 60000
-        if (lastBeaconTimestamp + intervalMilliseconds < timestampNow) {
+        if (beaconIntervalMinutes > 0
+            && lastBeaconTimestamp + intervalMilliseconds < timestampNow) {
             queueAdhocMessageForTransmission(beaconDestination, myCall, beaconMessage, DeliveryType.FIRE_AND_FORGET)
             lastBeaconTimestamp = timestampNow
         }
