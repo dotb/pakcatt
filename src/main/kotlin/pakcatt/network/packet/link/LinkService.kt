@@ -4,17 +4,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import pakcatt.application.shared.AppInterface
-import pakcatt.network.packet.link.model.ConnectionResponse
-import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.network.packet.kiss.KissFrame
 import pakcatt.network.packet.kiss.KissService
 import pakcatt.network.packet.link.model.LinkRequest
+import pakcatt.network.packet.link.model.LinkResponse
 import java.util.*
 import kotlin.collections.HashMap
 
 interface LinkInterface {
-    fun getDecisionOnConnectionRequest(request: LinkRequest): ConnectionResponse
-    fun getResponseForReceivedMessage(request: LinkRequest): InteractionResponse
+    fun getDecisionOnConnectionRequest(request: LinkRequest): LinkResponse
+    fun getResponseForReceivedMessage(request: LinkRequest): LinkResponse
 }
 
 @Service
@@ -91,11 +90,11 @@ class LinkService(var kissService: KissService,
     }
 
     /* LinkInterface Methods delegated from ConnectionHandlers */
-    override fun getDecisionOnConnectionRequest(request: LinkRequest): ConnectionResponse {
+    override fun getDecisionOnConnectionRequest(request: LinkRequest): LinkResponse {
         return appService.getDecisionOnConnectionRequest(request)
     }
 
-    override fun getResponseForReceivedMessage(request: LinkRequest): InteractionResponse {
+    override fun getResponseForReceivedMessage(request: LinkRequest): LinkResponse {
         return appService.getResponseForReceivedMessage(request)
     }
 

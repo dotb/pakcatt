@@ -1,8 +1,7 @@
 package pakcatt.application.shared
 
 import pakcatt.network.packet.link.model.LinkRequest
-import pakcatt.network.packet.link.model.ConnectionResponse
-import pakcatt.network.packet.link.model.InteractionResponse
+import pakcatt.network.packet.link.model.LinkResponse
 
 abstract class RootApp: SubApp() {
 
@@ -14,6 +13,6 @@ abstract class RootApp: SubApp() {
         return !isAddressedToMe(request, myCallsign)
     }
 
-    abstract fun decisionOnConnectionRequest(request: LinkRequest): ConnectionResponse
+    abstract fun decisionOnConnectionRequest(request: LinkRequest): LinkResponse
 
 }

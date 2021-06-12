@@ -3,9 +3,8 @@ package pakcatt.application
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import pakcatt.network.packet.link.model.LinkRequest
-import pakcatt.network.packet.link.model.ConnectionResponse
-import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.application.shared.RootApp
+import pakcatt.network.packet.link.model.LinkResponse
 import pakcatt.util.StringUtils
 
 @Component
@@ -26,17 +25,17 @@ class TestApp: RootApp() {
         return "test>"
     }
 
-    override fun decisionOnConnectionRequest(request: LinkRequest): ConnectionResponse {
-        return ConnectionResponse.connect()
+    override fun decisionOnConnectionRequest(request: LinkRequest): LinkResponse {
+        return LinkResponse.acknowledgeOnly()
     }
 
-    override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
+    override fun handleReceivedMessage(request: LinkRequest): LinkResponse {
         return when (stringUtils.removeEOLChars(request.message)) {
-            "nop" -> InteractionResponse.acknowledgeOnly()
-            "Hello!" -> InteractionResponse.sendText("Hi, there! *wave*")
-            "ping" -> InteractionResponse.sendText("pong")
-            "longtest" -> InteractionResponse.sendText(largeResponse())
-            else ->  InteractionResponse.sendText("Test")
+            "nop" -> LinkResponse.acknowledgeOnly()
+            "Hello!" -> LinkResponse.sendText("Hi, there! *wave*")
+            "ping" -> LinkResponse.sendText("pong")
+            "longtest" -> LinkResponse.sendText(largeResponse())
+            else ->  LinkResponse.sendText("Test")
         }
     }
 

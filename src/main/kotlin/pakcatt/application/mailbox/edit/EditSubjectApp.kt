@@ -3,8 +3,8 @@ package pakcatt.application.mailbox.edit
 import pakcatt.application.mailbox.persistence.MailMessage
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.shared.SubApp
-import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.network.packet.link.model.LinkRequest
+import pakcatt.network.packet.link.model.LinkResponse
 import pakcatt.util.StringUtils
 
 class EditSubjectApp(private val mailMessage: MailMessage, private val mailboxStore: MailboxStore): SubApp() {
@@ -15,9 +15,9 @@ class EditSubjectApp(private val mailMessage: MailMessage, private val mailboxSt
         return "Subject:"
     }
 
-    override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
+    override fun handleReceivedMessage(request: LinkRequest): LinkResponse {
         mailMessage.subject = stringUtils.removeEOLChars(request.message)
-        return InteractionResponse.sendText("Compose your message and finish with . on a line of it's own.", EditBodyApp(mailMessage, mailboxStore))
+        return LinkResponse.sendText("Compose your message and finish with . on a line of it's own.", EditBodyApp(mailMessage, mailboxStore))
     }
 
 }

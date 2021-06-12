@@ -7,9 +7,8 @@ import pakcatt.application.last.LastApp
 import pakcatt.application.mailbox.MailboxApp
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.network.packet.link.model.LinkRequest
-import pakcatt.network.packet.link.model.ConnectionResponse
-import pakcatt.network.packet.link.model.InteractionResponse
 import pakcatt.application.shared.RootApp
+import pakcatt.network.packet.link.model.LinkResponse
 import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 import kotlin.math.sqrt
@@ -28,49 +27,49 @@ class MainMenuApp(val myCall: String,
         return "menu>"
     }
 
-    override fun decisionOnConnectionRequest(request: LinkRequest): ConnectionResponse {
+    override fun decisionOnConnectionRequest(request: LinkRequest): LinkResponse {
         return when (isAddressedToMe(request, myCall)) {
-            true -> ConnectionResponse.connectWithMessage("Welcome to PakCatt! Type help to learn more :-)", this)
-            false -> ConnectionResponse.ignore()
+            true -> LinkResponse.sendText("Welcome to PakCatt! Type help to learn more :-)", this)
+            false -> LinkResponse.ignore()
         }
     }
 
-    override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
+    override fun handleReceivedMessage(request: LinkRequest): LinkResponse {
        return when {
             notAddressedToMe(request, myCall) -> {
-               return InteractionResponse.ignore()
+               return LinkResponse.ignore()
             }
             request.message.toLowerCase().contains("mail") -> {
-                InteractionResponse.sendText("Launching mail", MailboxApp(mailboxStore))
+                LinkResponse.sendText("Launching mail", MailboxApp(mailboxStore))
             }
             request.message.toLowerCase().contains("last") -> {
-                InteractionResponse.sendText(handleLast(request.message))
+                LinkResponse.sendText(handleLast(request.message))
             }
             request.message.toLowerCase().contains("hello") -> {
-                InteractionResponse.sendText("Hi, there! *wave*")
+                LinkResponse.sendText("Hi, there! *wave*")
             }
             request.message.toLowerCase().contains("ping") -> {
-                return InteractionResponse.sendText("Pong!")
+                return LinkResponse.sendText("Pong!")
             }
             request.message.toLowerCase().contains("pong") -> {
-                return InteractionResponse.sendText("Ping! haha")
+                return LinkResponse.sendText("Ping! haha")
             }
            request.message.toLowerCase().contains("sqrt") -> {
-                InteractionResponse.sendText(handleSQRT(request.message))
+               LinkResponse.sendText(handleSQRT(request.message))
             }
             request.message.toLowerCase().contains("nop") -> {
-                return InteractionResponse.acknowledgeOnly()
+                return LinkResponse.acknowledgeOnly()
             }
             request.message.toLowerCase().contains("beep") -> {
-                return InteractionResponse.sendText("beep! $beepChar")
+                return LinkResponse.sendText("beep! $beepChar")
             }
             request.message.toLowerCase().contains("bold") -> {
-                return InteractionResponse.sendText("This should be $escapeChar[1mBOLD$escapeChar[0m and this, should not be bold.")
+                return LinkResponse.sendText("This should be $escapeChar[1mBOLD$escapeChar[0m and this, should not be bold.")
             }
             request.message.toLowerCase().contains("styles") -> {
-               return InteractionResponse.sendText(allTheStyles())
+               return LinkResponse.sendText(allTheStyles())
             } else -> {
-               InteractionResponse.sendText("Try these commands: mail, last, hello, ping, and sqrt <number>")
+               LinkResponse.sendText("Try these commands: mail, last, hello, ping, and sqrt <number>")
             }
         }
     }

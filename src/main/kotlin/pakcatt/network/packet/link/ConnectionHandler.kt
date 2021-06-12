@@ -86,9 +86,9 @@ class ConnectionHandler(val remoteCallsign: String,
             // Share the payload with any listening applications to process
             val  appResponse = linkInterface.getResponseForReceivedMessage(LinkRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
             when (appResponse.responseType) {
-                InteractionResponseType.SEND_TEXT -> sendMessage(appResponse.responseString())
-                InteractionResponseType.ACK_ONLY -> sendAcknowlegeAndReadyForReceive()
-                InteractionResponseType.IGNORE -> logger.trace("Apps ignored frame: ${incomingFrame.toString()}")
+                ResponseType.ACK_WITH_TEXT -> sendMessage(appResponse.responseString())
+                ResponseType.ACK_ONLY -> sendAcknowlegeAndReadyForReceive()
+                ResponseType.IGNORE -> logger.trace("Apps ignored frame: ${incomingFrame.toString()}")
             }
         } else {
             rejectUnsequencedFrame(incomingFrame)
@@ -100,9 +100,9 @@ class ConnectionHandler(val remoteCallsign: String,
         // Gather a connection decision from applications
         val appResponse = linkInterface.getDecisionOnConnectionRequest(LinkRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
         when (appResponse.responseType) {
-            ConnectionResponseType.CONNECT -> acceptIncomingConnection()
-            ConnectionResponseType.CONNECT_WITH_MESSAGE -> acceptIncomingConnectionWithMessage(appResponse.responseString())
-            ConnectionResponseType.IGNORE -> logger.trace("Ignored connection request from: $remoteCallsign to :$myCallsign")
+            ResponseType.ACK_ONLY -> acceptIncomingConnection()
+            ResponseType.ACK_WITH_TEXT -> acceptIncomingConnectionWithMessage(appResponse.responseString())
+            ResponseType.IGNORE -> logger.trace("Ignored connection request from: $remoteCallsign to :$myCallsign")
         }
     }
 

@@ -6,7 +6,7 @@ import pakcatt.application.mailbox.persistence.MailMessage
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.shared.*
 import pakcatt.network.packet.link.model.LinkRequest
-import pakcatt.network.packet.link.model.InteractionResponse
+import pakcatt.network.packet.link.model.LinkResponse
 import pakcatt.util.StringUtils
 import java.lang.NumberFormatException
 import java.lang.StringBuilder
@@ -23,7 +23,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         return "mail>"
     }
 
-    override fun handleReceivedMessage(request: LinkRequest): InteractionResponse {
+    override fun handleReceivedMessage(request: LinkRequest): LinkResponse {
         val command = parseCommand(request.message)
         return try {
             when (command.command) {
@@ -31,16 +31,16 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
                 "read" -> readMessage(request.remoteCallsign, command.arg)
                 "send" -> sendMessage(request, command.arg)
                 "del" -> deleteMessage(request.remoteCallsign, command.arg)
-                "quit" -> InteractionResponse.sendText("Bye", NavigateBack(1))
-                else -> InteractionResponse.sendText("Options are: list, read, send, del, quit")
+                "quit" -> LinkResponse.sendText("Bye", NavigateBack(1))
+                else -> LinkResponse.sendText("Options are: list, read, send, del, quit")
             }
         } catch (e: NumberFormatException) {
             logger.error("Argument from {} for command {} {} was not an int", request.remoteCallsign, command.command, command.arg)
-            InteractionResponse.sendText("Invalid argument")
+            LinkResponse.sendText("Invalid argument")
         }
     }
 
-    private fun listMessages(request: LinkRequest): InteractionResponse {
+    private fun listMessages(request: LinkRequest): LinkResponse {
         val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign)
         val listResponse = StringBuilder()
         val messageCount = userMessages.size
@@ -65,28 +65,28 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         listResponse.append(messageCount)
         listResponse.append(" messages")
         listResponse.append(eol)
-        return InteractionResponse.sendText(listResponse.toString())
+        return LinkResponse.sendText(listResponse.toString())
     }
 
-    private fun readMessage(userCallsign: String, arg: String): InteractionResponse {
+    private fun readMessage(userCallsign: String, arg: String): LinkResponse {
         val messageNumber = arg.toInt()
         return when (val message = mailboxStore.getMessage(userCallsign, messageNumber)) {
-            null -> InteractionResponse.sendText("No message for $arg")
-            else -> InteractionResponse.sendText("${eol}Subject: ${message.subject}${eol}${message.body.toString()}")
+            null -> LinkResponse.sendText("No message for $arg")
+            else -> LinkResponse.sendText("${eol}Subject: ${message.subject}${eol}${message.body.toString()}")
         }
     }
 
-    private fun sendMessage(request: LinkRequest, arg: String): InteractionResponse {
+    private fun sendMessage(request: LinkRequest, arg: String): LinkResponse {
         val fromCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         val toCallsign = stringUtils.formatCallsignRemoveSSID(arg)
-        return InteractionResponse.sendText("", EditSubjectApp(MailMessage(fromCallsign, toCallsign), mailboxStore))
+        return LinkResponse.sendText("", EditSubjectApp(MailMessage(fromCallsign, toCallsign), mailboxStore))
     }
 
-    private fun deleteMessage(userCallsign: String, arg: String): InteractionResponse {
+    private fun deleteMessage(userCallsign: String, arg: String): LinkResponse {
         val messageNumber = arg.toInt()
         return when (val message = mailboxStore.deleteMessage(userCallsign, messageNumber)) {
-            null -> InteractionResponse.sendText("No message for $arg")
-            else -> return InteractionResponse.sendText("Deleted $messageNumber ${message.subject}")
+            null -> LinkResponse.sendText("No message for $arg")
+            else -> return LinkResponse.sendText("Deleted $messageNumber ${message.subject}")
         }
     }
 
