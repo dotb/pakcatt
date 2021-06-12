@@ -1,18 +1,14 @@
-package pakcatt
+package pakcatt.dependencies
 
-import org.springframework.context.annotation.*
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
 import pakcatt.network.packet.tnc.TNC
 import pakcatt.network.packet.tnc.TNCMocked
 
 @Configuration
 @Profile("test")
-class TestConfiguration {
-
-    @Bean
-    @Primary
-    fun tnc(): TNC {
-        return TNCMocked()
-    }
+class Configuration {
 
     @Bean
     open fun serialPortPath(): String {

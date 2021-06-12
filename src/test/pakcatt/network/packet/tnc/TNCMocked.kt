@@ -1,9 +1,11 @@
 package pakcatt.network.packet.tnc
 
+import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import pakcatt.util.ByteUtils
 
 @Component
+@Profile("test")
 class TNCMocked: TNC() {
 
     private val maxBufferSize = 8192

@@ -2,12 +2,14 @@ package pakcatt.network.packet.tnc
 
 import gnu.io.NRSerialPort
 import org.slf4j.LoggerFactory
+import org.springframework.context.annotation.Profile
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.io.DataInputStream
 import java.io.DataOutputStream
 
 @Component
+@Profile("production")
 class TNCSerial(private val serialPortPath: String,
                 private val serialPortBaud: Int): TNC() {
 
