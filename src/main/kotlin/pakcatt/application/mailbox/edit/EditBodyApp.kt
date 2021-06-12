@@ -6,11 +6,9 @@ import pakcatt.application.shared.NavigateBack
 import pakcatt.application.shared.SubApp
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.LinkResponse
-import pakcatt.util.StringUtils
 
 class EditBodyApp(private val mailMessage: MailMessage, private val mailboxStore: MailboxStore): SubApp() {
 
-    private val stringUtils = StringUtils()
     private var composedBody = StringBuilder()
 
     override fun returnCommandPrompt(): String {

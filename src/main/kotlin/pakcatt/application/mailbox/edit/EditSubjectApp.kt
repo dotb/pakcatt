@@ -5,11 +5,8 @@ import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.shared.SubApp
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.LinkResponse
-import pakcatt.util.StringUtils
 
 class EditSubjectApp(private val mailMessage: MailMessage, private val mailboxStore: MailboxStore): SubApp() {
-
-    private val stringUtils = StringUtils()
 
     override fun returnCommandPrompt(): String {
         return "Subject:"

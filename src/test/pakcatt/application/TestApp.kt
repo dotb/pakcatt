@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.application.shared.RootApp
 import pakcatt.network.packet.link.model.LinkResponse
-import pakcatt.util.StringUtils
 
 @Component
 @Profile("test")
@@ -17,9 +16,6 @@ class TestApp: RootApp() {
                                         "\n\rSed consectetur sed dolor nec tempus. Vivamus semper sem mi, et malesuada nisi cursus id. Aenean nec sapien nisi. Sed id mauris dui. Vivamus fringilla posuere neque, vitae posuere nulla pretium eu. Curabitur odio neque, faucibus nec urna vel, vestibulum bibendum libero. Cras tincidunt non ligula tincidunt venenatis. Mauris commodo sagittis dui. Suspendisse lacinia non augue in gravida. Aliquam sed orci elit. Donec id suscipit arcu. Fusce mollis nisl eget tellus euismod, molestie tristique ipsum imperdiet. Etiam eget lorem vel sapien placerat ultricies." +
                                         "\n\rAliquam sit amet orci augue. Donec luctus posuere lorem quis malesuada. Nam at ex a odio fringilla vestibulum id eget dolor. Maecenas tempus, ex in gravida convallis, nisi neque tempor quam, nec venenatis mi libero eu ante. Donec eget nunc massa. Nulla tincidunt tortor sodales tincidunt porttitor. Mauris non consequat eros. Praesent facilisis ut leo at finibus. Morbi vestibulum enim dolor, quis ornare nibh tempor a."
     }
-
-    private val stringUtils = StringUtils()
-
 
     override fun returnCommandPrompt(): String {
         return "test>"

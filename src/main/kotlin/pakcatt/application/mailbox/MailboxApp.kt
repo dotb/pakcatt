@@ -5,39 +5,32 @@ import pakcatt.application.mailbox.edit.EditSubjectApp
 import pakcatt.application.mailbox.persistence.MailMessage
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.shared.*
+import pakcatt.application.shared.command.Command
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.LinkResponse
-import pakcatt.util.StringUtils
-import java.lang.NumberFormatException
 import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 
 class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
     private val logger = LoggerFactory.getLogger(MailboxApp::class.java)
-    private val stringUtils = StringUtils()
     private val tabSpace = "\t"
     private val eol = "\n\r"
+
+    init {
+        registerCommand(Command("list") .function { listMessages(it) }  .description("List the messages available to you"))
+        registerCommand(Command("send") .function { sendMessage(it) }   .description("Send a message, passing the destination callsign as an argument"))
+        registerCommand(Command("read") .function { readMessage(it) }   .description("Read a single message, passing the message number as an argument"))
+        registerCommand(Command("del")  .function { deleteMessage(it) } .description("Delete a message, passing the message number as an argument"))
+        registerCommand(Command("quit") .reply("Bye").openApp(NavigateBack(1)).description("Leave the mail app and return to the main menu"))
+    }
 
     override fun returnCommandPrompt(): String {
         return "mail>"
     }
 
     override fun handleReceivedMessage(request: LinkRequest): LinkResponse {
-        val command = parseCommand(request.message)
-        return try {
-            when (command.command) {
-                "list" -> listMessages(request)
-                "read" -> readMessage(request.remoteCallsign, command.arg)
-                "send" -> sendMessage(request, command.arg)
-                "del" -> deleteMessage(request.remoteCallsign, command.arg)
-                "quit" -> LinkResponse.sendText("Bye", NavigateBack(1))
-                else -> LinkResponse.sendText("Options are: list, read, send, del, quit")
-            }
-        } catch (e: NumberFormatException) {
-            logger.error("Argument from {} for command {} {} was not an int", request.remoteCallsign, command.command, command.arg)
-            LinkResponse.sendText("Invalid argument")
-        }
+        return handleRequestWithRegisteredCommand(request)
     }
 
     fun unreadMessageCount(request: LinkRequest): Int {
@@ -77,43 +70,42 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         return LinkResponse.sendText(listResponse.toString())
     }
 
-    private fun readMessage(userCallsign: String, arg: String): LinkResponse {
-        val messageNumber = arg.toInt()
-        val message = mailboxStore.getMessage(userCallsign, messageNumber)
+    private fun readMessage(request: LinkRequest): LinkResponse {
+        val userCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
+        var message: MailMessage? = null
+        val messageNumber = parseIntArgument(request.message)
+        if (null != messageNumber) {
+            message = mailboxStore.getMessage(userCallsign, messageNumber)
+        }
         return if (null != message) {
             // Mark this message as read if it's being accessed by the recipient
-            if (stringUtils.formatCallsignRemoveSSID(userCallsign) == message.toCallsign) {
+            if (userCallsign == message.toCallsign) {
                 message.isRead = true
                 mailboxStore.updateMessage(message)
             }
             LinkResponse.sendText("${eol}Subject: ${message.subject}${eol}${message.body.toString()}")
         } else {
-            LinkResponse.sendText("No message for $arg")
+            LinkResponse.sendText("No message found")
         }
     }
 
-    private fun sendMessage(request: LinkRequest, arg: String): LinkResponse {
+    private fun sendMessage(request: LinkRequest): LinkResponse {
+        val arg = parseStringArgument(request.message, "")
         val fromCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         val toCallsign = stringUtils.formatCallsignRemoveSSID(arg)
         return LinkResponse.sendText("", EditSubjectApp(MailMessage(fromCallsign, toCallsign), mailboxStore))
     }
 
-    private fun deleteMessage(userCallsign: String, arg: String): LinkResponse {
-        val messageNumber = arg.toInt()
-        return when (val message = mailboxStore.deleteMessage(userCallsign, messageNumber)) {
-            null -> LinkResponse.sendText("No message for $arg")
-            else -> return LinkResponse.sendText("Deleted $messageNumber ${message.subject}")
+    private fun deleteMessage(request: LinkRequest): LinkResponse {
+        var message: MailMessage? = null
+        val userCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
+        val messageNumber = parseIntArgument(request.message)
+        if (null != messageNumber) {
+            message = mailboxStore.deleteMessage(userCallsign, messageNumber)
         }
-    }
-
-    private fun parseCommand(inputLine: String): Command {
-        val commandComponents = stringUtils.removeEOLChars(inputLine).split(" ")
-        return if (commandComponents.size >= 2) {
-            val command = commandComponents[0]
-            val arg = commandComponents[1]
-            Command(command, arg)
-        } else {
-            Command(stringUtils.removeEOLChars(inputLine), "")
+        return when (message) {
+            null -> LinkResponse.sendText("No message found")
+            else -> return LinkResponse.sendText("Deleted $messageNumber ${message.subject}")
         }
     }
 

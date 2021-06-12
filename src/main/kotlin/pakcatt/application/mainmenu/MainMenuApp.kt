@@ -1,6 +1,5 @@
 package pakcatt.application.mainmenu
 
-import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import pakcatt.application.last.LastApp
@@ -8,8 +7,8 @@ import pakcatt.application.mailbox.MailboxApp
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.application.shared.RootApp
+import pakcatt.application.shared.command.Command
 import pakcatt.network.packet.link.model.LinkResponse
-import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 import kotlin.math.sqrt
 
@@ -19,9 +18,26 @@ class MainMenuApp(val myCall: String,
                   val mailboxStore: MailboxStore,
                   val lastApp: LastApp): RootApp() {
 
-    private val stringUtils = StringUtils()
     private val beepChar = 7.toChar()
     private val escapeChar = 27.toChar()
+
+    init {
+        // Apps and functionality
+        registerCommand(Command("mail") .reply("Launching Mail")    .openApp(MailboxApp(mailboxStore))  .description("Open the Mail app"))
+        registerCommand(Command("last") .function { handleLast(it) }.description("See when others were last seen"))
+        registerCommand(Command("sqrt") .function { handleSQRT(it) }.description("Calculate the square root of an argument"))
+
+        // Cute responses
+        registerCommand(Command("hello").reply("Hi, there! *wave*") .description("Just a friendly welcome :-)"))
+        registerCommand(Command("ping") .reply("Pong!").description("I'll reply with a pong"))
+        registerCommand(Command("beep") .reply("beep! $beepChar").description("Send a beep instruction to your terminal"))
+
+        // Terminal tests
+        registerCommand(Command("bold") .reply("This should be $escapeChar[1mBOLD$escapeChar[0m and this, should not be bold.").description("Test the bold control character on your terminal"))
+        registerCommand(Command("styles").function { allTheStyles() }.description("Test the styles supported by your terminal"))
+        registerCommand(Command("nop")  .ackOnly().description("I'll do nothing, just acknowledge your request"))
+        registerCommand(Command("ignore").ignore().description("I'll receive your command but won't acknowledge it."))
+    }
 
     override fun returnCommandPrompt(): String {
         return "menu>"
@@ -47,72 +63,31 @@ class MainMenuApp(val myCall: String,
     }
 
     override fun handleReceivedMessage(request: LinkRequest): LinkResponse {
-       return when {
-            notAddressedToMe(request, myCall) -> {
-               return LinkResponse.ignore()
-            }
-            request.message.toLowerCase().contains("mail") -> {
-                LinkResponse.sendText("Launching mail", MailboxApp(mailboxStore))
-            }
-            request.message.toLowerCase().contains("last") -> {
-                LinkResponse.sendText(handleLast(request.message))
-            }
-            request.message.toLowerCase().contains("hello") -> {
-                LinkResponse.sendText("Hi, there! *wave*")
-            }
-            request.message.toLowerCase().contains("ping") -> {
-                return LinkResponse.sendText("Pong!")
-            }
-            request.message.toLowerCase().contains("pong") -> {
-                return LinkResponse.sendText("Ping! haha")
-            }
-           request.message.toLowerCase().contains("sqrt") -> {
-               LinkResponse.sendText(handleSQRT(request.message))
-            }
-            request.message.toLowerCase().contains("nop") -> {
-                return LinkResponse.acknowledgeOnly()
-            }
-            request.message.toLowerCase().contains("beep") -> {
-                return LinkResponse.sendText("beep! $beepChar")
-            }
-            request.message.toLowerCase().contains("bold") -> {
-                return LinkResponse.sendText("This should be $escapeChar[1mBOLD$escapeChar[0m and this, should not be bold.")
-            }
-            request.message.toLowerCase().contains("styles") -> {
-               return LinkResponse.sendText(allTheStyles())
-            } else -> {
-               LinkResponse.sendText("Try these commands: mail, last, hello, ping, and sqrt <number>")
-            }
-        }
+       return when (isAddressedToMe(request, myCall)) {
+           true -> handleRequestWithRegisteredCommand(request)
+           else -> LinkResponse.ignore()
+       }
     }
 
-    private fun handleSQRT(inputLine: String): String {
-        val arg = getArgument(inputLine, "0")
+    private fun handleSQRT(request: LinkRequest): LinkResponse {
+        val arg = parseStringArgument(request.message, "0")
         val result = sqrt(arg.toDouble()).toString()
-        return "Square root of $arg is $result"
+        return LinkResponse.sendText("Square root of $arg is $result")
     }
 
-    private fun handleLast(inputLine: String): String {
-        return when (val arg = getArgument(inputLine, "")) {
-            "" -> lastApp.lastEntries()
-            else -> lastApp.lastEntryFor(arg)
+    private fun handleLast(request: LinkRequest): LinkResponse {
+        return when (val arg = parseStringArgument(request.message, "")) {
+            "" -> LinkResponse.sendText(lastApp.lastEntries())
+            else -> LinkResponse.sendText(lastApp.lastEntryFor(arg))
         }
     }
 
-    private fun getArgument(inputLine: String, defaultArgument: String): String {
-        val stringTokens = inputLine.split(" ")
-        return when (stringTokens.size) {
-            2 -> stringUtils.removeEOLChars(stringTokens[1])
-            else -> defaultArgument
-        }
-    }
-
-    private fun allTheStyles(): String {
+    private fun allTheStyles(): LinkResponse {
         val returnString = StringBuilder()
         for (style in 1..8) {
             returnString.append("$escapeChar[${style}m Style $style $escapeChar[0m\r\n")
         }
-        return returnString.toString()
+        return LinkResponse.sendText(returnString.toString())
     }
 
 }

@@ -6,7 +6,6 @@ import pakcatt.application.last.persistence.LastEntryStore
 import pakcatt.application.shared.RootApp
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.LinkResponse
-import pakcatt.util.StringUtils
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -19,7 +18,6 @@ import java.util.*
 class LastApp(private val lastEntryStore: LastEntryStore): RootApp() {
 
     private val dateFormatter = SimpleDateFormat("EEEE, dd MMMM yyyy, HH:mm")
-    private val stringUtils = StringUtils()
 
     override fun returnCommandPrompt(): String {
         return ""
