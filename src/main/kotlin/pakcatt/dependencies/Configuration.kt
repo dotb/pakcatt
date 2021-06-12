@@ -27,18 +27,24 @@ class Configuration {
         return beaconMessage
     }
 
-    @Value("\${pakcatt.application.beacon.interval_seconds}")
-    private lateinit var beaconIntervalSeconds: String
+    @Value("\${pakcatt.application.beacon.interval_minutes}")
+    private lateinit var beaconIntervalMinutes: String
     @Bean
-    fun beaconIntervalSeconds(): Int {
+    fun beaconIntervalMinutes(): Int {
         return try {
-            beaconIntervalSeconds.toInt()
+            beaconIntervalMinutes.toInt()
         } catch (e: NumberFormatException) {
-            logger.error("The beacon interval {} is not a valid number. Please configure pakcatt.application.beacon.interval_seconds using numeric characters.", beaconIntervalSeconds)
+            logger.error("The beacon interval {} is not a valid number. Please configure pakcatt.application.beacon.interval_minutes using numeric characters.", beaconIntervalMinutes)
             0
         }
     }
 
+    @Value("\${pakcatt.application.beacon.destination}")
+    private lateinit var beaconDestination: String
+    @Bean
+    fun beaconDestination(): String {
+        return beaconDestination
+    }
 
     @Value("\${pakcatt.serial-port-path}")
     private lateinit var serialPortPath: String

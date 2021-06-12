@@ -4,8 +4,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import pakcatt.application.shared.AppInterface
+import pakcatt.network.packet.kiss.ControlFrame
 import pakcatt.network.packet.kiss.KissFrame
 import pakcatt.network.packet.kiss.KissService
+import pakcatt.network.packet.link.model.DeliveryType
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.LinkResponse
 import java.util.*
@@ -49,12 +51,21 @@ class LinkService(var kissService: KissService,
                 connectionHandler.handleIncomingFrame(nextReceivedFrame)
         }
 
+        // Queue any adhoc frames for delivery
+        for (adhocDelivery in appService.getAdhocResponsesForDelivery()) {
+            val adhocConnectionHandler = connectionHandlerForConversation(adhocDelivery.remoteCallsign, adhocDelivery.myCallsign)
+            when (adhocDelivery.deliveryType) {
+                DeliveryType.REQUIRES_ACK -> adhocConnectionHandler.queueMessageForDelivery(ControlFrame.INFORMATION_8, adhocDelivery.message)
+                DeliveryType.FIRE_AND_FORGET -> adhocConnectionHandler.queueMessageForDelivery(ControlFrame.U_UNNUMBERED_INFORMATION, adhocDelivery.message)
+            }
+        }
+
         // Handle frames queued for delivery
         if (Date().time - minOvertimeMilliseconds > lastTransmitTimestamp) {
             var deliveryCount = 0
             for (connectionHandler in connectionHandlers.values) {
                 deliveryCount = connectionHandler.deliverQueuedControlFrame(kissService)
-                deliveryCount += connectionHandler.deliverSequencedFrames(kissService)
+                deliveryCount += connectionHandler.deliverContentFrames(kissService)
             }
             if (deliveryCount > 0) {
                 logger.debug("Transmitted: {} frames", deliveryCount)
@@ -67,13 +78,13 @@ class LinkService(var kissService: KissService,
         receiveQueue.add(incomingFrame)
     }
 
-    private fun connectionHandlerForConversation(remoteCallsign: String, addressedToCallsign: String): ConnectionHandler {
-        val key = connectionHandlerKey(remoteCallsign, addressedToCallsign)
+    private fun connectionHandlerForConversation(remoteCallsign: String, myCallsign: String): ConnectionHandler {
+        val key = connectionHandlerKey(remoteCallsign, myCallsign)
         val connectionHandler = connectionHandlers[key]
         return if (null != connectionHandler) {
             connectionHandler
         } else {
-            val connectionHandler = ConnectionHandler(remoteCallsign, addressedToCallsign, this)
+            val connectionHandler = ConnectionHandler(remoteCallsign, myCallsign, this)
             connectionHandlers[key] = connectionHandler
             connectionHandler
         }

@@ -3,21 +3,25 @@ PakCatt is a modern packet radio framework built on top of KISS and AX25. It's n
 
 It's written in Kotlin and the Springboot framework, which makes it highly extensible and able to integrate into other web services.
 
-PakCatt is maintained by VK3LIT and VK2VRO.
+PakCatt is maintained by VK3LIT and VK2VRO, who also run an instance on 144.875MHz FM in the Melbourne area, Australia - Connect to VK3LIT-1.
 
 ## Features
 
 PakCatt is in its early days! Here are a few of the features it currently supports:
 
+- **An extensible app framework** for developing digital services over packet
+
+- **A Maildrop service** - you can send and receive mail!
+
+- **Beacon** - Beacon a custom message at a configured time interval 
+
+- **Log of seen stations** - check out the `last` command
+  
 - **Serial Interface** to hardware TNCs
 
 - **KISS implementation** for raw communication with a TNC
 
 - **AX.25 implementation**, or at least a good start of it ;-)
-
-- **A Maildrop service** - you can send and receive mail!
-
-- **An extensible app framework** for developing digital services over packet 
 
 ## Build instructions
 You'll need:

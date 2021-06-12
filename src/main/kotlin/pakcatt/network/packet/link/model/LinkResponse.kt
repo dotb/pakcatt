@@ -6,10 +6,9 @@ enum class ResponseType {
     ACK_WITH_TEXT, ACK_ONLY, IGNORE
 }
 
-class LinkResponse(
-    val responseType: ResponseType,
-    private var responseString: String,
-    private val nextApp: SubApp? = null) {
+class LinkResponse(val responseType: ResponseType,
+                   private var responseString: String,
+                    private val nextApp: SubApp? = null) {
 
     companion object {
         /**

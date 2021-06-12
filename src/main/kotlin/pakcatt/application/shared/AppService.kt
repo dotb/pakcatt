@@ -8,6 +8,7 @@ import pakcatt.util.StringUtils
 interface AppInterface {
     fun getDecisionOnConnectionRequest(request: LinkRequest): LinkResponse
     fun getResponseForReceivedMessage(request: LinkRequest): LinkResponse
+    fun getAdhocResponsesForDelivery(): List<LinkAdhoc>
     fun closeConnection(remoteCallsign: String, myCallsign: String)
 }
 
@@ -60,6 +61,14 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         updateAppFocus(interactionResponse.nextApp(), userContext)
         // Return any response with an included command prompt string
         return addPromptToResponse(userContext.engagedApplication(), interactionResponse)
+    }
+
+    override fun getAdhocResponsesForDelivery(): List<LinkAdhoc> {
+        val allAdhocResponses = ArrayList<LinkAdhoc>()
+        for (app in rootApplications) {
+            allAdhocResponses.addAll(app.flushAdhocResponses())
+        }
+        return allAdhocResponses
     }
 
     private fun getResponseForReceivedMessage(request: LinkRequest, userContext: UserContext): LinkResponse  {

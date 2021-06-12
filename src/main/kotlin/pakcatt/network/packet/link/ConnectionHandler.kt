@@ -16,6 +16,7 @@ class ConnectionHandler(val remoteCallsign: String,
     private val logger = LoggerFactory.getLogger(ConnectionHandler::class.java)
     private var controlMode = ControlMode.MODULO_8
     private var nextQueuedControlFrame: KissFrame? = null
+    private var unnumberedQueue = ArrayList<KissFrame>()
     private var sequencedQueue = SequencedQueue()
 
     /* The receive state variable contains the sequence number of the next expected received I frame.
@@ -49,14 +50,24 @@ class ConnectionHandler(val remoteCallsign: String,
         }
     }
 
-    fun deliverSequencedFrames(kissService: KissService): Int {
+    fun deliverContentFrames(kissService: KissService): Int {
         var deliveryCount = 0
-        val framesForDelivery = sequencedQueue.getSequencedFramesForDelivery()
-        if (framesForDelivery.isNotEmpty()) {
-            for ((index, frame) in framesForDelivery.withIndex()) {
+
+        // Deliver unnumbered frames that do not require an ACK
+        val unnumberedFramesForDelivery = unnumberedQueue
+        unnumberedQueue = ArrayList() // Reset the unnumberedQueue
+        for (frame in unnumberedFramesForDelivery) {
+            kissService.transmitFrame(frame)
+            deliveryCount++
+        }
+
+        // Deliver numbered frames that do require an ACK
+        val numberedFramesForDelivery = sequencedQueue.getSequencedFramesForDelivery()
+        if (numberedFramesForDelivery.isNotEmpty()) {
+            for ((index, frame) in numberedFramesForDelivery.withIndex()) {
 
                 // This is the last frame to be delivered in this over, set the P flag.
-                if (index >= framesForDelivery.size - 1 && !sequencedQueue.isAtEndOfMessageDelivery()) {
+                if (index >= numberedFramesForDelivery.size - 1 && !sequencedQueue.isAtEndOfMessageDelivery()) {
                     frame.setControlType(ControlFrame.INFORMATION_8_P)
                 }
                 kissService.transmitFrame(frame)
@@ -70,6 +81,19 @@ class ConnectionHandler(val remoteCallsign: String,
             }
         }
         return deliveryCount
+    }
+
+    fun queueMessageForDelivery(controlFrame: ControlFrame, message: String) {
+        val payloadChunks = chunkUpPayload(message)
+        for (payloadChunk in payloadChunks) {
+            val contentFrame = newResponseFrame(controlFrame, false)
+            contentFrame.setPayloadMessage(payloadChunk)
+            if (contentFrame.requiresAcknowledgement()) {
+                sequencedQueue.addFrameForSequencedTransmission(contentFrame)
+            } else {
+                unnumberedQueue.add(contentFrame)
+            }
+        }
     }
 
     private fun queueFrameForControl(frame: KissFrame) {
@@ -86,7 +110,7 @@ class ConnectionHandler(val remoteCallsign: String,
             // Share the payload with any listening applications to process
             val  appResponse = linkInterface.getResponseForReceivedMessage(LinkRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
             when (appResponse.responseType) {
-                ResponseType.ACK_WITH_TEXT -> sendMessage(appResponse.responseString())
+                ResponseType.ACK_WITH_TEXT -> queueMessageForDelivery(ControlFrame.INFORMATION_8, appResponse.responseString())
                 ResponseType.ACK_ONLY -> sendAcknowlegeAndReadyForReceive()
                 ResponseType.IGNORE -> logger.trace("Apps ignored frame: ${incomingFrame.toString()}")
             }
@@ -111,6 +135,7 @@ class ConnectionHandler(val remoteCallsign: String,
         // Reset sequence state
         controlMode = ControlMode.MODULO_8
         sequencedQueue.reset()
+        unnumberedQueue = ArrayList<KissFrame>()
         nextQueuedControlFrame = null
         nextExpectedSendSequenceNumberFromPeer = 0
         val frame = newResponseFrame(ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
@@ -119,7 +144,7 @@ class ConnectionHandler(val remoteCallsign: String,
 
     private fun acceptIncomingConnectionWithMessage(message: String) {
         acceptIncomingConnection()
-        sendMessage(message)
+        queueMessageForDelivery(ControlFrame.INFORMATION_8, message)
     }
 
     private fun handleIncomingAcknowledgement(incomingFrame: KissFrame) {
@@ -154,16 +179,6 @@ class ConnectionHandler(val remoteCallsign: String,
 
     private fun ignoreFrame(incomingFrame: KissFrame) {
         logger.error("No handler for frame. Ignored. ${incomingFrame.toString()}")
-    }
-
-    /* Application Interface methods */
-    private fun sendMessage(message: String) {
-        val payloadChunks = chunkUpPayload(message)
-        for (payloadChunk in payloadChunks) {
-            val contentFrame = newResponseFrame(ControlFrame.INFORMATION_8, false)
-            contentFrame.setPayloadMessage(payloadChunk)
-            sequencedQueue.addFrameForSequencedTransmission(contentFrame)
-        }
     }
 
     /* Factory methods */
