@@ -23,7 +23,8 @@ abstract class SubApp {
     fun handleRequestWithRegisteredCommand(request: LinkRequest): LinkResponse {
         val commandText = parseCommand(request.message)
         for (command in commands) {
-            if (command.commandText() == commandText || command.shortCutText() == commandText) {
+            if (command.commandText() == commandText
+                || (command.shortCutText().isNotEmpty() && command.shortCutText() == commandText)) {
                 return command.execute(request)
             }
         }
