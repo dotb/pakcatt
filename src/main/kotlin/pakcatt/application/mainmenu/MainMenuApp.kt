@@ -49,13 +49,12 @@ class MainMenuApp(val myCall: String,
             val mailboxApp = MailboxApp(mailboxStore)
             val unreadMessages = mailboxApp.unreadMessageCount(request)
 
-            stringBuilder.append("Welcome to PakCatt! Type help to learn more :-)")
+            stringBuilder.append("Welcome to PakCatt! Type help to learn more :-)\r\n")
             if (unreadMessages > 1) {
-                stringBuilder.append("You have $unreadMessages unread messages.")
+                stringBuilder.append("You have $unreadMessages unread messages.\r\n")
             } else if (unreadMessages > 0) {
-                stringBuilder.append("You have an unread message.")
+                stringBuilder.append("You have an unread message.\r\n")
             }
-            stringBuilder.append("\r\n")
             LinkResponse.sendText(stringBuilder.toString(), this)
         } else {
             LinkResponse.ignore()
