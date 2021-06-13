@@ -22,13 +22,20 @@ abstract class SubApp {
 
     fun handleRequestWithRegisteredCommand(request: LinkRequest): LinkResponse {
         val commandText = parseCommand(request.message)
-        for (command in commands) {
-            if (command.commandText() == commandText
-                || (command.shortCutText().isNotEmpty() && command.shortCutText() == commandText)) {
-                return command.execute(request)
+        if (commandText.isEmpty()) {
+            // An empty request should return only the prompt / new line
+            return LinkResponse.sendText("")
+        } else {
+            // Find a command that handles the command sent to us
+            for (command in commands) {
+                if (command.commandText() == commandText
+                    || (command.shortCutText().isNotEmpty() && command.shortCutText() == commandText)
+                ) {
+                    return command.execute(request)
+                }
             }
+            return helpResponse()
         }
-        return helpResponse()
     }
 
     protected fun parseCommand(inputLine: String): String {
