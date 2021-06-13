@@ -140,9 +140,7 @@ class LinkServiceTest: TestCase() {
         val requestFrame = KissFrameStandard()
         requestFrame.setDestCallsign("VK3LIT-1")
         requestFrame.setSourceCallsign("VK3LIT-2")
-        requestFrame.setControlType(controlType)
-        requestFrame.setSendSequenceNumber(sendSequenceNumber)
-        requestFrame.setReceiveSequenceNumber(rxSequenceNumber)
+        requestFrame.setControlField(controlType, rxSequenceNumber, sendSequenceNumber)
         if (null != payload) {
             requestFrame.setPayloadMessage(payload)
         }

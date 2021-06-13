@@ -145,9 +145,19 @@ abstract class KissFrame() {
         this.sourceSSID = byteUtils.setBits(parsedCallsign.second, 0x01)
     }
 
-    fun setControlType(controlType: ControlFrame) {
-        setControlFrame(controlType)
+    fun setControlField(controlType: ControlFrame, receiveSeq: Int = 0, sendSeq: Int = 0) {
+        setControlFrame(controlType, receiveSeq, sendSeq)
         setCommandBits(controlType)
+    }
+
+    fun setReceiveSequenceNumberIfRequired(receiveSeq: Int) {
+        if (requiresReceiveSequenceNumber()) {
+            setControlField(controlFrame(), receiveSeq, sendSequenceNumber())
+        }
+    }
+
+    fun setSendSequenceNumber(sendSeq: Int) {
+        setControlField(controlFrame(), receiveSequenceNumber(), sendSeq)
     }
 
     fun setPayloadMessage(message: String) {
@@ -217,25 +227,31 @@ abstract class KissFrame() {
         return calculateControlFrame().toString()
     }
 
-    fun pollFinalBitString(): String {
-        return when (pollFinalBit()) {
-            true -> "1"
-            false -> "0"
-        }
-    }
-
     /**
      * Returns true if this frame needs to be acknowledged
      * be the node receiving it. I.e. It's send sequence number
      * needs to be acknowledged.
      */
-    fun requiresAcknowledgement(): Boolean {
+    fun requiresSendSequenceNumber(): Boolean {
         return arrayListOf(
                 ControlFrame.INFORMATION_8,
                 ControlFrame.INFORMATION_8_P,
                 ControlFrame.INFORMATION_128,
                 ControlFrame.INFORMATION_128_P
             ).contains(controlFrame())
+    }
+
+    fun requiresReceiveSequenceNumber(): Boolean {
+        return listOf(ControlFrame.INFORMATION_8, ControlFrame.INFORMATION_8_P,
+            ControlFrame.INFORMATION_128, ControlFrame.INFORMATION_128_P,
+            ControlFrame.S_8_RECEIVE_READY, ControlFrame.S_8_RECEIVE_READY_P,
+            ControlFrame.S_8_RECEIVE_NOT_READY, ControlFrame.S_8_RECEIVE_NOT_READY_P,
+            ControlFrame.S_8_REJECT, ControlFrame.S_8_REJECT_P,
+            ControlFrame.S_8_SELECTIVE_REJECT, ControlFrame.S_8_SELECTIVE_REJECT_P,
+            ControlFrame.S_128_RECEIVE_NOT_READY, ControlFrame.S_128_RECEIVE_READY_P,
+            ControlFrame.S_128_RECEIVE_READY, ControlFrame.S_128_RECEIVE_READY_P,
+            ControlFrame.S_128_REJECT, ControlFrame.S_128_REJECT_P,
+            ControlFrame.S_128_SELECTIVE_REJECT, ControlFrame.S_128_SELECTIVE_REJECT_P).contains(controlFrame())
     }
 
     override fun toString(): String {
@@ -363,11 +379,7 @@ abstract class KissFrame() {
 
     abstract fun pollFinalBit(): Boolean
 
-    abstract fun setReceiveSequenceNumber(receiveSeq: Int)
-
-    abstract fun setSendSequenceNumber(sendSeq: Int)
-
-    protected abstract fun setControlFrame(controlType: ControlFrame)
+    protected abstract fun setControlFrame(controlType: ControlFrame, receiveSeq: Int, sendSeq: Int)
 
     protected abstract fun calculateControlFrame(): ControlFrame
 

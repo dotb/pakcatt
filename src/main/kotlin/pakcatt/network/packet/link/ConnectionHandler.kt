@@ -45,6 +45,7 @@ class ConnectionHandler(private val remoteCallsign: String,
     fun deliverQueuedControlFrame(kissService: KissService): Int {
         val controlFrame = nextQueuedControlFrame
         return if (null != controlFrame) {
+            controlFrame.setReceiveSequenceNumberIfRequired(nextExpectedSendSequenceNumberFromPeer)
             kissService.transmitFrame(controlFrame)
             nextQueuedControlFrame = null
             1
@@ -60,6 +61,7 @@ class ConnectionHandler(private val remoteCallsign: String,
         val unnumberedFramesForDelivery = unnumberedQueue
         unnumberedQueue = ArrayList() // Reset the unnumberedQueue
         for (frame in unnumberedFramesForDelivery) {
+            frame.setReceiveSequenceNumberIfRequired(nextExpectedSendSequenceNumberFromPeer)
             kissService.transmitFrame(frame)
             deliveryCount++
         }
@@ -71,15 +73,20 @@ class ConnectionHandler(private val remoteCallsign: String,
 
                 // If this is the last frame to be delivered in this over, set the P flag.
                 if (index >= numberedFramesForDelivery.size - 1 && !sequencedQueue.isAtEndOfMessageDelivery()) {
-                    frame.setControlType(ControlFrame.INFORMATION_8_P)
+                    frame.setControlField(ControlFrame.INFORMATION_8_P, nextExpectedSendSequenceNumberFromPeer, frame.sendSequenceNumber())
+                } else {
+                    frame.setControlField(ControlFrame.INFORMATION_8, nextExpectedSendSequenceNumberFromPeer, frame.sendSequenceNumber())
                 }
+
                 kissService.transmitFrame(frame)
                 deliveryCount++
             }
 
             // If we're at the end of a message, transmit READY_RECEIVE_P
             if (sequencedQueue.isAtEndOfMessageDelivery()) {
-                kissService.transmitFrame(newResponseFrame(ControlFrame.S_8_RECEIVE_READY_P, false))
+                val frame = newResponseFrame(ControlFrame.S_8_RECEIVE_READY_P, false)
+                frame.setReceiveSequenceNumberIfRequired(nextExpectedSendSequenceNumberFromPeer)
+                kissService.transmitFrame(frame)
                 deliveryCount++
             }
         }
@@ -91,7 +98,7 @@ class ConnectionHandler(private val remoteCallsign: String,
         for (payloadChunk in payloadChunks) {
             val contentFrame = newResponseFrame(controlFrame, false)
             contentFrame.setPayloadMessage(payloadChunk)
-            if (contentFrame.requiresAcknowledgement()) {
+            if (contentFrame.requiresSendSequenceNumber()) {
                 sequencedQueue.addFrameForSequencedTransmission(contentFrame)
             } else {
                 unnumberedQueue.add(contentFrame)
@@ -197,21 +204,8 @@ class ConnectionHandler(private val remoteCallsign: String,
         }
         newFrame.setDestCallsign(remoteCallsign)
         newFrame.setSourceCallsign(myCallsign)
-        newFrame.setControlType(frameType)
-
-        // Set the receive sequence number on frames that require it
-        if (listOf(ControlFrame.INFORMATION_8, ControlFrame.INFORMATION_8_P,
-                ControlFrame.INFORMATION_128, ControlFrame.INFORMATION_128_P,
-                ControlFrame.S_8_RECEIVE_READY, ControlFrame.S_8_RECEIVE_READY_P,
-                ControlFrame.S_8_RECEIVE_NOT_READY, ControlFrame.S_8_RECEIVE_NOT_READY_P,
-                ControlFrame.S_8_REJECT, ControlFrame.S_8_REJECT_P,
-                ControlFrame.S_8_SELECTIVE_REJECT, ControlFrame.S_8_SELECTIVE_REJECT_P,
-                ControlFrame.S_128_RECEIVE_NOT_READY, ControlFrame.S_128_RECEIVE_READY_P,
-                ControlFrame.S_128_RECEIVE_READY, ControlFrame.S_128_RECEIVE_READY_P,
-                ControlFrame.S_128_REJECT, ControlFrame.S_128_REJECT_P,
-                ControlFrame.S_128_SELECTIVE_REJECT, ControlFrame.S_128_SELECTIVE_REJECT_P).contains(frameType)) {
-                newFrame.setReceiveSequenceNumber(nextExpectedSendSequenceNumberFromPeer)
-        }
+        // Set the control type now. The receive and send sequence numbers are updated just before it's transmitted.
+        newFrame.setControlField(frameType)
         return newFrame
     }
 

@@ -49,11 +49,18 @@ open class KissFrameExtended: KissFrame() {
         return ControlFrame.UNKNOWN_FRAME
     }
 
-    override fun setControlFrame(controlType: ControlFrame) {
+    override fun setControlFrame(controlType: ControlFrame, receiveSeq: Int, sendSeq: Int) {
+        // Ensure the controlField starts at 0 so that residual bits don't remain
+        controlFieldHigh = byteUtils.intToByte(0x00)
+        controlFieldLow = byteUtils.intToByte(0x00)
+        // Set the control type
         val controlTypeLowInt = byteUtils.maskInt(controlType.bitPattern, 0x000000FF)
         val controlTypeHighInt = byteUtils.shiftBitsRight(controlType.bitPattern, 8)
         controlFieldLow = byteUtils.setBits(controlFieldLow, controlTypeLowInt)
         controlFieldHigh = byteUtils.setBits(controlFieldHigh, controlTypeHighInt)
+        // Then set the send and receive sequence bits. No change is made if they are 0.
+        setSendSequenceNumber(sendSeq)
+        setReceiveSequenceNumberBits(receiveSeq)
     }
 
     override fun calculateReceiveSequenceNumber(): Int {
@@ -66,13 +73,13 @@ open class KissFrameExtended: KissFrame() {
         return byteUtils.byteToInt(shiftedControlField)
     }
 
-    override fun setReceiveSequenceNumber(receiveSeq: Int) {
+    private fun setReceiveSequenceNumberBits(receiveSeq: Int) {
         val sequenceNumberByte = byteUtils.intToByte(receiveSeq)
         val shiftedSequence = byteUtils.shiftBitsLeft(sequenceNumberByte, 1)
         this.controlFieldHigh = byteUtils.setBits(controlFieldHigh, shiftedSequence)
     }
 
-    override fun setSendSequenceNumber(sendSeq: Int) {
+    private fun setSendSequenceNumberBits(sendSeq: Int) {
         val sequenceNumberByte = byteUtils.intToByte(sendSeq)
         val shiftedSequence = byteUtils.shiftBitsLeft(sequenceNumberByte, 1)
         this.controlFieldLow = byteUtils.setBits(controlFieldLow, shiftedSequence)

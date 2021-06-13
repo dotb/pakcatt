@@ -1,6 +1,5 @@
 package pakcatt.network.packet.link
 
-import org.slf4j.LoggerFactory
 import pakcatt.network.packet.kiss.KissFrame
 import java.util.*
 import kotlin.math.min
@@ -30,7 +29,7 @@ class SequencedQueue(private val framesPerOver: Int,
     }
 
     fun addFrameForSequencedTransmission(newFrame: KissFrame) {
-        if (newFrame.requiresAcknowledgement()) {
+        if (newFrame.requiresSendSequenceNumber()) {
             newFrame.setSendSequenceNumber(ourNextBoundedSendSequenceNumber())
             ourNextUnboundedSendSequenceNumber++
         }
