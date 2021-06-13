@@ -29,7 +29,6 @@ class LinkService(private var kissService: KissService,
     private val logger = LoggerFactory.getLogger(LinkService::class.java)
     private var connectionHandlers = HashMap<String, ConnectionHandler>()
     private var receiveQueue = LinkedList<KissFrame>()
-
     private var lastTransmitTimestamp: Long = 0
 
     init {

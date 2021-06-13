@@ -30,8 +30,8 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
     fun transmitFrame(frame: KissFrame) {
         tncConnection.sendData(frame.packetData())
         tncConnection.sendData(KissFrame.FRAME_END)
-        logger.trace("Sent bytes:\t\t ${stringUtils.byteArrayToHex(frame.packetData())}")
-        logger.debug("Sent frame:\t\t ${frame.toString()}")
+        logger.trace("Sent bytes:\t\t {}", stringUtils.byteArrayToHex(frame.packetData()))
+        logger.debug("Sent frame:\t\t {}", stringUtils.removeEOLChars(frame.toString(), " "))
     }
 
     private fun handleNewByte(newByte: Byte) {
@@ -62,7 +62,7 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
         if (frame.size >= KissFrame.SIZE_MIN && null != myReceiveFrameCallback) {
             val kissFrame = KissFrame.parseRawKISSFrame(frame)
             logger.trace("Decoded hex:\t\t {}", stringUtils.byteArrayToHex(kissFrame.packetData()))
-            logger.debug("Received frame:\t {}", kissFrame.toString())
+            logger.debug("Received frame:\t {}", stringUtils.removeEOLChars(kissFrame.toString(), " "))
             logger.trace("Decoded data:\t {}", kissFrame.payloadDataString())
             myReceiveFrameCallback(kissFrame)
         } else {

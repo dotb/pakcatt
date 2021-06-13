@@ -58,9 +58,13 @@ class StringUtils {
      * Remove any end-of-line characters from a string
      */
     fun removeEOLChars(input: String): String {
-        var chompedString = input.replace("\r","")
-        chompedString = chompedString.replace("\n", "")
-        return chompedString
+        return removeEOLChars(input, "")
+    }
+
+    fun removeEOLChars(input: String, substitutionString: String): String {
+        var returnedString = input.replace("\r",substitutionString)
+        returnedString = returnedString.replace("\n", substitutionString)
+        return returnedString
     }
 
     /**

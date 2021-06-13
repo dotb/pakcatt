@@ -241,25 +241,24 @@ abstract class KissFrame() {
     override fun toString(): String {
         val stringBuilder = StringBuilder()
 
-        if (listOf(ControlFrame.INFORMATION_8, ControlFrame.INFORMATION_8_P,
-                ControlFrame.INFORMATION_128, ControlFrame.INFORMATION_128_P).contains(calculateControlFrame())) {
-            stringBuilder.append("Delivery Attempt: $deliveryAttempts Send Seq: ${sendSequenceNumber()} Receive Seq: ${receiveSequenceNumber()} protocolID: ${stringUtils.byteToHex(protocolID())} ")
-        }
-
-        stringBuilder.append("From: ${sourceCallsign()} to: ${destCallsign()} pollFinalBit: ${pollFinalBitString()} " +
-                "control: ${stringUtils.byteArrayToHex(controlField())} controlType: ${controlTypeString()} ")
-
         if (listOf(ControlFrame.S_8_RECEIVE_READY, ControlFrame.S_8_RECEIVE_READY_P, ControlFrame.S_8_RECEIVE_NOT_READY,
                 ControlFrame.S_8_RECEIVE_NOT_READY_P, ControlFrame.S_8_REJECT, ControlFrame.S_8_REJECT_P, ControlFrame.S_8_SELECTIVE_REJECT,
                 ControlFrame.S_8_SELECTIVE_REJECT_P, ControlFrame.S_128_RECEIVE_READY, ControlFrame.S_128_RECEIVE_READY_P,
                 ControlFrame.S_128_RECEIVE_NOT_READY, ControlFrame.S_128_RECEIVE_NOT_READY_P, ControlFrame.S_128_REJECT,
                 ControlFrame.S_128_REJECT_P, ControlFrame.S_128_SELECTIVE_REJECT,
                 ControlFrame.S_128_SELECTIVE_REJECT_P).contains(calculateControlFrame())) {
-            stringBuilder.append("\t\tReceive Seq: ${receiveSequenceNumber()}")
+            stringBuilder.append("Receive Seq: ${receiveSequenceNumber()} ")
         }
 
-        if (payloadData.size > 0) {
-            stringBuilder.append(" Payload: ${payloadDataString()}")
+        if (listOf(ControlFrame.INFORMATION_8, ControlFrame.INFORMATION_8_P,
+                ControlFrame.INFORMATION_128, ControlFrame.INFORMATION_128_P).contains(calculateControlFrame())) {
+            stringBuilder.append("Receive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()} Delivery Attempt: $deliveryAttempts protocolID: ${stringUtils.byteToHex(protocolID())} ")
+        }
+
+        stringBuilder.append("From: ${sourceCallsign()} to: ${destCallsign()} controlType: ${controlTypeString()} ")
+
+        if (payloadData.isNotEmpty()) {
+            stringBuilder.append("Payload: ${payloadDataString()}")
         }
 
         return stringBuilder.toString()
