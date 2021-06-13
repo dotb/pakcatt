@@ -67,7 +67,7 @@ abstract class KissFrame() {
     companion object {
         const val FRAME_END = -64
         const val SIZE_MIN = 15
-        const val PAYLOAD_MAX = 238 // (max of 256 - 18 bytes of headers)
+        const val SIZE_HEADERS = 18
 
         fun parseRawKISSFrame(frame: ByteArray): KissFrame {
             // Mandatory fields
@@ -87,7 +87,7 @@ abstract class KissFrame() {
             if (frame.size >= 17) {
                 protocolID = frame[16]
             }
-            if (frame.size >= 18) {
+            if (frame.size >= SIZE_HEADERS) {
                 payloadData = frame.copyOfRange(17, frame.size)
             }
             val kissFrame = KissFrameStandard()

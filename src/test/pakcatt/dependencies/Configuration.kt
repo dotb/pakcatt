@@ -38,4 +38,24 @@ class Configuration {
         return 9600
     }
 
+    @Bean
+    fun frameSizeMax(): Int {
+        return 256
+    }
+
+    @Bean
+    fun framesPerOver(): Int {
+        return 2
+    }
+
+    @Bean
+    fun minTXPauseSeconds(): Int {
+        return 2
+    }
+
+    @Bean
+    fun maxDeliveryAttempts(): Int {
+        return 10
+    }
+
 }

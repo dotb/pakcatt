@@ -19,13 +19,17 @@ interface LinkInterface {
 }
 
 @Service
-class LinkService(var kissService: KissService,
-                  var appService: AppInterface): LinkInterface {
+class LinkService(private var kissService: KissService,
+                  private var appService: AppInterface,
+                  private val frameSizeMax: Int,
+                  private val framesPerOver: Int,
+                  private val minTXPauseSeconds: Int,
+                  private val maxDeliveryAttempts: Int): LinkInterface {
 
     private val logger = LoggerFactory.getLogger(LinkService::class.java)
     private var connectionHandlers = HashMap<String, ConnectionHandler>()
     private var receiveQueue = LinkedList<KissFrame>()
-    private var minOvertimeMilliseconds = 2000
+
     private var lastTransmitTimestamp: Long = 0
 
     init {
@@ -51,7 +55,7 @@ class LinkService(var kissService: KissService,
                 connectionHandler.handleIncomingFrame(nextReceivedFrame)
         }
 
-        // Queue any adhoc frames for delivery
+        // Queue any adhoc frames requested by apps, for delivery
         for (adhocDelivery in appService.getAdhocResponsesForDelivery()) {
             val adhocConnectionHandler = connectionHandlerForConversation(adhocDelivery.remoteCallsign, adhocDelivery.myCallsign)
             when (adhocDelivery.deliveryType) {
@@ -61,14 +65,15 @@ class LinkService(var kissService: KissService,
         }
 
         // Handle frames queued for delivery
-        if (Date().time - minOvertimeMilliseconds > lastTransmitTimestamp) {
+        val minTXPauseMilliseconds = minTXPauseSeconds * 1000
+        if (Date().time - minTXPauseMilliseconds > lastTransmitTimestamp) {
             var deliveryCount = 0
             for (connectionHandler in connectionHandlers.values) {
-                deliveryCount = connectionHandler.deliverQueuedControlFrame(kissService)
+                deliveryCount += connectionHandler.deliverQueuedControlFrame(kissService)
                 deliveryCount += connectionHandler.deliverContentFrames(kissService)
             }
             if (deliveryCount > 0) {
-                logger.debug("Transmitted: {} frames", deliveryCount)
+                logger.debug("Transmitting: {} frames", deliveryCount)
                 lastTransmitTimestamp = Date().time
             }
         }
@@ -84,7 +89,7 @@ class LinkService(var kissService: KissService,
         return if (null != connectionHandler) {
             connectionHandler
         } else {
-            val connectionHandler = ConnectionHandler(remoteCallsign, myCallsign, this)
+            val connectionHandler = ConnectionHandler(remoteCallsign, myCallsign, this, frameSizeMax, framesPerOver, maxDeliveryAttempts)
             connectionHandlers[key] = connectionHandler
             connectionHandler
         }

@@ -61,4 +61,33 @@ class Configuration {
         return serialPortBaud.toInt()
     }
 
+    @Value("\${pakcatt.network.packet.frame_size_max}")
+    private lateinit var frameSizeMax: Number
+    @Bean
+    fun frameSizeMax(): Int {
+        return frameSizeMax.toInt()
+    }
+
+
+    @Value("\${pakcatt.network.packet.frames_per_over}")
+    private lateinit var framesPerOver: Number
+    @Bean
+    fun framesPerOver(): Int {
+        return framesPerOver.toInt()
+    }
+
+    @Value("\${pakcatt.network.packet.minTXPauseSeconds}")
+    private lateinit var minTXPauseSeconds: Number
+    @Bean
+    fun minTXPauseSeconds(): Int {
+        return minTXPauseSeconds.toInt()
+    }
+
+    @Value("\${pakcatt.network.packet.maxDeliveryAttempts}")
+    private lateinit var maxDeliveryAttempts: Number
+    @Bean
+    fun maxDeliveryAttempts(): Int {
+        return maxDeliveryAttempts.toInt()
+    }
+
 }

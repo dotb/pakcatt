@@ -9,15 +9,18 @@ enum class ControlMode {
     MODULO_8, MODULO_128
 }
 
-class ConnectionHandler(val remoteCallsign: String,
-                        val myCallsign: String,
-                        val linkInterface: LinkInterface) {
+class ConnectionHandler(private val remoteCallsign: String,
+                        private val myCallsign: String,
+                        private val linkInterface: LinkInterface,
+                        private val frameSizeMax: Int,
+                        framesPerOver: Int,
+                        maxDeliveryAttempts: Int) {
 
     private val logger = LoggerFactory.getLogger(ConnectionHandler::class.java)
     private var controlMode = ControlMode.MODULO_8
     private var nextQueuedControlFrame: KissFrame? = null
     private var unnumberedQueue = ArrayList<KissFrame>()
-    private var sequencedQueue = SequencedQueue()
+    private var sequencedQueue = SequencedQueue(framesPerOver, maxDeliveryAttempts)
 
     /* The receive state variable contains the sequence number of the next expected received I frame.
      * This variable is updated upon the reception of an error-free I frame whose send sequence number
@@ -33,8 +36,8 @@ class ConnectionHandler(val remoteCallsign: String,
             ControlFrame.S_8_RECEIVE_READY_P -> handleIncomingAcknowledgement(incomingFrame)
             ControlFrame.S_8_REJECT -> handleIncomingAcknowledgement(incomingFrame)
             ControlFrame.S_8_REJECT_P -> handleIncomingAcknowledgement(incomingFrame)
-            ControlFrame.U_REJECT -> handleIncomingAcknowledgement(incomingFrame)
             ControlFrame.U_DISCONNECT_P -> handleDisconnectRequest() // Disconnect request
+            ControlFrame.U_REJECT -> resetConnection() // FRMR is unrecoverable. We reset the connection.
             else -> ignoreFrame(incomingFrame)
         }
     }
@@ -66,7 +69,7 @@ class ConnectionHandler(val remoteCallsign: String,
         if (numberedFramesForDelivery.isNotEmpty()) {
             for ((index, frame) in numberedFramesForDelivery.withIndex()) {
 
-                // This is the last frame to be delivered in this over, set the P flag.
+                // If this is the last frame to be delivered in this over, set the P flag.
                 if (index >= numberedFramesForDelivery.size - 1 && !sequencedQueue.isAtEndOfMessageDelivery()) {
                     frame.setControlType(ControlFrame.INFORMATION_8_P)
                 }
@@ -131,13 +134,8 @@ class ConnectionHandler(val remoteCallsign: String,
     }
 
     private fun acceptIncomingConnection() {
+        resetConnection()
         logger.info("Accepting connection from remote party: $remoteCallsign local party: $myCallsign")
-        // Reset sequence state
-        controlMode = ControlMode.MODULO_8
-        sequencedQueue.reset()
-        unnumberedQueue = ArrayList<KissFrame>()
-        nextQueuedControlFrame = null
-        nextExpectedSendSequenceNumberFromPeer = 0
         val frame = newResponseFrame(ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P, false)
         queueFrameForControl(frame)
     }
@@ -145,6 +143,16 @@ class ConnectionHandler(val remoteCallsign: String,
     private fun acceptIncomingConnectionWithMessage(message: String) {
         acceptIncomingConnection()
         queueMessageForDelivery(ControlFrame.INFORMATION_8, message)
+    }
+
+    // Reset sequence state
+    private fun resetConnection() {
+        logger.debug("Resetting connection")
+        controlMode = ControlMode.MODULO_8
+        sequencedQueue.reset()
+        unnumberedQueue = ArrayList<KissFrame>()
+        nextQueuedControlFrame = null
+        nextExpectedSendSequenceNumberFromPeer = 0
     }
 
     private fun handleIncomingAcknowledgement(incomingFrame: KissFrame) {
@@ -233,12 +241,13 @@ class ConnectionHandler(val remoteCallsign: String,
      * agreed dynamically with the client TNC.
      */
     fun chunkUpPayload(payload: String): List<String> {
+        val payloadSize = frameSizeMax - KissFrame.SIZE_HEADERS
         var remainingPayload = payload
         var splitPayload = ArrayList<String>()
         // Break the playload into smaller parts
-        while (remainingPayload.length > KissFrame.PAYLOAD_MAX) {
-            splitPayload.add(remainingPayload.substring(0, KissFrame.PAYLOAD_MAX))
-            remainingPayload = remainingPayload.substring(KissFrame.PAYLOAD_MAX, remainingPayload.length)
+        while (remainingPayload.length > payloadSize) {
+            splitPayload.add(remainingPayload.substring(0, payloadSize))
+            remainingPayload = remainingPayload.substring(payloadSize, remainingPayload.length)
         }
         // Add any remaining payload data that falls within the maximum payload size
         splitPayload.add(remainingPayload)

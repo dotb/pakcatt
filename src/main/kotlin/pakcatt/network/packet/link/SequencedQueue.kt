@@ -5,12 +5,10 @@ import pakcatt.network.packet.kiss.KissFrame
 import java.util.*
 import kotlin.math.min
 
-class SequencedQueue {
+class SequencedQueue(private val framesPerOver: Int,
+                     private val maxDeliveryAttempts: Int) {
 
-    private val logger = LoggerFactory.getLogger(SequencedQueue::class.java)
-    private val dataFramesSentPerOver = 2
     private val maxSequenceNumberSize = 8
-    private val maxDeliveryAttempts = 10
     private val deliveryRetryTimeMilliseconds = 9000
     private var sequencedFramesForDelivery = ArrayList<KissFrame>(maxSequenceNumberSize)
 
@@ -42,7 +40,7 @@ class SequencedQueue {
     fun getSequencedFramesForDelivery(): LinkedList<KissFrame> {
         val timeStampNow = Date().time
         val startIndex = nextUnboundedFrameIndexExpectedByPeer
-        val endIndex = min((startIndex + dataFramesSentPerOver - 1), ourNextUnboundedSendSequenceNumber - 1)
+        val endIndex = min((startIndex + framesPerOver - 1), ourNextUnboundedSendSequenceNumber - 1)
         var framesForDelivery = LinkedList<KissFrame>()
 
         if (startIndex >= 0 && endIndex >= 0) {
@@ -66,7 +64,7 @@ class SequencedQueue {
      * returns the last frames remaining in the delivery queue.
      */
     fun isAtEndOfMessageDelivery(): Boolean {
-        return nextUnboundedFrameIndexExpectedByPeer >= ourNextUnboundedSendSequenceNumber - dataFramesSentPerOver
+        return nextUnboundedFrameIndexExpectedByPeer >= ourNextUnboundedSendSequenceNumber - framesPerOver
     }
 
     // Keep a record of the next send sequence number our remote party expects us to send
