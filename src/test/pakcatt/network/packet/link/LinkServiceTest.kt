@@ -136,7 +136,28 @@ class LinkServiceTest: TestCase() {
         assertEquals(expectedResponseString, constructedPayload)
     }
 
+    @Test
+    fun testSentReceiveSequenceNumbers() {
+        val mockedTNC = tnc as TNCMocked
+
+        // Establish a link
+        sendFrameAndWaitResponse(mockedTNC, ControlFrame.U_SET_ASYNC_BALANCED_MODE_P, 0, 0)
+
+        // Send request for a large response
+        sendFrame(mockedTNC, ControlFrame.INFORMATION_8, 0, 0, "longtest")
+        // Then pull a VK2VRO special, and send MORE! :-)
+        sendFrameAndWaitResponse(mockedTNC, ControlFrame.INFORMATION_8, 1, 0, "Hello!")
+        val parsedFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
+        val lastFrame = parsedFrames.last()
+        assertEquals(2, lastFrame.receiveSequenceNumber())
+    }
+
     private fun sendFrameAndWaitResponse(mockedTNC: TNCMocked, controlType: ControlFrame, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null) {
+        sendFrame(mockedTNC, controlType, sendSequenceNumber, rxSequenceNumber, payload)
+        waitForResponse(mockedTNC)
+    }
+
+    private fun sendFrame(mockedTNC: TNCMocked, controlType: ControlFrame, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null) {
         val requestFrame = KissFrameStandard()
         requestFrame.setDestCallsign("VK3LIT-1")
         requestFrame.setSourceCallsign("VK3LIT-2")
@@ -144,10 +165,15 @@ class LinkServiceTest: TestCase() {
         if (null != payload) {
             requestFrame.setPayloadMessage(payload)
         }
-        sendFrameFromBytesAndWaitResponse(mockedTNC, requestFrame.packetData())
+        sendFrameFromBytes(mockedTNC, requestFrame.packetData())
     }
 
     private fun sendFrameFromBytesAndWaitResponse(mockedTNC: TNCMocked, frameData: ByteArray) {
+        sendFrameFromBytes(mockedTNC, frameData)
+        waitForResponse(mockedTNC)
+    }
+
+    private fun sendFrameFromBytes(mockedTNC: TNCMocked, frameData: ByteArray) {
         // Send conversation request
         mockedTNC.clearDataBuffer()
         mockedTNC.receiveDataCallback(byteUtils.intToByte(0xC0))
@@ -155,7 +181,6 @@ class LinkServiceTest: TestCase() {
             mockedTNC.receiveDataCallback(byte)
         }
         mockedTNC.receiveDataCallback(byteUtils.intToByte(0xC0))
-        waitForResponse(mockedTNC)
     }
 
     private fun byteArrayFromInts(vararg elements: Int): ByteArray {
