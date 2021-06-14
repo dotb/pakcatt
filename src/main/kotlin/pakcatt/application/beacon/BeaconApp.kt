@@ -3,9 +3,9 @@ package pakcatt.application.beacon
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import pakcatt.application.shared.RootApp
-import pakcatt.network.packet.link.model.DeliveryType
-import pakcatt.network.packet.link.model.LinkRequest
-import pakcatt.network.packet.link.model.LinkResponse
+import pakcatt.network.packet.protocol.no_layer_three.model.DeliveryType
+import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
+import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
 import java.util.*
 
 @Component

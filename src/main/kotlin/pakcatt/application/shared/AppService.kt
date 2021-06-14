@@ -2,7 +2,7 @@ package pakcatt.application.shared
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import pakcatt.network.packet.link.model.*
+import pakcatt.network.packet.protocol.no_layer_three.model.*
 import pakcatt.util.StringUtils
 
 interface AppInterface {

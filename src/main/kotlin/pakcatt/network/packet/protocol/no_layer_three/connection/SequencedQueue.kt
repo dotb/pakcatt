@@ -1,6 +1,6 @@
-package pakcatt.network.packet.link
+package pakcatt.network.packet.protocol.no_layer_three.connection
 
-import pakcatt.network.packet.kiss.KissFrame
+import pakcatt.network.packet.kiss.model.KissFrame
 import java.util.*
 import kotlin.math.min
 

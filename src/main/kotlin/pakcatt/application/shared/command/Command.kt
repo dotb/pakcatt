@@ -1,9 +1,9 @@
 package pakcatt.application.shared.command
 
 import pakcatt.application.shared.SubApp
-import pakcatt.network.packet.link.model.LinkRequest
-import pakcatt.network.packet.link.model.LinkResponse
-import pakcatt.network.packet.link.model.ResponseType
+import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
+import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
+import pakcatt.network.packet.protocol.no_layer_three.model.ResponseType
 
 data class Command(private val fullCommand: String,
                    private var description: String? = null,

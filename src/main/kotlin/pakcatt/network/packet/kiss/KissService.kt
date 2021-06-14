@@ -1,15 +1,22 @@
 package pakcatt.network.packet.kiss
 
 import org.slf4j.LoggerFactory
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import pakcatt.network.packet.kiss.model.KissFrame
+import pakcatt.network.packet.kiss.queue.DeliveryQueue
+import pakcatt.network.packet.protocol.shared.ProtocolService
 import pakcatt.network.packet.tnc.TNC
+import pakcatt.util.ByteUtils
 import pakcatt.util.StringUtils
 
 @Service
-class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
+class KissService(val tncConnection: TNC,
+                  val protocolServices: List<ProtocolService>,
+                  val stringUtils: StringUtils,
+                  val byteUtils: ByteUtils) {
 
     private val logger = LoggerFactory.getLogger(KissService::class.java)
-    private lateinit var receiveFrameCallback:(receivedFrame: KissFrame) -> Unit?
     private var incomingFrame = ByteArray(1024)
     private var incomingFrameIndex = -1
 
@@ -20,14 +27,18 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
         tncConnection.connect()
     }
 
-    /**
-     * Set the callback handler for incoming decoded KISS frames
-     */
-    fun setReceiveFrameCallback(newCallback: (receivedFrame: KissFrame) -> Unit) {
-        receiveFrameCallback = newCallback
+    @Scheduled(fixedDelay = 500)
+    private fun collectAndDeliverFrames() {
+        val framesForDelivery = DeliveryQueue()
+        for (protocolService in protocolServices) {
+            protocolService.queueFramesForDelivery(framesForDelivery)
+        }
+        for (frame in framesForDelivery.allFrames()) {
+            transmitFrame(frame)
+        }
     }
 
-    fun transmitFrame(frame: KissFrame) {
+    private fun transmitFrame(frame: KissFrame) {
         tncConnection.sendData(frame.packetData())
         tncConnection.sendData(KissFrame.FRAME_END)
         logger.trace("Sent bytes:\t\t {}", stringUtils.byteArrayToHex(frame.packetData()))
@@ -58,15 +69,22 @@ class KissService(val tncConnection: TNC, val stringUtils: StringUtils) {
 
     private fun handleNewFrame(frame: ByteArray) {
         logger.trace("Received bytes:\t {}", stringUtils.byteArrayToHex(frame))
-        val myReceiveFrameCallback = receiveFrameCallback
-        if (frame.size >= KissFrame.SIZE_MIN && null != myReceiveFrameCallback) {
+        if (frame.size >= KissFrame.SIZE_MIN) {
             val kissFrame = KissFrame.parseRawKISSFrame(frame)
             logger.trace("Decoded hex:\t\t {}", stringUtils.byteArrayToHex(kissFrame.packetData()))
             logger.debug("Received frame:\t {}", stringUtils.removeEOLChars(kissFrame.toString(), " "))
             logger.trace("Decoded data:\t {}", kissFrame.payloadDataString())
-            myReceiveFrameCallback(kissFrame)
+            handFrameToProtocolServices(kissFrame)
         } else {
             logger.error("KISS frame was too small to decode: ${frame.size} bytes")
+        }
+    }
+
+    private fun handFrameToProtocolServices(frame: KissFrame) {
+        for (protocolService in protocolServices) {
+            if (protocolService.supportedProtocol(byteUtils.byteToInt(frame.protocolID()), frame.controlField())) {
+                protocolService.handleFrame(frame)
+            }
         }
     }
 

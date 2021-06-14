@@ -1,8 +1,8 @@
 package pakcatt.application.shared
 
 import pakcatt.application.shared.command.Command
-import pakcatt.network.packet.link.model.LinkRequest
-import pakcatt.network.packet.link.model.LinkResponse
+import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
+import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
 import pakcatt.util.StringUtils
 import java.lang.NumberFormatException
 import java.lang.StringBuilder

@@ -1,6 +1,4 @@
-package pakcatt.network.packet.kiss
-
-import pakcatt.util.ByteUtils
+package pakcatt.network.packet.kiss.model
 
 open class KissFrameExtended: KissFrame() {
 
@@ -28,7 +26,7 @@ open class KissFrameExtended: KissFrame() {
         this.controlFieldHigh = controlFieldHigh
     }
 
-    override fun controlField(): ByteArray {
+    override fun controlBits(): ByteArray {
         return byteArrayOf(controlFieldHigh, controlFieldLow)
     }
 
@@ -36,8 +34,8 @@ open class KissFrameExtended: KissFrame() {
         return byteUtils.compareMaskedByte(controlFieldHigh,0x01, 0x01)
     }
 
-    override fun calculateControlFrame(): ControlFrame {
-        for (controlType in ControlFrame.values()) {
+    override fun calculateControlFrame(): ControlField {
+        for (controlType in ControlField.values()) {
             val controlTypeLowInt = byteUtils.maskInt(controlType.bitPattern, 0x000000FF)
             val maskLow = byteUtils.maskInt(controlType.mask, 0x000000FF)
             val controlTypeHighInt = byteUtils.shiftBitsRight(controlType.bitPattern, 8)
@@ -46,10 +44,10 @@ open class KissFrameExtended: KissFrame() {
                 return controlType
             }
         }
-        return ControlFrame.UNKNOWN_FRAME
+        return ControlField.UNKNOWN_Field
     }
 
-    override fun setControlFrame(controlType: ControlFrame, receiveSeq: Int, sendSeq: Int) {
+    override fun setControlFrame(controlType: ControlField, receiveSeq: Int, sendSeq: Int) {
         // Ensure the controlField starts at 0 so that residual bits don't remain
         controlFieldHigh = byteUtils.intToByte(0x00)
         controlFieldLow = byteUtils.intToByte(0x00)

@@ -1,6 +1,4 @@
-package pakcatt.network.packet.link.model
-
-import pakcatt.application.shared.SubApp
+package pakcatt.network.packet.protocol.no_layer_three.model
 
 class LinkRequest(public val remoteCallsign: String,
                   public val addressedToCallsign: String,

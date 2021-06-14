@@ -1,4 +1,4 @@
-package pakcatt.network.packet.kiss
+package pakcatt.network.packet.kiss.model
 
 import pakcatt.util.ByteUtils
 import pakcatt.util.StringUtils
@@ -46,7 +46,12 @@ Information Field  1-256 bytes (payload data) (AX.25)
 Frame End (FEND)   1 byte (0xc0) (KISS)
  */
 
-enum class ControlFrame(val mask: Int, val bitPattern: Int) {
+enum class ProtocolID(val id: Int) {
+    NO_LAYER_3(0xF0),
+    APRS(0x96)
+}
+
+enum class ControlField(val mask: Int, val bitPattern: Int) {
     INFORMATION_8(0x11, 0x00),
     INFORMATION_8_P(0x11,0x10),
     INFORMATION_128(0x0101,0x0000),
@@ -59,7 +64,7 @@ enum class ControlFrame(val mask: Int, val bitPattern: Int) {
 
     U_SET_ASYNC_BALANCED_MODE_EXTENDED(0xFF,0x6F), U_SET_ASYNC_BALANCED_MODE(0xFF,0x2F), U_DISCONNECT(0xFF,0x43), U_DISCONNECT_MODE(0xFF,0x0F), U_UNNUMBERED_ACKNOWLEDGE(0xFF,0x63), U_REJECT(0xFF,0x87), U_UNNUMBERED_INFORMATION(0xFF,0x03), U_EXCHANGE_IDENTIFICATION(0xFF,0xAF), U_TEST(0xFF,0xE3),
     U_SET_ASYNC_BALANCED_MODE_EXTENDED_P(0xFF,0x7F), U_SET_ASYNC_BALANCED_MODE_P(0xFF,0x3F), U_DISCONNECT_P(0xFF,0x53), U_DISCONNECT_MODE_P(0xFF,0x1F), U_UNNUMBERED_ACKNOWLEDGE_P(0xFF,0x73), U_REJECT_P(0xFF,0x97), U_UNNUMBERED_INFORMATION_P(0xFF,0x13), U_EXCHANGE_IDENTIFICATION_P(0xFF,0xBF), U_TEST_P(0xFF,0xF3),
-    UNKNOWN_FRAME(0xFF,0xFF)
+    UNKNOWN_Field(0xFF,0xFF)
 }
 
 abstract class KissFrame() {
@@ -145,19 +150,19 @@ abstract class KissFrame() {
         this.sourceSSID = byteUtils.setBits(parsedCallsign.second, 0x01)
     }
 
-    fun setControlField(controlType: ControlFrame, receiveSeq: Int = 0, sendSeq: Int = 0) {
+    fun setControlField(controlType: ControlField, receiveSeq: Int = 0, sendSeq: Int = 0) {
         setControlFrame(controlType, receiveSeq, sendSeq)
         setCommandBits(controlType)
     }
 
     fun setReceiveSequenceNumberIfRequired(receiveSeq: Int) {
         if (requiresReceiveSequenceNumber()) {
-            setControlField(controlFrame(), receiveSeq, sendSequenceNumber())
+            setControlField(controlField(), receiveSeq, sendSequenceNumber())
         }
     }
 
     fun setSendSequenceNumber(sendSeq: Int) {
-        setControlField(controlFrame(), receiveSequenceNumber(), sendSeq)
+        setControlField(controlField(), receiveSequenceNumber(), sendSeq)
     }
 
     fun setPayloadMessage(message: String) {
@@ -165,17 +170,22 @@ abstract class KissFrame() {
     }
 
     fun packetData(): ByteArray {
-        val controlField = controlField()
+        val controlField = controlBits()
 
         var packetSize = controlField.size + destCallsign.size + sourceCallsign.size + payloadData.size
 
         // Section 3.4. PID Field. The PID field is only sent on I and UI Frames
-        if (arrayOf(ControlFrame.INFORMATION_8, ControlFrame.INFORMATION_8_P, ControlFrame.INFORMATION_128, ControlFrame.INFORMATION_128_P,
-        ControlFrame.U_UNNUMBERED_INFORMATION, ControlFrame.U_UNNUMBERED_INFORMATION_P)
+        packetSize += if (arrayOf(
+                ControlField.INFORMATION_8,
+                ControlField.INFORMATION_8_P,
+                ControlField.INFORMATION_128,
+                ControlField.INFORMATION_128_P,
+                ControlField.U_UNNUMBERED_INFORMATION,
+                ControlField.U_UNNUMBERED_INFORMATION_P)
                 .contains(calculateControlFrame())) {
-            packetSize += 4
+            4
         } else {
-            packetSize += 3
+            3
         }
 
         var nextIndex = 0
@@ -211,7 +221,7 @@ abstract class KissFrame() {
         return stringUtils.convertBytesToString(payloadData)
     }
 
-    fun controlFrame(): ControlFrame {
+    fun controlField(): ControlField {
         return calculateControlFrame()
     }
 
@@ -234,40 +244,56 @@ abstract class KissFrame() {
      */
     fun requiresSendSequenceNumber(): Boolean {
         return arrayListOf(
-                ControlFrame.INFORMATION_8,
-                ControlFrame.INFORMATION_8_P,
-                ControlFrame.INFORMATION_128,
-                ControlFrame.INFORMATION_128_P
-            ).contains(controlFrame())
+            ControlField.INFORMATION_8,
+            ControlField.INFORMATION_8_P,
+            ControlField.INFORMATION_128,
+            ControlField.INFORMATION_128_P
+            ).contains(controlField())
     }
 
     fun requiresReceiveSequenceNumber(): Boolean {
-        return listOf(ControlFrame.INFORMATION_8, ControlFrame.INFORMATION_8_P,
-            ControlFrame.INFORMATION_128, ControlFrame.INFORMATION_128_P,
-            ControlFrame.S_8_RECEIVE_READY, ControlFrame.S_8_RECEIVE_READY_P,
-            ControlFrame.S_8_RECEIVE_NOT_READY, ControlFrame.S_8_RECEIVE_NOT_READY_P,
-            ControlFrame.S_8_REJECT, ControlFrame.S_8_REJECT_P,
-            ControlFrame.S_8_SELECTIVE_REJECT, ControlFrame.S_8_SELECTIVE_REJECT_P,
-            ControlFrame.S_128_RECEIVE_NOT_READY, ControlFrame.S_128_RECEIVE_READY_P,
-            ControlFrame.S_128_RECEIVE_READY, ControlFrame.S_128_RECEIVE_READY_P,
-            ControlFrame.S_128_REJECT, ControlFrame.S_128_REJECT_P,
-            ControlFrame.S_128_SELECTIVE_REJECT, ControlFrame.S_128_SELECTIVE_REJECT_P).contains(controlFrame())
+        return listOf(
+            ControlField.INFORMATION_8, ControlField.INFORMATION_8_P,
+            ControlField.INFORMATION_128, ControlField.INFORMATION_128_P,
+            ControlField.S_8_RECEIVE_READY, ControlField.S_8_RECEIVE_READY_P,
+            ControlField.S_8_RECEIVE_NOT_READY, ControlField.S_8_RECEIVE_NOT_READY_P,
+            ControlField.S_8_REJECT, ControlField.S_8_REJECT_P,
+            ControlField.S_8_SELECTIVE_REJECT, ControlField.S_8_SELECTIVE_REJECT_P,
+            ControlField.S_128_RECEIVE_NOT_READY, ControlField.S_128_RECEIVE_READY_P,
+            ControlField.S_128_RECEIVE_READY, ControlField.S_128_RECEIVE_READY_P,
+            ControlField.S_128_REJECT, ControlField.S_128_REJECT_P,
+            ControlField.S_128_SELECTIVE_REJECT, ControlField.S_128_SELECTIVE_REJECT_P
+        ).contains(controlField())
     }
 
     override fun toString(): String {
         val stringBuilder = StringBuilder()
 
-        if (listOf(ControlFrame.S_8_RECEIVE_READY, ControlFrame.S_8_RECEIVE_READY_P, ControlFrame.S_8_RECEIVE_NOT_READY,
-                ControlFrame.S_8_RECEIVE_NOT_READY_P, ControlFrame.S_8_REJECT, ControlFrame.S_8_REJECT_P, ControlFrame.S_8_SELECTIVE_REJECT,
-                ControlFrame.S_8_SELECTIVE_REJECT_P, ControlFrame.S_128_RECEIVE_READY, ControlFrame.S_128_RECEIVE_READY_P,
-                ControlFrame.S_128_RECEIVE_NOT_READY, ControlFrame.S_128_RECEIVE_NOT_READY_P, ControlFrame.S_128_REJECT,
-                ControlFrame.S_128_REJECT_P, ControlFrame.S_128_SELECTIVE_REJECT,
-                ControlFrame.S_128_SELECTIVE_REJECT_P).contains(calculateControlFrame())) {
+        if (listOf(
+                ControlField.S_8_RECEIVE_READY,
+                ControlField.S_8_RECEIVE_READY_P,
+                ControlField.S_8_RECEIVE_NOT_READY,
+                ControlField.S_8_RECEIVE_NOT_READY_P,
+                ControlField.S_8_REJECT,
+                ControlField.S_8_REJECT_P,
+                ControlField.S_8_SELECTIVE_REJECT,
+                ControlField.S_8_SELECTIVE_REJECT_P,
+                ControlField.S_128_RECEIVE_READY,
+                ControlField.S_128_RECEIVE_READY_P,
+                ControlField.S_128_RECEIVE_NOT_READY,
+                ControlField.S_128_RECEIVE_NOT_READY_P,
+                ControlField.S_128_REJECT,
+                ControlField.S_128_REJECT_P,
+                ControlField.S_128_SELECTIVE_REJECT,
+                ControlField.S_128_SELECTIVE_REJECT_P
+            ).contains(calculateControlFrame())) {
             stringBuilder.append("Receive Seq: ${receiveSequenceNumber()} ")
         }
 
-        if (listOf(ControlFrame.INFORMATION_8, ControlFrame.INFORMATION_8_P,
-                ControlFrame.INFORMATION_128, ControlFrame.INFORMATION_128_P).contains(calculateControlFrame())) {
+        if (listOf(
+                ControlField.INFORMATION_8, ControlField.INFORMATION_8_P,
+                ControlField.INFORMATION_128, ControlField.INFORMATION_128_P
+            ).contains(calculateControlFrame())) {
             stringBuilder.append("Receive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()} Delivery Attempt: $deliveryAttempts protocolID: ${stringUtils.byteToHex(protocolID())} ")
         }
 
@@ -321,50 +347,50 @@ abstract class KissFrame() {
      * to denote a command or a response packet. Below we set either
      * one of these bits to 1, assuming the other remains 0.
      */
-    private fun setCommandBits(controlType: ControlFrame) {
+    private fun setCommandBits(controlType: ControlField) {
         destSSID = when (controlType) {
-            ControlFrame.INFORMATION_8 -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.INFORMATION_8_P -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.INFORMATION_128 -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.INFORMATION_128_P -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_SET_ASYNC_BALANCED_MODE -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_SET_ASYNC_BALANCED_MODE_EXTENDED -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_DISCONNECT -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_DISCONNECT_MODE -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_UNNUMBERED_INFORMATION -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_EXCHANGE_IDENTIFICATION -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_TEST -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_SET_ASYNC_BALANCED_MODE_P -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_DISCONNECT_P -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_DISCONNECT_MODE_P -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_UNNUMBERED_INFORMATION_P -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_EXCHANGE_IDENTIFICATION_P -> byteUtils.setBits(destSSID, 0x80)
-            ControlFrame.U_TEST_P -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.INFORMATION_8 -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.INFORMATION_8_P -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.INFORMATION_128 -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.INFORMATION_128_P -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_SET_ASYNC_BALANCED_MODE -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_DISCONNECT -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_DISCONNECT_MODE -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_UNNUMBERED_INFORMATION -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_EXCHANGE_IDENTIFICATION -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_TEST -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_SET_ASYNC_BALANCED_MODE_P -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_DISCONNECT_P -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_DISCONNECT_MODE_P -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_UNNUMBERED_INFORMATION_P -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_EXCHANGE_IDENTIFICATION_P -> byteUtils.setBits(destSSID, 0x80)
+            ControlField.U_TEST_P -> byteUtils.setBits(destSSID, 0x80)
             else -> destSSID
         }
 
         sourceSSID = when (controlType) {
-            ControlFrame.S_8_RECEIVE_READY -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_8_RECEIVE_NOT_READY -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_8_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_8_SELECTIVE_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_8_RECEIVE_READY_P -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_8_RECEIVE_NOT_READY_P -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_8_REJECT_P -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_8_SELECTIVE_REJECT_P -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_128_RECEIVE_READY -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_128_RECEIVE_NOT_READY -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_128_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_128_SELECTIVE_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_128_RECEIVE_READY_P -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_128_RECEIVE_NOT_READY_P -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_128_REJECT_P -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.S_128_SELECTIVE_REJECT_P -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.U_UNNUMBERED_ACKNOWLEDGE -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.U_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.U_UNNUMBERED_ACKNOWLEDGE_P -> byteUtils.setBits(sourceSSID, 0x80)
-            ControlFrame.U_REJECT_P -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_8_RECEIVE_READY -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_8_RECEIVE_NOT_READY -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_8_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_8_SELECTIVE_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_8_RECEIVE_READY_P -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_8_RECEIVE_NOT_READY_P -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_8_REJECT_P -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_8_SELECTIVE_REJECT_P -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_128_RECEIVE_READY -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_128_RECEIVE_NOT_READY -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_128_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_128_SELECTIVE_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_128_RECEIVE_READY_P -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_128_RECEIVE_NOT_READY_P -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_128_REJECT_P -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.S_128_SELECTIVE_REJECT_P -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.U_UNNUMBERED_ACKNOWLEDGE -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.U_REJECT -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.U_UNNUMBERED_ACKNOWLEDGE_P -> byteUtils.setBits(sourceSSID, 0x80)
+            ControlField.U_REJECT_P -> byteUtils.setBits(sourceSSID, 0x80)
             else -> sourceSSID
         }
     }
@@ -375,13 +401,13 @@ abstract class KissFrame() {
      * so that both 1 and 2 byte Control Field parameters
      * can be handled to support Extended mode.
      */
-    abstract fun controlField(): ByteArray
+    abstract fun controlBits(): ByteArray
 
     abstract fun pollFinalBit(): Boolean
 
-    protected abstract fun setControlFrame(controlType: ControlFrame, receiveSeq: Int, sendSeq: Int)
+    protected abstract fun setControlFrame(controlType: ControlField, receiveSeq: Int, sendSeq: Int)
 
-    protected abstract fun calculateControlFrame(): ControlFrame
+    protected abstract fun calculateControlFrame(): ControlField
 
     protected abstract fun calculateReceiveSequenceNumber(): Int
 

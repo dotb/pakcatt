@@ -2,9 +2,9 @@ package pakcatt.application
 
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
-import pakcatt.network.packet.link.model.LinkRequest
+import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
 import pakcatt.application.shared.RootApp
-import pakcatt.network.packet.link.model.LinkResponse
+import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
 import pakcatt.util.StringUtils
 
 @Component

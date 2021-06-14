@@ -1,4 +1,4 @@
-package pakcatt.network.packet.kiss
+package pakcatt.network.packet.kiss.model
 
 class KissFrameStandard: KissFrame() {
 
@@ -22,7 +22,7 @@ class KissFrameStandard: KissFrame() {
         this.controlField = controlField
     }
 
-    override fun controlField(): ByteArray {
+    override fun controlBits(): ByteArray {
         return byteArrayOf(controlField)
     }
 
@@ -30,16 +30,16 @@ class KissFrameStandard: KissFrame() {
         return byteUtils.compareMaskedByte(controlField,0x10, 0x10)
     }
 
-    override fun calculateControlFrame(): ControlFrame {
-        for (controlType in ControlFrame.values()) {
+    override fun calculateControlFrame(): ControlField {
+        for (controlType in ControlField.values()) {
             if (byteUtils.compareMaskedByte(controlField, controlType.mask, controlType.bitPattern)) {
                 return controlType
             }
         }
-        return ControlFrame.UNKNOWN_FRAME
+        return ControlField.UNKNOWN_Field
     }
 
-    override fun setControlFrame(controlType: ControlFrame, receiveSeq: Int, sendSeq: Int) {
+    override fun setControlFrame(controlType: ControlField, receiveSeq: Int, sendSeq: Int) {
         /* Ensure the controlField starts at 0 so that residual bits don't remain and break
          * the control type, send or receive sequence number bits. */
         controlField = byteUtils.intToByte(0x00)

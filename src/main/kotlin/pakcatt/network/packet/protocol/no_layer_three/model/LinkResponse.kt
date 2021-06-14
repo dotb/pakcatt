@@ -1,4 +1,4 @@
-package pakcatt.network.packet.link.model
+package pakcatt.network.packet.protocol.no_layer_three.model
 
 import pakcatt.application.shared.SubApp
 
