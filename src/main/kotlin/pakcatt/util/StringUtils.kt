@@ -5,6 +5,11 @@ import org.springframework.stereotype.Component
 @Component
 class StringUtils {
 
+    companion object {
+        const val EOL = "\n\r"
+    }
+
+
     fun byteToHex(byte: Byte): String {
         return String.format("%02x", byte)
     }

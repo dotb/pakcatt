@@ -8,6 +8,7 @@ import pakcatt.application.shared.*
 import pakcatt.application.shared.command.Command
 import pakcatt.network.packet.link.model.LinkRequest
 import pakcatt.network.packet.link.model.LinkResponse
+import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 
@@ -15,7 +16,6 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
     private val logger = LoggerFactory.getLogger(MailboxApp::class.java)
     private val tabSpace = "\t"
-    private val eol = "\n\r"
 
     init {
         registerCommand(Command("list") .function { listMessages(it) }  .description("List the messages available to you"))
@@ -45,8 +45,8 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         val dateFormatter = SimpleDateFormat("dd MMM HH:mm")
 
         if (messageCount > 0) {
-            listResponse.append(eol)
-            listResponse.append("  No${tabSpace}Date          From${tabSpace}To${tabSpace}Subject${eol}")
+            listResponse.append(StringUtils.EOL)
+            listResponse.append("  No${tabSpace}Date          From${tabSpace}To${tabSpace}Subject${StringUtils.EOL}")
             for (message in userMessages) {
                 listResponse.append(when (message.isRead) {
                     true -> "  "
@@ -61,12 +61,12 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
                 listResponse.append(message.toCallsign)
                 listResponse.append(tabSpace)
                 listResponse.append(message.subject)
-                listResponse.append(eol)
+                listResponse.append(StringUtils.EOL)
             }
         }
         listResponse.append(messageCount)
         listResponse.append(" messages")
-        listResponse.append(eol)
+        listResponse.append(StringUtils.EOL)
         return LinkResponse.sendText(listResponse.toString())
     }
 
@@ -83,7 +83,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
                 message.isRead = true
                 mailboxStore.updateMessage(message)
             }
-            LinkResponse.sendText("${eol}Subject: ${message.subject}${eol}${message.body.toString()}")
+            LinkResponse.sendText("${StringUtils.EOL}Subject: ${message.subject}${StringUtils.EOL}${message.body.toString()}")
         } else {
             LinkResponse.sendText("No message found")
         }

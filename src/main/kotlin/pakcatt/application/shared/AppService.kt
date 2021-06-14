@@ -118,9 +118,9 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         val message = response.responseString()
 
         when (val prompt = app?.returnCommandPrompt()) {
-            "" -> response.updateResponseString("$message\n\r")
-            null -> response.updateResponseString("$message\n\r")
-            else -> response.updateResponseString("$message\n\r$prompt ")
+            "" -> response.updateResponseString("$message${StringUtils.EOL}")
+            null -> response.updateResponseString("$message${StringUtils.EOL}")
+            else -> response.updateResponseString("$message${StringUtils.EOL}$prompt ")
         }
 
         return response

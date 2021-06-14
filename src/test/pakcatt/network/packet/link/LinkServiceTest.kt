@@ -56,7 +56,7 @@ class LinkServiceTest: TestCase() {
         // Receive two frames - 1 INFORMATION_8 and 2 S_8_RECEIVE_READY_P
         val responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
         assertEquals(ControlFrame.INFORMATION_8, responseFrames[0].controlFrame())
-        assertEquals("Hi, there! *wave*", responseFrames[0].payloadDataString())
+        assertEquals("Hi, there! *wave*${StringUtils.EOL}", responseFrames[0].payloadDataString())
         assertEquals(ControlFrame.S_8_RECEIVE_READY_P, responseFrames[1].controlFrame())
 
         /* Receive a disconnect, and respond with an Unnumbered ACK */
@@ -109,7 +109,7 @@ class LinkServiceTest: TestCase() {
         sendFrameAndWaitResponse(mockedTNC, ControlFrame.INFORMATION_8, 0, 0, "ping")
         val parsedFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
         val constructedPayload = constructPayloadFromFrames(parsedFrames)
-        assertEquals("pong\n\r", constructedPayload)
+        assertEquals("pong${StringUtils.EOL}", constructedPayload)
     }
 
     @Test
@@ -132,7 +132,7 @@ class LinkServiceTest: TestCase() {
             lastReceivedFrame = receivedFrames.last()
         }
         val constructedPayload = constructPayloadFromFrames(receivedFrames)
-        val expectedResponseString = "${TestApp.longResponseString}\n\r"
+        val expectedResponseString = "${TestApp.longResponseString}${StringUtils.EOL}"
         assertEquals(expectedResponseString, constructedPayload)
     }
 
