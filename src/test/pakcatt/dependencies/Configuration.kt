@@ -58,4 +58,9 @@ class Configuration {
         return 10
     }
 
+    @Bean
+    fun deliveryRetryTimeSeconds(): Int {
+        return 10
+    }
+
 }

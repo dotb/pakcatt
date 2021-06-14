@@ -5,10 +5,10 @@ import java.util.*
 import kotlin.math.min
 
 class SequencedQueue(private val framesPerOver: Int,
-                     private val maxDeliveryAttempts: Int) {
+                     private val maxDeliveryAttempts: Int,
+                     private val deliveryRetryTimeSeconds: Int) {
 
     private val maxSequenceNumberSize = 8
-    private val deliveryRetryTimeMilliseconds = 9000
     private var sequencedFramesForDelivery = ArrayList<KissFrame>(maxSequenceNumberSize)
 
     /* Section 4.2.4 Frame Variables and Sequence Numbers, Beech et all */
@@ -40,14 +40,14 @@ class SequencedQueue(private val framesPerOver: Int,
         val timeStampNow = Date().time
         val startIndex = nextUnboundedFrameIndexExpectedByPeer
         val endIndex = min((startIndex + framesPerOver - 1), ourNextUnboundedSendSequenceNumber - 1)
+        val deliveryRetryTimeMilliseconds = deliveryRetryTimeSeconds * 1000
         var framesForDelivery = LinkedList<KissFrame>()
 
         if (startIndex >= 0 && endIndex >= 0) {
             for (index in startIndex..endIndex) {
                 val frameAwaitingDelivery = sequencedFramesForDelivery[index]
                 if (frameAwaitingDelivery.deliveryAttempts < maxDeliveryAttempts
-                    && frameAwaitingDelivery.lastDeliveryAttemptTimeStamp < timeStampNow - deliveryRetryTimeMilliseconds
-                ) {
+                    && frameAwaitingDelivery.lastDeliveryAttemptTimeStamp < timeStampNow - deliveryRetryTimeMilliseconds) {
                     // Attempt to deliver this frame
                     frameAwaitingDelivery.deliveryAttempts++
                     frameAwaitingDelivery.lastDeliveryAttemptTimeStamp = timeStampNow

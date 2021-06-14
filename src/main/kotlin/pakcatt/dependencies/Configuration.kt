@@ -90,4 +90,11 @@ class Configuration {
         return maxDeliveryAttempts.toInt()
     }
 
+    @Value("\${pakcatt.network.packet.deliveryRetryTimeSeconds}")
+    private lateinit var deliveryRetryTimeSeconds: Number
+    @Bean
+    fun deliveryRetryTimeSeconds(): Int {
+        return deliveryRetryTimeSeconds.toInt()
+    }
+
 }

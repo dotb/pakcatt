@@ -24,7 +24,8 @@ class LinkService(private var kissService: KissService,
                   private val frameSizeMax: Int,
                   private val framesPerOver: Int,
                   private val minTXPauseSeconds: Int,
-                  private val maxDeliveryAttempts: Int): LinkInterface {
+                  private val maxDeliveryAttempts: Int,
+                  private val deliveryRetryTimeSeconds: Int): LinkInterface {
 
     private val logger = LoggerFactory.getLogger(LinkService::class.java)
     private var connectionHandlers = HashMap<String, ConnectionHandler>()
@@ -88,7 +89,7 @@ class LinkService(private var kissService: KissService,
         return if (null != connectionHandler) {
             connectionHandler
         } else {
-            val connectionHandler = ConnectionHandler(remoteCallsign, myCallsign, this, frameSizeMax, framesPerOver, maxDeliveryAttempts)
+            val connectionHandler = ConnectionHandler(remoteCallsign, myCallsign, this, frameSizeMax, framesPerOver, maxDeliveryAttempts, deliveryRetryTimeSeconds)
             connectionHandlers[key] = connectionHandler
             connectionHandler
         }

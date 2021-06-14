@@ -14,13 +14,14 @@ class ConnectionHandler(private val remoteCallsign: String,
                         private val linkInterface: LinkInterface,
                         private val frameSizeMax: Int,
                         framesPerOver: Int,
-                        maxDeliveryAttempts: Int) {
+                        maxDeliveryAttempts: Int,
+                        deliveryRetryTimeSeconds: Int) {
 
     private val logger = LoggerFactory.getLogger(ConnectionHandler::class.java)
     private var controlMode = ControlMode.MODULO_8
     private var nextQueuedControlFrame: KissFrame? = null
     private var unnumberedQueue = ArrayList<KissFrame>()
-    private var sequencedQueue = SequencedQueue(framesPerOver, maxDeliveryAttempts)
+    private var sequencedQueue = SequencedQueue(framesPerOver, maxDeliveryAttempts, deliveryRetryTimeSeconds)
 
     /* The receive state variable contains the sequence number of the next expected received I frame.
      * This variable is updated upon the reception of an error-free I frame whose send sequence number
