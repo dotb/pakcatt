@@ -1,25 +1,14 @@
 package pakcatt.network.packet.kiss.model
 
-class KissFrameStandard: KissFrame() {
+open class KissFrameStandard: KissFrame() {
 
     private var controlField: Byte = byteUtils.intToByte(0x00)
 
-    fun parseRawKISSFrame(portAndCommand: Byte,
-                          destCallsign: ByteArray,
-                          destSSID: Byte,
-                          sourceCallsign: ByteArray,
-                          sourceSSID: Byte,
-                          controlField: Byte,
-                          protocolID: Byte,
-                          payloadData: ByteArray) {
-        super.parseRawKISSFrame(portAndCommand,
-                                destCallsign,
-                                destSSID,
-                                sourceCallsign,
-                                sourceSSID,
-                                protocolID,
-                                payloadData)
-        this.controlField = controlField
+    override fun populateFromFrameData(frameByteData: ByteArray) {
+        super.populateFromFrameData(frameByteData)
+        if (frameByteData.size >= 16) {
+            controlField = frameByteData[15]
+        }
     }
 
     override fun controlBits(): ByteArray {

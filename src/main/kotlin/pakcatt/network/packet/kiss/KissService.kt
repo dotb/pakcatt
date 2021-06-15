@@ -4,6 +4,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import pakcatt.network.packet.kiss.model.KissFrame
+import pakcatt.network.packet.kiss.model.KissFrameStandard
 import pakcatt.network.packet.kiss.queue.DeliveryQueue
 import pakcatt.network.packet.protocol.shared.ProtocolService
 import pakcatt.network.packet.tnc.TNC
@@ -70,7 +71,8 @@ class KissService(val tncConnection: TNC,
     private fun handleNewFrame(frame: ByteArray) {
         logger.trace("Received bytes:\t {}", stringUtils.byteArrayToHex(frame))
         if (frame.size >= KissFrame.SIZE_MIN) {
-            val kissFrame = KissFrame.parseRawKISSFrame(frame)
+            val kissFrame = KissFrameStandard()
+            kissFrame.populateFromFrameData(frame)
             logger.trace("Decoded hex:\t\t {}", stringUtils.byteArrayToHex(kissFrame.packetData()))
             logger.debug("Received frame:\t {}", stringUtils.removeEOLChars(kissFrame.toString(), " "))
             logger.trace("Decoded data:\t {}", kissFrame.payloadDataString())

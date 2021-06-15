@@ -69,46 +69,6 @@ enum class ControlField(val mask: Int, val bitPattern: Int) {
 
 abstract class KissFrame() {
 
-    companion object {
-        const val FRAME_END = -64
-        const val SIZE_MIN = 15
-        const val SIZE_HEADERS = 18
-
-        fun parseRawKISSFrame(frame: ByteArray): KissFrame {
-            // Mandatory fields
-            val portAndCommand = frame[0]
-            val destCallsign = frame.copyOfRange(1, 7)
-            val destSSID = frame[7]
-            val sourceCallsign = frame.copyOfRange(8, 14)
-            val sourceSSID = frame[14]
-
-            // Optional fields
-            var controlField = Byte.MIN_VALUE
-            var protocolID = Byte.MIN_VALUE
-            var payloadData = ByteArray(0)
-            if (frame.size >= 16) {
-                controlField = frame[15]
-            }
-            if (frame.size >= 17) {
-                protocolID = frame[16]
-            }
-            if (frame.size >= SIZE_HEADERS) {
-                payloadData = frame.copyOfRange(17, frame.size)
-            }
-            val kissFrame = KissFrameStandard()
-            kissFrame.parseRawKISSFrame(portAndCommand,
-                destCallsign,
-                destSSID,
-                sourceCallsign,
-                sourceSSID,
-                controlField,
-                protocolID,
-                payloadData)
-            return kissFrame
-        }
-
-    }
-
     protected val byteUtils = ByteUtils()
     protected val stringUtils = StringUtils()
     protected var portAndCommand: Byte = byteUtils.intToByte(0x00)
@@ -121,13 +81,42 @@ abstract class KissFrame() {
     var lastDeliveryAttemptTimeStamp: Long = 0
     var deliveryAttempts = 0
 
-    protected fun parseRawKISSFrame(portAndCommand: Byte,
-                                    destCallsign: ByteArray,
-                                    destSSID: Byte,
-                                    sourceCallsign: ByteArray,
-                                    sourceSSID: Byte,
-                                    protocolID: Byte,
-                                    payloadData: ByteArray) {
+    companion object {
+        const val FRAME_END = -64
+        const val SIZE_MIN = 15
+        const val SIZE_HEADERS = 18
+    }
+
+    open fun populateFromFrameData(frameByteData: ByteArray) {
+        var protocolID = Byte.MIN_VALUE
+        var payloadData = ByteArray(0)
+
+        // Mandatory fields
+        val portAndCommand = frameByteData[0]
+        val destCallsign = frameByteData.copyOfRange(1, 7)
+        val destSSID = frameByteData[7]
+        val sourceCallsign = frameByteData.copyOfRange(8, 14)
+        val sourceSSID = frameByteData[14]
+
+        if (frameByteData.size >= 17) {
+            protocolID = frameByteData[16]
+        }
+        if (frameByteData.size >= SIZE_HEADERS) {
+            payloadData = frameByteData.copyOfRange(17, frameByteData.size)
+        }
+
+        populateFromFrameData(portAndCommand,
+            destCallsign, destSSID, sourceCallsign,
+            sourceSSID, protocolID, payloadData)
+    }
+
+    private fun populateFromFrameData(portAndCommand: Byte,
+                                      destCallsign: ByteArray,
+                                      destSSID: Byte,
+                                      sourceCallsign: ByteArray,
+                                      sourceSSID: Byte,
+                                      protocolID: Byte,
+                                      payloadData: ByteArray) {
         this.portAndCommand = portAndCommand
         this.destCallsign = destCallsign
         this.destSSID = destSSID

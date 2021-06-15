@@ -5,25 +5,8 @@ open class KissFrameExtended: KissFrame() {
     private var controlFieldLow: Byte = byteUtils.intToByte(0x00)
     private var controlFieldHigh: Byte = byteUtils.intToByte(0x00)
 
-    fun parseRawKISSFrame(portAndCommand: Byte,
-                          destCallsign: ByteArray,
-                          destSSID: Byte,
-                          sourceCallsign: ByteArray,
-                          sourceSSID: Byte,
-                          controlFieldLow: Byte,
-                          controlFieldHigh: Byte,
-                          protocolID: Byte,
-                          payloadData: ByteArray) {
-        super.parseRawKISSFrame(portAndCommand,
-            destCallsign,
-            destSSID,
-            sourceCallsign,
-            sourceSSID,
-            protocolID,
-            payloadData)
-
-        this.controlFieldLow = controlFieldLow
-        this.controlFieldHigh = controlFieldHigh
+    override fun populateFromFrameData(frameByteData: ByteArray) {
+       // TODO - needs implementation for Extended Frame support.
     }
 
     override fun controlBits(): ByteArray {

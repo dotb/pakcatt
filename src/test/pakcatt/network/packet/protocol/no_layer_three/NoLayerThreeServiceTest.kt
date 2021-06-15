@@ -78,7 +78,8 @@ class NoLayerThreeServiceTest: TestCase() {
         var rxSequenceNumber = 0
         for (sendSequenceNumber in 0..6) {
             sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, sendSequenceNumber, rxSequenceNumber, "hello")
-            val responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.sentDataBuffer())
+            var responseFrame = KissFrameStandard()
+            responseFrame.populateFromFrameData(mockedTNC.sentDataBuffer())
             rxSequenceNumber = sendSequenceNumber + 1
             assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", sendSequenceNumber + 1, responseFrame.receiveSequenceNumber())
             assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", sendSequenceNumber, responseFrame.sendSequenceNumber())
@@ -86,13 +87,15 @@ class NoLayerThreeServiceTest: TestCase() {
 
         // The 7th exchange should roll-over the received sequence number
         sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, 7, rxSequenceNumber, "hello")
-        var responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.sentDataBuffer())
+        var responseFrame = KissFrameStandard()
+        responseFrame.populateFromFrameData(mockedTNC.sentDataBuffer())
         assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 0, responseFrame.receiveSequenceNumber())
         assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 7, responseFrame.sendSequenceNumber())
 
         // The 8th exchange should roll-over the sent sequence number
         sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, 0, rxSequenceNumber, "hello")
-        responseFrame = KissFrame.parseRawKISSFrame(mockedTNC.sentDataBuffer())
+        responseFrame = KissFrameStandard()
+        responseFrame.populateFromFrameData(mockedTNC.sentDataBuffer())
         assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 1, responseFrame.receiveSequenceNumber())
         assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 0, responseFrame.sendSequenceNumber())
 
@@ -211,7 +214,8 @@ class NoLayerThreeServiceTest: TestCase() {
                     val frameSize = frameEnd - frameStart
                     val frameBuffer = ByteArray(frameSize)
                     responseBuffer.copyInto(frameBuffer, 0, frameStart, frameEnd)
-                    val kissFrame = KissFrame.parseRawKISSFrame(frameBuffer)
+                    val kissFrame = KissFrameStandard()
+                    kissFrame.populateFromFrameData(frameBuffer)
                     responseFrameList.add(kissFrame)
                     val payloadString = kissFrame.payloadDataString()
                     frameEnd++
