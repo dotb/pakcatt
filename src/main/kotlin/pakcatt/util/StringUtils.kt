@@ -1,6 +1,7 @@
 package pakcatt.util
 
 import org.springframework.stereotype.Component
+import kotlin.math.min
 
 @Component
 class StringUtils {
@@ -8,7 +9,6 @@ class StringUtils {
     companion object {
         const val EOL = "\n\r"
     }
-
 
     fun byteToHex(byte: Byte): String {
         return String.format("%02x", byte)
@@ -126,6 +126,22 @@ class StringUtils {
         }
 
         return fixedString.toString()
+    }
+
+    /**
+     * Create a string of a fixed size, padding with space
+     * on the end of the string if required.
+     */
+    fun fixedSizeString(inputString: String, fixedSize: Int): String {
+        var returnedString = inputString
+        for (index in returnedString.length..fixedSize) {
+            returnedString += " "
+        }
+        return trimmedString(returnedString, fixedSize)
+    }
+
+    fun trimmedString(inputString: String, maxLength: Int): String {
+        return inputString.substring(0, min(maxLength, inputString.length))
     }
 
 }

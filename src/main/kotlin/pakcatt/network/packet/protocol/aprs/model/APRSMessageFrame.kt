@@ -1,6 +1,7 @@
 package pakcatt.network.packet.protocol.aprs.model
 
 import java.lang.StringBuilder
+import kotlin.math.min
 
 class APRSMessageFrame: APRSFrame() {
     /*
@@ -17,29 +18,23 @@ class APRSMessageFrame: APRSFrame() {
         aprsDataType = APRSDataType.MESSAGE
     }
 
-    override fun populateFromFrameData(frameByteData: ByteArray) {
-        super.populateFromFrameData(frameByteData)
-        // Update our local message variables
-        val payloadString = payloadDataString()
-        setMessageDestinationCallsignFromPayload(payloadString)
-        setMessageFromPayload(payloadString)
-        setMessageNumberFromPayload(payloadString)
-    }
-
     fun setMessageSourceCallsign(sourceCallsign: String) {
         setSourceCallsign(sourceCallsign)
     }
 
     fun setMessageDestinationCallsign(destinationCallsign: String) {
         this.messageDestinationCallsign = destinationCallsign
+        updateFrameFieldsUsingAPRSMessageParameters()
     }
 
     fun setMessage(message: String) {
         this.message = message
+        updateFrameFieldsUsingAPRSMessageParameters()
     }
 
     fun setMessageNumber(messageNumber: Int) {
         this.messageNumber = messageNumber
+        updateFrameFieldsUsingAPRSMessageParameters()
     }
 
     fun messageSourceCallsign(): String {
@@ -58,20 +53,31 @@ class APRSMessageFrame: APRSFrame() {
         return messageNumber
     }
 
-    override fun packetData(): ByteArray {
-        // Construct the payload using our local variables
-        val stringPayloadBuilder = StringBuilder()
-        stringPayloadBuilder.append(":")
-        stringPayloadBuilder.append(messageDestinationCallsign)
-        stringPayloadBuilder.append(":")
-        if (messageNumber >= 0) {
-            stringPayloadBuilder.append("{")
-            stringPayloadBuilder.append(messageNumber)
-        }
+    override fun populateFromFrameData(frameByteData: ByteArray) {
+        super.populateFromFrameData(frameByteData)
+        // Update our local message variables
+        val payloadString = payloadDataString()
+        setMessageDestinationCallsignFromPayload(payloadString)
+        setMessageFromPayload(payloadString)
+        setMessageNumberFromPayload(payloadString)
+    }
 
-        this.payloadData = stringUtils.convertStringToBytes(stringPayloadBuilder.toString())
-        // Construct and return the packet data
+    override fun packetData(): ByteArray {
+        updateFrameFieldsUsingAPRSMessageParameters()
         return super.packetData()
+    }
+
+    override fun toString(): String {
+        val stringBuilder = StringBuilder()
+        stringBuilder.append("Data Type: $aprsDataType ")
+        stringBuilder.append("From: ${sourceCallsign()} ")
+        stringBuilder.append("To: ${messageDestinationCallsign()} ")
+        stringBuilder.append("No: ${messageNumber()} ")
+        stringBuilder.append("Message: ${message()} ")
+        if (payloadData.isNotEmpty()) {
+            stringBuilder.append("Payload: ${payloadDataString()}")
+        }
+        return stringBuilder.toString()
     }
 
     private fun setMessageDestinationCallsignFromPayload(payloadDataString: String) {
@@ -96,6 +102,25 @@ class APRSMessageFrame: APRSFrame() {
         } else {
             this.messageNumber = -1
         }
+    }
+
+    private fun updateFrameFieldsUsingAPRSMessageParameters() {
+        // The destination callsign must be 9 characters in length and message numbers 5
+        this.message = stringUtils.trimmedString(message, 67)
+        this.messageNumber = stringUtils.trimmedString(messageNumber.toString(), 5).toInt()
+        this.messageDestinationCallsign = stringUtils.trimmedString(messageDestinationCallsign, 9)
+        val fixedLengthDestination = stringUtils.fixedSizeString(messageDestinationCallsign, 9)
+        // Construct the payload using our local variables
+        val stringPayloadBuilder = StringBuilder()
+        stringPayloadBuilder.append(":")
+        stringPayloadBuilder.append(fixedLengthDestination)
+        stringPayloadBuilder.append(":")
+        stringPayloadBuilder.append(message)
+        if (messageNumber >= 0) {
+            stringPayloadBuilder.append("{")
+            stringPayloadBuilder.append(messageNumber)
+        }
+        this.payloadData = stringUtils.convertStringToBytes(stringPayloadBuilder.toString())
     }
 
 }

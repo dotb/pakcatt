@@ -68,7 +68,6 @@ abstract class ProtocolTest: TestCase() {
                     val kissFrame = KissFrameStandard()
                     kissFrame.populateFromFrameData(frameBuffer)
                     responseFrameList.add(kissFrame)
-                    val payloadString = kissFrame.payloadDataString()
                     frameEnd++
                     frameStart = frameEnd
                 }
