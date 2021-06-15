@@ -4,11 +4,9 @@ open class KissFrameStandard: KissFrame() {
 
     private var controlField: Byte = byteUtils.intToByte(0x00)
 
-    override fun populateFromFrameData(frameByteData: ByteArray) {
-        super.populateFromFrameData(frameByteData)
-        if (frameByteData.size >= 16) {
-            controlField = frameByteData[15]
-        }
+    override fun setControlFieldFromFrameData(frameByteData: ByteArray, nextIndex: Int): Int {
+        controlField = frameByteData[nextIndex]
+        return nextIndex + 1
     }
 
     override fun controlBits(): ByteArray {
@@ -37,6 +35,8 @@ open class KissFrameStandard: KissFrame() {
         // Then set the send and receive sequence bits. No change is made if they are 0.
         setSendSequenceNumberBits(sendSeq)
         setReceiveSequenceNumberBits(receiveSeq)
+        // Lastly, set the protocol ID if required
+        setProtocolIdBasedOnControlType(controlType)
     }
 
     override fun calculateReceiveSequenceNumber(): Int {
@@ -60,6 +60,17 @@ open class KissFrameStandard: KissFrame() {
         val sequenceNumberByte = byteUtils.intToByte(sendSeq)
         val shiftedSequence = byteUtils.shiftBitsLeft(sequenceNumberByte, 1)
         this.controlField = byteUtils.setBits(controlField, shiftedSequence)
+    }
+
+    /**
+     * If this frame contains content, we should set the protocolID to 0xF0 - no layer 3
+     */
+    private fun setProtocolIdBasedOnControlType(controlType: ControlField) {
+        if (listOf(ControlField.INFORMATION_8, ControlField.INFORMATION_8_P,
+                ControlField.INFORMATION_128, ControlField.INFORMATION_128_P,
+                ControlField.U_UNNUMBERED_INFORMATION, ControlField.U_UNNUMBERED_INFORMATION_P).contains(controlType)) {
+            this.protocolID = byteUtils.intToByte(0xF0)
+        }
     }
 
 }

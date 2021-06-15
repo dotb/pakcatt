@@ -5,8 +5,10 @@ open class KissFrameExtended: KissFrame() {
     private var controlFieldLow: Byte = byteUtils.intToByte(0x00)
     private var controlFieldHigh: Byte = byteUtils.intToByte(0x00)
 
-    override fun populateFromFrameData(frameByteData: ByteArray) {
-       // TODO - needs implementation for Extended Frame support.
+    override fun setControlFieldFromFrameData(frameByteData: ByteArray, nextIndex: Int): Int {
+        controlFieldHigh = frameByteData[nextIndex]
+        controlFieldLow = frameByteData[nextIndex + 1]
+        return nextIndex + 2
     }
 
     override fun controlBits(): ByteArray {

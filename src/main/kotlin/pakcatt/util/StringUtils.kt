@@ -47,6 +47,12 @@ class StringUtils {
         return String(byteArray, Charsets.US_ASCII)
     }
 
+    fun convertByteToString(byte: Byte): String {
+        val byteArrayOfOne = ByteArray(1)
+        byteArrayOfOne[0] = byte
+        return convertBytesToString(byteArrayOfOne)
+    }
+
     fun convertStringToBytes(string: String): ByteArray {
         return string.toByteArray(Charsets.US_ASCII)
     }

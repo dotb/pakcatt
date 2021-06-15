@@ -39,16 +39,16 @@ class NoLayerThreeServiceTest: TestCase() {
 
         /* Accept an incoming conversation, respond with an Unnumbered ACK */
         // From: VK3LIT-2 to: VK3LIT-1 control: 3f  controlType: U_SET_ASYNC_BALANCED_MODE_P pollFinalBit: 1 protocolID: 80
-        sendFrameFromBytesAndWaitResponse(mockedTNC, byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x62, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x3f))
+        sendFrameFromBytesAndWaitResponse(mockedTNC, byteUtils.byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x62, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x3f))
         // From: VK3LIT-1 to: VK3LIT-2 control: 73  controlType: U_UNNUMBERED_ACKNOWLEDGE_P pollFinalBit: 1
-        assertResponse(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0), mockedTNC)
+        assertResponse(byteUtils.byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0), mockedTNC)
 
 
         /* Receive an incoming message, respond with an Ready Receive ACK*/
         // Send nop
         sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, 0, 0, "nop")
         // Receive ACK only
-        assertResponse(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x21, 0xc0), mockedTNC)
+        assertResponse(byteUtils.byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x21, 0xc0), mockedTNC)
 
         /* Receive an Receive Ready P message and transfer rx variable state back to the remote TNC */
         // Send Hello!
@@ -61,9 +61,9 @@ class NoLayerThreeServiceTest: TestCase() {
 
         /* Receive a disconnect, and respond with an Unnumbered ACK */
         // From: VK3LIT-2 to: VK3LIT-1 control: 53  controlType: U_DISCONNECT_P pollFinalBit: 1 protocolID: 80 Receive Seq: 2 Send Seq: 1
-        sendFrameFromBytesAndWaitResponse(mockedTNC, byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe2, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x53))
+        sendFrameFromBytesAndWaitResponse(mockedTNC, byteUtils.byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe2, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x65, 0x53))
         // From: VK3LIT-1 to: VK3LIT-2 control: 73  controlType: U_UNNUMBERED_ACKNOWLEDGE_P pollFinalBit: 1 protocolID: f0 Receive Seq: 3 Send Seq: 1
-        assertResponse(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0), mockedTNC)
+        assertResponse(byteUtils.byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0), mockedTNC)
     }
 
     @Test
@@ -72,7 +72,7 @@ class NoLayerThreeServiceTest: TestCase() {
         // Establish a link
         sendFrameAndWaitResponse(mockedTNC, ControlField.U_SET_ASYNC_BALANCED_MODE_P, 0, 0)
         // From: VK3LIT-1 to: VK3LIT-2 control: 73  controlType: U_UNNUMBERED_ACKNOWLEDGE_P pollFinalBit: 1
-        assertResponse(byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0), mockedTNC)
+        assertResponse(byteUtils.byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0), mockedTNC)
 
         // Send multiple message exchanges to ensure sequence numbers increment and roll over properly after 7 (a 3 bit value)
         var rxSequenceNumber = 0
@@ -155,6 +155,17 @@ class NoLayerThreeServiceTest: TestCase() {
         assertEquals(2, lastFrame.receiveSequenceNumber())
     }
 
+
+    @Test
+    fun testFramesWithRepeaterAddresses() {
+        /* Send the following frame that includes two repeater addressess, and make sure it's decoded.
+           From: VK3EF-9 to: S7U0S1-0 controlType: Via1: VK3RMD-1 Via2: WIDE2-1 controlType: U_UNNUMBERED_INFORMATION Payload: `I/'p-Wk/
+           00 a6 6e aa 60 a6 62 60 ac 96 66 8a 8c 40 72 ac 96 66 a4 9a 88 e2 ae 92 88 8a 64 40 63 03 f0 60 49 2f 27 70 2d 57 6b 2f */
+        val mockedTNC = tnc as TNCMocked
+        sendFrameFromBytesAndWaitResponse(mockedTNC, byteUtils.byteArrayFromInts(0x00, 0xa6, 0x6e, 0xaa, 0x60, 0xa6, 0x62, 0x60, 0xac, 0x96, 0x66, 0x8a, 0x8c, 0x40, 0x72, 0xac, 0x96, 0x66, 0xa4, 0x9a, 0x88, 0xe2, 0xae, 0x92, 0x88, 0x8a, 0x64, 0x40, 0x63, 0x3f))
+        assertResponse(byteUtils.byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x8a, 0x8c, 0x40, 0x72, 0xa6, 0x6e, 0xaa, 0x60, 0xa6, 0x62, 0xe1, 0x73, 0xc0), mockedTNC)
+    }
+
     private fun sendFrameAndWaitResponse(mockedTNC: TNCMocked, controlType: ControlField, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null) {
         sendFrame(mockedTNC, controlType, sendSequenceNumber, rxSequenceNumber, payload)
         waitForResponse(mockedTNC)
@@ -184,15 +195,6 @@ class NoLayerThreeServiceTest: TestCase() {
             mockedTNC.receiveDataCallback(byte)
         }
         mockedTNC.receiveDataCallback(byteUtils.intToByte(0xC0))
-    }
-
-    private fun byteArrayFromInts(vararg elements: Int): ByteArray {
-        val byteArray = ByteArray(elements.size)
-        for ((index, intOctet) in elements.withIndex()) {
-            val byte = byteUtils.intToByte(intOctet)
-            byteArray[index] = byte
-        }
-        return byteArray
     }
 
     private fun constructPayloadFromFrames(frames: List<KissFrame>): String {

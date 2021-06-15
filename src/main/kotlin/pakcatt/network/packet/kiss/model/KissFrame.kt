@@ -22,7 +22,8 @@ Source SSID        1 byte (CRRSSID1 C=Command, R=Reserved, SSID=SSID, 0=Extensio
 
 ### Optional Repeater addressing ###
 The repeater section can be repeated (pun intended) to include up to two repeaters.
-Although the documentation seems to indicate it could include more repeaters.
+Although the documentation seems to indicate it could include more repeaters, but this
+is being phased out, and I've not seen it in the wild.
 Repeater Callsign  6 bytes (Callsign using 7 bit uppercase chars) (AX.25)
 Repeater SSID      1 byte (HRRSSID1 H=Repeated yes/no, R=Reserved, SSID=SSID, 1=Extension bit) (AX.25)
                     - H = 1 Has been repeated
@@ -47,8 +48,7 @@ Frame End (FEND)   1 byte (0xc0) (KISS)
  */
 
 enum class ProtocolID(val id: Int) {
-    NO_LAYER_3(0xF0),
-    APRS(0x96)
+    NO_LAYER_3(0xF0)
 }
 
 enum class ControlField(val mask: Int, val bitPattern: Int) {
@@ -76,7 +76,11 @@ abstract class KissFrame() {
     protected var destSSID: Byte = byteUtils.intToByte(0x00)
     protected var sourceCallsign: ByteArray = ByteArray(0)
     protected var sourceSSID: Byte = byteUtils.intToByte(0x00)
-    protected var protocolID: Byte = byteUtils.intToByte(0xF0)
+    protected var repeaterCallsignOne: ByteArray = ByteArray(0)
+    protected var repeaterSSIDOne: Byte = byteUtils.intToByte(0x00)
+    protected var repeaterCallsignTwo: ByteArray = ByteArray(0)
+    protected var repeaterSSIDTwo: Byte = byteUtils.intToByte(0x00)
+    protected var protocolID: Byte = byteUtils.intToByte(0x00)
     protected var payloadData: ByteArray = ByteArray(0)
     var lastDeliveryAttemptTimeStamp: Long = 0
     var deliveryAttempts = 0
@@ -88,42 +92,56 @@ abstract class KissFrame() {
     }
 
     open fun populateFromFrameData(frameByteData: ByteArray) {
-        var protocolID = Byte.MIN_VALUE
-        var payloadData = ByteArray(0)
+        // Set defaults for optional fields
+        this.repeaterCallsignOne = ByteArray(0)
+        this.repeaterCallsignTwo = ByteArray(0)
+        this.repeaterSSIDOne = byteUtils.intToByte(0x00)
+        this.repeaterSSIDTwo = byteUtils.intToByte(0x00)
+        this.protocolID = byteUtils.intToByte(0x00)
+        this.payloadData = ByteArray(0)
 
         // Mandatory fields
-        val portAndCommand = frameByteData[0]
-        val destCallsign = frameByteData.copyOfRange(1, 7)
-        val destSSID = frameByteData[7]
-        val sourceCallsign = frameByteData.copyOfRange(8, 14)
-        val sourceSSID = frameByteData[14]
+        var nextIndex = 0
+        this.portAndCommand = frameByteData[nextIndex]
+        nextIndex++
+        this.destCallsign = frameByteData.copyOfRange(nextIndex, nextIndex + 6)
+        nextIndex += 6
+        this.destSSID = frameByteData[nextIndex]
+        nextIndex++
+        this.sourceCallsign = frameByteData.copyOfRange(nextIndex, nextIndex + 6)
+        nextIndex += 6
+        this.sourceSSID = frameByteData[nextIndex]
+        nextIndex++
 
-        if (frameByteData.size >= 17) {
-            protocolID = frameByteData[16]
+        // Is there repeater information to decode?
+        // Last bit in sourceSSID set to 0 - yes, 1 - no
+        if (byteUtils.maskByte(sourceSSID, 0x01) == byteUtils.intToByte(0x00)) {
+            // At least one repeater address is expected
+            this.repeaterCallsignOne = frameByteData.copyOfRange(nextIndex, nextIndex + 6)
+            nextIndex += 6
+            this.repeaterSSIDOne = frameByteData[nextIndex]
+            nextIndex++
+            if (byteUtils.maskByte(repeaterSSIDOne, 0x01) == byteUtils.intToByte(0x00)) {
+                this.repeaterCallsignTwo = frameByteData.copyOfRange(nextIndex, nextIndex + 6)
+                nextIndex += 6
+                this.repeaterSSIDTwo = frameByteData[nextIndex]
+                nextIndex++
+            }
         }
-        if (frameByteData.size >= SIZE_HEADERS) {
-            payloadData = frameByteData.copyOfRange(17, frameByteData.size)
+
+        // Call to the standard or extended frame classes to handle the control field
+        nextIndex = setControlFieldFromFrameData(frameByteData, nextIndex)
+
+        // The protocol ID is optional
+        if (frameByteData.size > nextIndex) {
+            this.protocolID = frameByteData[nextIndex]
+            nextIndex++
         }
 
-        populateFromFrameData(portAndCommand,
-            destCallsign, destSSID, sourceCallsign,
-            sourceSSID, protocolID, payloadData)
-    }
-
-    private fun populateFromFrameData(portAndCommand: Byte,
-                                      destCallsign: ByteArray,
-                                      destSSID: Byte,
-                                      sourceCallsign: ByteArray,
-                                      sourceSSID: Byte,
-                                      protocolID: Byte,
-                                      payloadData: ByteArray) {
-        this.portAndCommand = portAndCommand
-        this.destCallsign = destCallsign
-        this.destSSID = destSSID
-        this.sourceCallsign = sourceCallsign
-        this.sourceSSID = sourceSSID
-        this.protocolID = protocolID
-        this.payloadData = payloadData
+        // Information / payload data is optional
+        if (frameByteData.size > nextIndex) {
+            this.payloadData = frameByteData.copyOfRange(nextIndex, frameByteData.size)
+        }
     }
 
     fun setDestCallsign(destCallsign: String) {
@@ -161,7 +179,16 @@ abstract class KissFrame() {
     fun packetData(): ByteArray {
         val controlField = controlBits()
 
-        var packetSize = controlField.size + destCallsign.size + sourceCallsign.size + payloadData.size
+        var packetSize = controlField.size + destCallsign.size + sourceCallsign.size +
+                repeaterCallsignOne.size + repeaterCallsignTwo.size + payloadData.size
+
+        // Add space any repeater SSIDs
+        if (repeaterCallsignOne.isNotEmpty()) {
+            packetSize++
+        }
+        if (repeaterCallsignTwo.isNotEmpty()) {
+            packetSize++
+        }
 
         // Section 3.4. PID Field. The PID field is only sent on I and UI Frames
         packetSize += if (arrayOf(
@@ -184,6 +211,14 @@ abstract class KissFrame() {
         nextIndex = byteUtils.insertIntoByteArray(destSSID, kissPacket, nextIndex)
         nextIndex = byteUtils.insertIntoByteArray(sourceCallsign, kissPacket, nextIndex)
         nextIndex = byteUtils.insertIntoByteArray(sourceSSID, kissPacket, nextIndex)
+        nextIndex = byteUtils.insertIntoByteArray(repeaterCallsignOne, kissPacket, nextIndex)
+        if (repeaterCallsignOne.isNotEmpty()) {
+            nextIndex = byteUtils.insertIntoByteArray(repeaterSSIDOne, kissPacket, nextIndex)
+        }
+        nextIndex = byteUtils.insertIntoByteArray(repeaterCallsignTwo, kissPacket, nextIndex)
+        if (repeaterCallsignTwo.isNotEmpty()) {
+            nextIndex = byteUtils.insertIntoByteArray(repeaterSSIDTwo, kissPacket, nextIndex)
+        }
         nextIndex = byteUtils.insertIntoByteArray(controlField, kissPacket, nextIndex)
         nextIndex = byteUtils.insertIntoByteArray(protocolID, kissPacket, nextIndex) // Optional
         byteUtils.insertIntoByteArray(payloadData, kissPacket, nextIndex) // Optional
@@ -196,6 +231,14 @@ abstract class KissFrame() {
 
     fun destCallsign(): String {
         return constructCallsign(destCallsign, destSSID)
+    }
+
+    fun repeaterCallsignOne(): String {
+        return constructCallsign(repeaterCallsignOne, repeaterSSIDOne)
+    }
+
+    fun repeaterCallsignTwo(): String {
+        return constructCallsign(repeaterCallsignTwo, repeaterSSIDTwo)
     }
 
     fun protocolID(): Byte {
@@ -286,7 +329,17 @@ abstract class KissFrame() {
             stringBuilder.append("Receive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()} Delivery Attempt: $deliveryAttempts protocolID: ${stringUtils.byteToHex(protocolID())} ")
         }
 
-        stringBuilder.append("From: ${sourceCallsign()} to: ${destCallsign()} controlType: ${controlTypeString()} ")
+        stringBuilder.append("From: ${sourceCallsign()} to: ${destCallsign()} controlType: ")
+
+        if (repeaterCallsignOne.isNotEmpty()) {
+            stringBuilder.append("Via1: ${repeaterCallsignOne()} ")
+        }
+
+        if (repeaterCallsignTwo.isNotEmpty()) {
+            stringBuilder.append("Via2: ${repeaterCallsignTwo()} ")
+        }
+
+        stringBuilder.append("controlType: ${controlTypeString()} ")
 
         if (payloadData.isNotEmpty()) {
             stringBuilder.append("Payload: ${payloadDataString()}")
@@ -393,6 +446,8 @@ abstract class KissFrame() {
     abstract fun controlBits(): ByteArray
 
     abstract fun pollFinalBit(): Boolean
+
+    protected abstract fun setControlFieldFromFrameData(frameByteData: ByteArray, nextIndex: Int): Int
 
     protected abstract fun setControlFrame(controlType: ControlField, receiveSeq: Int, sendSeq: Int)
 

@@ -34,23 +34,12 @@ class LinkService(private var appService: AppInterface,
     private var lastTransmitTimestamp: Long = 0
 
     override fun supportedProtocol(protocolId: Int, controlField: ControlField): Boolean {
-        return protocolId == ProtocolID.NO_LAYER_3.id || listOf(ControlField.S_8_RECEIVE_READY,
-            ControlField.S_8_RECEIVE_NOT_READY, ControlField.S_8_REJECT, ControlField.S_8_SELECTIVE_REJECT,
-            ControlField.S_8_RECEIVE_READY_P, ControlField.S_8_RECEIVE_NOT_READY_P, ControlField.S_8_REJECT_P,
-            ControlField.S_8_SELECTIVE_REJECT_P, ControlField.S_128_RECEIVE_READY, ControlField.S_128_RECEIVE_NOT_READY,
-            ControlField.S_128_REJECT, ControlField.S_128_SELECTIVE_REJECT, ControlField.S_128_RECEIVE_READY_P,
-            ControlField.S_128_RECEIVE_NOT_READY_P, ControlField.S_128_REJECT_P, ControlField.S_128_SELECTIVE_REJECT_P,
-            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED, ControlField.U_SET_ASYNC_BALANCED_MODE,
-            ControlField.U_DISCONNECT, ControlField.U_DISCONNECT_MODE, ControlField.U_UNNUMBERED_ACKNOWLEDGE,
-            ControlField.U_REJECT, ControlField.U_UNNUMBERED_INFORMATION, ControlField.U_EXCHANGE_IDENTIFICATION,
-            ControlField.U_TEST, ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P, ControlField.U_SET_ASYNC_BALANCED_MODE_P,
-            ControlField.U_DISCONNECT_P, ControlField.U_DISCONNECT_MODE_P, ControlField.U_UNNUMBERED_ACKNOWLEDGE_P,
-            ControlField.U_REJECT_P, ControlField.U_UNNUMBERED_INFORMATION_P, ControlField.U_EXCHANGE_IDENTIFICATION_P,
-            ControlField.U_TEST_P).contains(controlField)
+        // All frame types are handled.
+        return true
     }
 
     override fun handleFrame(incomingFrame: KissFrame) {
-        logger.trace("No Layer 3, handling frame: {}", incomingFrame)
+        logger.trace("NO_LAYER_3: handling frame: {}", incomingFrame)
         receiveQueue.add(incomingFrame)
     }
 
