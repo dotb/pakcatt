@@ -144,39 +144,7 @@ abstract class KissFrame() {
         }
     }
 
-    fun setDestCallsign(destCallsign: String) {
-        val parsedCallsign = parseStringCallsign(destCallsign)
-        this.destCallsign = parsedCallsign.first
-        this.destSSID = parsedCallsign.second
-    }
-
-    fun setSourceCallsign(sourceCallsign: String) {
-        // Set the source callsign ending in 1 to denote there is no repeater address
-        val parsedCallsign = parseStringCallsign(sourceCallsign)
-        this.sourceCallsign = parsedCallsign.first
-        this.sourceSSID = byteUtils.setBits(parsedCallsign.second, 0x01)
-    }
-
-    fun setControlField(controlType: ControlField, receiveSeq: Int = 0, sendSeq: Int = 0) {
-        setControlFrame(controlType, receiveSeq, sendSeq)
-        setCommandBits(controlType)
-    }
-
-    fun setReceiveSequenceNumberIfRequired(receiveSeq: Int) {
-        if (requiresReceiveSequenceNumber()) {
-            setControlField(controlField(), receiveSeq, sendSequenceNumber())
-        }
-    }
-
-    fun setSendSequenceNumber(sendSeq: Int) {
-        setControlField(controlField(), receiveSequenceNumber(), sendSeq)
-    }
-
-    fun setPayloadMessage(message: String) {
-        payloadData = stringUtils.convertStringToBytes(message)
-    }
-
-    fun packetData(): ByteArray {
+    open fun packetData(): ByteArray {
         val controlField = controlBits()
 
         var packetSize = controlField.size + destCallsign.size + sourceCallsign.size +
@@ -223,6 +191,38 @@ abstract class KissFrame() {
         nextIndex = byteUtils.insertIntoByteArray(protocolID, kissPacket, nextIndex) // Optional
         byteUtils.insertIntoByteArray(payloadData, kissPacket, nextIndex) // Optional
         return kissPacket
+    }
+
+    fun setDestCallsign(destCallsign: String) {
+        val parsedCallsign = parseStringCallsign(destCallsign)
+        this.destCallsign = parsedCallsign.first
+        this.destSSID = parsedCallsign.second
+    }
+
+    fun setSourceCallsign(sourceCallsign: String) {
+        // Set the source callsign ending in 1 to denote there is no repeater address
+        val parsedCallsign = parseStringCallsign(sourceCallsign)
+        this.sourceCallsign = parsedCallsign.first
+        this.sourceSSID = byteUtils.setBits(parsedCallsign.second, 0x01)
+    }
+
+    fun setControlField(controlType: ControlField, receiveSeq: Int = 0, sendSeq: Int = 0) {
+        setControlFrame(controlType, receiveSeq, sendSeq)
+        setCommandBits(controlType)
+    }
+
+    fun setReceiveSequenceNumberIfRequired(receiveSeq: Int) {
+        if (requiresReceiveSequenceNumber()) {
+            setControlField(controlField(), receiveSeq, sendSequenceNumber())
+        }
+    }
+
+    fun setSendSequenceNumber(sendSeq: Int) {
+        setControlField(controlField(), receiveSequenceNumber(), sendSeq)
+    }
+
+    fun setPayloadMessage(message: String) {
+        payloadData = stringUtils.convertStringToBytes(message)
     }
 
     fun sourceCallsign(): String {
@@ -349,11 +349,15 @@ abstract class KissFrame() {
     }
 
     private fun constructCallsign(callsignByteArray: ByteArray, callsignSSID: Byte): String {
-        val shiftedCallsign = byteUtils.shiftBitsRight(callsignByteArray, 1)
-        val callsignString = stringUtils.convertBytesToString(shiftedCallsign)
-        val trimmedCallsign = stringUtils.removeWhitespace(callsignString)
-        val ssid = ssidFromSSIDByte(callsignSSID)
-        return "${trimmedCallsign}-${ssid}"
+        return if (callsignByteArray.isNotEmpty()) {
+            val shiftedCallsign = byteUtils.shiftBitsRight(callsignByteArray, 1)
+            val callsignString = stringUtils.convertBytesToString(shiftedCallsign)
+            val trimmedCallsign = stringUtils.removeWhitespace(callsignString)
+            val ssid = ssidFromSSIDByte(callsignSSID)
+            "${trimmedCallsign}-${ssid}"
+        } else {
+            ""
+        }
     }
 
     private fun ssidFromSSIDByte(ssidByte: Byte): Int {

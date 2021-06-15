@@ -1,5 +1,6 @@
 package pakcatt.network.packet.protocol.aprs.model
 
+import pakcatt.network.packet.kiss.model.ControlField
 import pakcatt.network.packet.kiss.model.KissFrame
 import pakcatt.network.packet.kiss.model.KissFrameStandard
 
@@ -13,7 +14,15 @@ enum class APRSDataType(val id: Int) {
 
 open class APRSFrame: KissFrameStandard() {
 
-    private var aprsDataType: APRSDataType = APRSDataType.UNKNOWN
+    protected var aprsDataType: APRSDataType = APRSDataType.UNKNOWN
+
+    init {
+        // Configure the AX.25 frame parameters for APRS
+        setControlField(ControlField.U_UNNUMBERED_INFORMATION)
+        // Version identifier goes into teh destination callsign
+        setDestCallsign("PAKCAT-0")
+    }
+
 
     open fun populateFromKissFrame(kissFrame: KissFrame) {
         populateFromFrameData(kissFrame.packetData())
