@@ -1,8 +1,5 @@
 package pakcatt.network.packet.protocol.no_layer_three
 
-import junit.framework.TestCase
-import org.awaitility.Awaitility.await
-import org.awaitility.Duration
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,25 +10,19 @@ import pakcatt.application.TestApp
 import pakcatt.network.packet.kiss.model.ControlField
 import pakcatt.network.packet.kiss.model.KissFrame
 import pakcatt.network.packet.kiss.model.KissFrameStandard
+import pakcatt.network.packet.protocol.ProtocolTest
 import pakcatt.network.packet.tnc.TNC
 import pakcatt.network.packet.tnc.TNCMocked
-import pakcatt.util.ByteUtils
 import pakcatt.util.StringUtils
 
 
 @ActiveProfiles("test")
 @SpringBootTest
 @RunWith(SpringJUnit4ClassRunner::class)
-class NoLayerThreeServiceTest: TestCase() {
-
-    val byteUtils = ByteUtils()
-    val stringUtils = StringUtils()
+class NoLayerThreeServiceTest: ProtocolTest() {
 
     @Autowired
     lateinit var tnc: TNC
-
-    @Autowired
-    lateinit var linkService: LinkService
 
     @Test
     fun testStandardConversationHandshake() {
@@ -164,82 +155,6 @@ class NoLayerThreeServiceTest: TestCase() {
         val mockedTNC = tnc as TNCMocked
         sendFrameFromBytesAndWaitResponse(mockedTNC, byteUtils.byteArrayFromInts(0x00, 0xa6, 0x6e, 0xaa, 0x60, 0xa6, 0x62, 0x60, 0xac, 0x96, 0x66, 0x8a, 0x8c, 0x40, 0x72, 0xac, 0x96, 0x66, 0xa4, 0x9a, 0x88, 0xe2, 0xae, 0x92, 0x88, 0x8a, 0x64, 0x40, 0x63, 0x3f))
         assertResponse(byteUtils.byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x8a, 0x8c, 0x40, 0x72, 0xa6, 0x6e, 0xaa, 0x60, 0xa6, 0x62, 0xe1, 0x73, 0xc0), mockedTNC)
-    }
-
-    private fun sendFrameAndWaitResponse(mockedTNC: TNCMocked, controlType: ControlField, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null) {
-        sendFrame(mockedTNC, controlType, sendSequenceNumber, rxSequenceNumber, payload)
-        waitForResponse(mockedTNC)
-    }
-
-    private fun sendFrame(mockedTNC: TNCMocked, controlType: ControlField, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null) {
-        val requestFrame = KissFrameStandard()
-        requestFrame.setDestCallsign("VK3LIT-1")
-        requestFrame.setSourceCallsign("VK3LIT-2")
-        requestFrame.setControlField(controlType, rxSequenceNumber, sendSequenceNumber)
-        if (null != payload) {
-            requestFrame.setPayloadMessage(payload)
-        }
-        sendFrameFromBytes(mockedTNC, requestFrame.packetData())
-    }
-
-    private fun sendFrameFromBytesAndWaitResponse(mockedTNC: TNCMocked, frameData: ByteArray) {
-        sendFrameFromBytes(mockedTNC, frameData)
-        waitForResponse(mockedTNC)
-    }
-
-    private fun sendFrameFromBytes(mockedTNC: TNCMocked, frameData: ByteArray) {
-        // Send conversation request
-        mockedTNC.clearDataBuffer()
-        mockedTNC.receiveDataCallback(byteUtils.intToByte(0xC0))
-        for (byte in frameData) {
-            mockedTNC.receiveDataCallback(byte)
-        }
-        mockedTNC.receiveDataCallback(byteUtils.intToByte(0xC0))
-    }
-
-    private fun constructPayloadFromFrames(frames: List<KissFrame>): String {
-        val singleString = StringBuilder()
-        for (frame in frames) {
-            singleString.append(frame.payloadDataString())
-        }
-        return singleString.toString()
-    }
-
-    private fun parseFramesFromResponse(responseBuffer: ByteArray): List<KissFrame> {
-        var responseFrameList = ArrayList<KissFrame>()
-        var frameStart = 0
-        var frameEnd = 0
-        for (byte in responseBuffer) {
-            when (byte) {
-                // We've come to the end of the frame
-                0xC0.toByte() -> {
-                    val frameSize = frameEnd - frameStart
-                    val frameBuffer = ByteArray(frameSize)
-                    responseBuffer.copyInto(frameBuffer, 0, frameStart, frameEnd)
-                    val kissFrame = KissFrameStandard()
-                    kissFrame.populateFromFrameData(frameBuffer)
-                    responseFrameList.add(kissFrame)
-                    val payloadString = kissFrame.payloadDataString()
-                    frameEnd++
-                    frameStart = frameEnd
-                }
-                // Increase the index so that these bytes are included in the next frame
-                else -> frameEnd++
-            }
-        }
-        return responseFrameList
-    }
-
-    private fun waitForResponse(mockedTNC: TNCMocked) {
-        // Wait for the response
-        await().atMost(Duration.TEN_SECONDS).until {
-            mockedTNC.sentDataBuffer().size >= 10
-        }
-    }
-
-    private fun assertResponse(expectedResponse: ByteArray, mockedTNC: TNCMocked) {
-        val response = mockedTNC.sentDataBuffer()
-        assertEquals(stringUtils.byteArrayToHex(expectedResponse), stringUtils.byteArrayToHex(response))
     }
 
 }
