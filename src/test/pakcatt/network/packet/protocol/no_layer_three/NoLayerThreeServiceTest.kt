@@ -1,4 +1,4 @@
-package pakcatt.network.packet.protocol
+package pakcatt.network.packet.protocol.no_layer_three
 
 import junit.framework.TestCase
 import org.awaitility.Awaitility.await
@@ -13,7 +13,6 @@ import pakcatt.application.TestApp
 import pakcatt.network.packet.kiss.model.ControlField
 import pakcatt.network.packet.kiss.model.KissFrame
 import pakcatt.network.packet.kiss.model.KissFrameStandard
-import pakcatt.network.packet.protocol.no_layer_three.LinkService
 import pakcatt.network.packet.tnc.TNC
 import pakcatt.network.packet.tnc.TNCMocked
 import pakcatt.util.ByteUtils
@@ -23,7 +22,7 @@ import pakcatt.util.StringUtils
 @ActiveProfiles("test")
 @SpringBootTest
 @RunWith(SpringJUnit4ClassRunner::class)
-class LinkServiceTest: TestCase() {
+class NoLayerThreeServiceTest: TestCase() {
 
     val byteUtils = ByteUtils()
     val stringUtils = StringUtils()
