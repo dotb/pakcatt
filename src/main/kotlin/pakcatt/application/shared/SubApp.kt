@@ -1,9 +1,9 @@
 package pakcatt.application.shared
 
 import pakcatt.application.shared.command.Command
-import pakcatt.network.packet.protocol.no_layer_three.model.DeliveryType
-import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
-import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
+import pakcatt.network.radio.protocol.packet.model.DeliveryType
+import pakcatt.network.radio.protocol.packet.model.LinkRequest
+import pakcatt.network.radio.protocol.packet.model.LinkResponse
 import pakcatt.util.StringUtils
 import java.lang.NumberFormatException
 import java.lang.StringBuilder

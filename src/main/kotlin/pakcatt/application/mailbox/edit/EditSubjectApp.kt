@@ -3,8 +3,8 @@ package pakcatt.application.mailbox.edit
 import pakcatt.application.mailbox.persistence.MailMessage
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.shared.SubApp
-import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
-import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
+import pakcatt.network.radio.protocol.packet.model.LinkRequest
+import pakcatt.network.radio.protocol.packet.model.LinkResponse
 
 class EditSubjectApp(private val mailMessage: MailMessage, private val mailboxStore: MailboxStore): SubApp() {
 

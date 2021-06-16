@@ -1,13 +1,12 @@
 package pakcatt.application.mailbox
 
-import org.slf4j.LoggerFactory
 import pakcatt.application.mailbox.edit.EditSubjectApp
 import pakcatt.application.mailbox.persistence.MailMessage
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.shared.*
 import pakcatt.application.shared.command.Command
-import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
-import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
+import pakcatt.network.radio.protocol.packet.model.LinkRequest
+import pakcatt.network.radio.protocol.packet.model.LinkResponse
 import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 import java.text.SimpleDateFormat

@@ -1,7 +1,7 @@
 package pakcatt.application.shared
 
-import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
-import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
+import pakcatt.network.radio.protocol.packet.model.LinkRequest
+import pakcatt.network.radio.protocol.packet.model.LinkResponse
 
 /**
  * A simple class that represents navigation to any previous app

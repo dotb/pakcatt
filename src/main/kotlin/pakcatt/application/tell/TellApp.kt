@@ -2,10 +2,10 @@ package pakcatt.application.tell
 
 import pakcatt.application.shared.NavigateBack
 import pakcatt.application.shared.SubApp
-import pakcatt.network.packet.protocol.aprs.model.APRSMessageFrame
-import pakcatt.network.packet.protocol.no_layer_three.model.DeliveryType
-import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
-import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
+import pakcatt.network.radio.protocol.aprs.model.APRSMessageFrame
+import pakcatt.network.radio.protocol.packet.model.DeliveryType
+import pakcatt.network.radio.protocol.packet.model.LinkRequest
+import pakcatt.network.radio.protocol.packet.model.LinkResponse
 
 /**
  * Allows users to send quick messages to others

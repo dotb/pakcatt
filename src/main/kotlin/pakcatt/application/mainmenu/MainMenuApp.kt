@@ -5,11 +5,11 @@ import org.springframework.stereotype.Component
 import pakcatt.application.last.LastApp
 import pakcatt.application.mailbox.MailboxApp
 import pakcatt.application.mailbox.persistence.MailboxStore
-import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
+import pakcatt.network.radio.protocol.packet.model.LinkRequest
 import pakcatt.application.shared.RootApp
 import pakcatt.application.shared.command.Command
 import pakcatt.application.tell.TellApp
-import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
+import pakcatt.network.radio.protocol.packet.model.LinkResponse
 import java.lang.StringBuilder
 import kotlin.math.sqrt
 
