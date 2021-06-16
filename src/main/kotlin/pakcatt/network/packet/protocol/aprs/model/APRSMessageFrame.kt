@@ -23,7 +23,7 @@ class APRSMessageFrame: APRSFrame() {
     }
 
     fun setMessageDestinationCallsign(destinationCallsign: String) {
-        this.messageDestinationCallsign = destinationCallsign
+        this.messageDestinationCallsign = stringUtils.formatCallsignEnsureSSID(destinationCallsign)
         updateFrameFieldsUsingAPRSMessageParameters()
     }
 

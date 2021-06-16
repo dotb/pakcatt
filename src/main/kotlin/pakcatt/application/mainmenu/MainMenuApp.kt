@@ -8,6 +8,7 @@ import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
 import pakcatt.application.shared.RootApp
 import pakcatt.application.shared.command.Command
+import pakcatt.application.tell.TellApp
 import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
 import java.lang.StringBuilder
 import kotlin.math.sqrt
@@ -24,8 +25,9 @@ class MainMenuApp(val myCall: String,
     init {
         // Apps and functionality
         registerCommand(Command("mail") .reply("Launching Mail")    .openApp(MailboxApp(mailboxStore))  .description("Open the Mail app"))
-        registerCommand(Command("last") .function { handleLast(it) }.description("See when others were last seen"))
-        registerCommand(Command("sqrt") .function { handleSQRT(it) }.description("Calculate the square root of an argument"))
+        registerCommand(Command("last") .function { handleLast(it) }.description("last [callsign] - See when others were last seen"))
+        registerCommand(Command("tell") .function { handleTell(it) } .description("tell <callsign> - Send a quick APRS message to someone."))
+        registerCommand(Command("sqrt") .function { handleSQRT(it) }.description("sqrt <number> - Calculate the square root of an argument"))
 
         // Cute responses
         registerCommand(Command("hello").reply("Hi, there! *wave*") .description("Just a friendly welcome :-)"))
@@ -66,6 +68,15 @@ class MainMenuApp(val myCall: String,
            true -> handleRequestWithRegisteredCommand(request)
            else -> LinkResponse.ignore()
        }
+    }
+
+    private fun handleTell(request: LinkRequest): LinkResponse {
+        val destinationCallsign = parseStringArgument(request.message, "")
+        return if (destinationCallsign.isNotBlank()) {
+            LinkResponse.sendText("", TellApp(destinationCallsign, myCall))
+        } else {
+            LinkResponse.sendText("You need to specify a callsign")
+        }
     }
 
     private fun handleSQRT(request: LinkRequest): LinkResponse {

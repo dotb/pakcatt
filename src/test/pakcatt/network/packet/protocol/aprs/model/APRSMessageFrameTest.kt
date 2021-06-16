@@ -80,4 +80,23 @@ class APRSMessageFrameTest : TestCase() {
         assertEquals(":VK3FUNKLO:hello there! This message string is longer than what is allowed by {12345", aprsMessageFrame.payloadDataString())
     }
 
+    @Test
+    fun testConstructFrameWithNoMessageIdAndLowCaseCalls() {
+        val aprsMessageFrame = APRSMessageFrame()
+        aprsMessageFrame.setMessageSourceCallsign("vk3lit-1")
+        aprsMessageFrame.setMessageDestinationCallsign("vk2vro")
+        aprsMessageFrame.setMessage("hello.")
+
+        assertEquals(ControlField.U_UNNUMBERED_INFORMATION, aprsMessageFrame.controlField())
+        assertEquals(byteUtils.intToByte(ProtocolID.NO_LAYER_3.id), aprsMessageFrame.protocolID())
+        assertEquals(APRSDataType.MESSAGE, aprsMessageFrame.aprsDataType())
+        assertEquals("VK3LIT-1", aprsMessageFrame.sourceCallsign())
+        assertEquals("PAKCAT-0", aprsMessageFrame.destCallsign())
+        assertEquals("VK3LIT-1", aprsMessageFrame.messageSourceCallsign())
+        assertEquals("VK2VRO-0", aprsMessageFrame.messageDestinationCallsign())
+        assertEquals("hello.", aprsMessageFrame.message())
+        assertEquals(-1, aprsMessageFrame.messageNumber())
+        assertEquals(":VK2VRO-0 :hello.", aprsMessageFrame.payloadDataString())
+    }
+
 }

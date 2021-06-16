@@ -19,17 +19,22 @@ abstract class RootApp: SubApp() {
 
     abstract fun decisionOnConnectionRequest(request: LinkRequest): LinkResponse
 
-    fun queueAdhocMessageForTransmission(remoteCallsign: String,
+    override fun queueAdhocMessageForTransmission(remoteCallsign: String,
                                          myCallsign: String,
                                          message: String,
                                          deliveryType: DeliveryType) {
         adhocResponses.add(LinkAdhoc(remoteCallsign, myCallsign, message, deliveryType))
     }
 
-    fun flushAdhocResponses(): List<LinkAdhoc> {
-        val responsesForDelivery = adhocResponses
-        adhocResponses = ArrayList()
-        return responsesForDelivery
+    fun flushAdhocResponses(forDeliveryType: DeliveryType): List<LinkAdhoc> {
+        val deliveryList = ArrayList<LinkAdhoc>()
+        for (adhocResponse in adhocResponses) {
+            if (forDeliveryType == adhocResponse.deliveryType) {
+                deliveryList.add(adhocResponse)
+            }
+        }
+        adhocResponses.removeAll(deliveryList)
+        return deliveryList
     }
 
 }

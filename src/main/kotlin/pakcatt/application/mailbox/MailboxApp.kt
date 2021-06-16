@@ -14,7 +14,6 @@ import java.text.SimpleDateFormat
 
 class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
-    private val logger = LoggerFactory.getLogger(MailboxApp::class.java)
     private val tabSpace = "\t"
 
     init {

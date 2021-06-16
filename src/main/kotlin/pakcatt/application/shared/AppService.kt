@@ -8,7 +8,7 @@ import pakcatt.util.StringUtils
 interface AppInterface {
     fun getDecisionOnConnectionRequest(request: LinkRequest): LinkResponse
     fun getResponseForReceivedMessage(request: LinkRequest): LinkResponse
-    fun getAdhocResponsesForDelivery(): List<LinkAdhoc>
+    fun getAdhocResponses(forDeliveryType: DeliveryType): List<LinkAdhoc>
     fun closeConnection(remoteCallsign: String, myCallsign: String)
 }
 
@@ -63,10 +63,10 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         return addPromptToResponse(userContext.engagedApplication(), interactionResponse)
     }
 
-    override fun getAdhocResponsesForDelivery(): List<LinkAdhoc> {
+    override fun getAdhocResponses(forDeliveryType: DeliveryType): List<LinkAdhoc> {
         val allAdhocResponses = ArrayList<LinkAdhoc>()
         for (app in rootApplications) {
-            allAdhocResponses.addAll(app.flushAdhocResponses())
+            allAdhocResponses.addAll(app.flushAdhocResponses(forDeliveryType))
         }
         return allAdhocResponses
     }
@@ -109,6 +109,7 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
                 userContext.navigateBack()
             }
         } else if (null != nextApp) {
+            nextApp.setParentRootApp(userContext.rootApplication())
             userContext.navigateToApp(nextApp)
         }
     }

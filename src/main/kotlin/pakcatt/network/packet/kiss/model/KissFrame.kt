@@ -201,7 +201,8 @@ abstract class KissFrame() {
 
     fun setSourceCallsign(sourceCallsign: String) {
         // Set the source callsign ending in 1 to denote there is no repeater address
-        val parsedCallsign = parseStringCallsign(sourceCallsign)
+        val uppercaseCallsign = sourceCallsign.toUpperCase()
+        val parsedCallsign = parseStringCallsign(uppercaseCallsign)
         this.sourceCallsign = parsedCallsign.first
         this.sourceSSID = byteUtils.setBits(parsedCallsign.second, 0x01)
     }

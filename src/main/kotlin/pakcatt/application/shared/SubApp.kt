@@ -1,6 +1,7 @@
 package pakcatt.application.shared
 
 import pakcatt.application.shared.command.Command
+import pakcatt.network.packet.protocol.no_layer_three.model.DeliveryType
 import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
 import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
 import pakcatt.util.StringUtils
@@ -11,6 +12,7 @@ abstract class SubApp {
 
     private val commands = ArrayList<Command>()
     protected val stringUtils = StringUtils()
+    private var parentRootApp: RootApp? = null
 
     abstract fun returnCommandPrompt(): String
 
@@ -36,6 +38,18 @@ abstract class SubApp {
             }
             return helpResponse()
         }
+    }
+
+    open fun queueAdhocMessageForTransmission(remoteCallsign: String,
+                                         myCallsign: String,
+                                         message: String,
+                                         deliveryType: DeliveryType
+    ) {
+        parentRootApp?.queueAdhocMessageForTransmission(remoteCallsign, myCallsign, message, deliveryType)
+    }
+
+    fun setParentRootApp(parent: RootApp?) {
+        this.parentRootApp = parent
     }
 
     protected fun parseCommand(inputLine: String): String {

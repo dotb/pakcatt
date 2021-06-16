@@ -34,7 +34,7 @@ class BeaconApp(private val myCall: String,
         val intervalMilliseconds = beaconIntervalMinutes * 60000
         if (beaconIntervalMinutes > 0
             && lastBeaconTimestamp + intervalMilliseconds < timestampNow) {
-            queueAdhocMessageForTransmission(beaconDestination, myCall, beaconMessage, DeliveryType.FIRE_AND_FORGET)
+            queueAdhocMessageForTransmission(beaconDestination, myCall, beaconMessage, DeliveryType.LINK_FIRE_AND_FORGET)
             lastBeaconTimestamp = timestampNow
         }
     }

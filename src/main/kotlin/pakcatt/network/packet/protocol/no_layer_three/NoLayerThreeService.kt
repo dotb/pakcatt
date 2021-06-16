@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service
 import pakcatt.application.shared.AppInterface
 import pakcatt.network.packet.kiss.model.ControlField
 import pakcatt.network.packet.kiss.model.KissFrame
-import pakcatt.network.packet.kiss.model.ProtocolID
 import pakcatt.network.packet.kiss.queue.DeliveryQueue
 import pakcatt.network.packet.protocol.no_layer_three.connection.ConnectionHandler
 import pakcatt.network.packet.protocol.no_layer_three.model.DeliveryType
@@ -60,12 +59,13 @@ class LinkService(private var appService: AppInterface,
         }
 
         // Queue any adhoc frames requested by apps, for delivery
-        for (adhocDelivery in appService.getAdhocResponsesForDelivery()) {
+        for (adhocDelivery in appService.getAdhocResponses(DeliveryType.LINK_REQUIRES_ACK)) {
             val adhocConnectionHandler = connectionHandlerForConversation(adhocDelivery.remoteCallsign, adhocDelivery.myCallsign)
-            when (adhocDelivery.deliveryType) {
-                DeliveryType.REQUIRES_ACK -> adhocConnectionHandler.queueMessageForDelivery(ControlField.INFORMATION_8, adhocDelivery.message)
-                DeliveryType.FIRE_AND_FORGET -> adhocConnectionHandler.queueMessageForDelivery(ControlField.U_UNNUMBERED_INFORMATION, adhocDelivery.message)
-            }
+            adhocConnectionHandler.queueMessageForDelivery(ControlField.INFORMATION_8, adhocDelivery.message)
+        }
+        for (adhocDelivery in appService.getAdhocResponses(DeliveryType.LINK_FIRE_AND_FORGET)) {
+            val adhocConnectionHandler = connectionHandlerForConversation(adhocDelivery.remoteCallsign, adhocDelivery.myCallsign)
+            adhocConnectionHandler.queueMessageForDelivery(ControlField.U_UNNUMBERED_INFORMATION, adhocDelivery.message)
         }
 
         // Handle frames queued for delivery

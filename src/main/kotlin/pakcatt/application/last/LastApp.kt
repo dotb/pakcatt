@@ -6,6 +6,7 @@ import pakcatt.application.last.persistence.LastEntryStore
 import pakcatt.application.shared.RootApp
 import pakcatt.network.packet.protocol.no_layer_three.model.LinkRequest
 import pakcatt.network.packet.protocol.no_layer_three.model.LinkResponse
+import pakcatt.util.StringUtils
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -46,7 +47,7 @@ class LastApp(private val lastEntryStore: LastEntryStore): RootApp() {
         val stringBuilder = StringBuilder()
         for (lastEntry in lastEntries) {
             stringBuilder.append("Last seen ${lastEntry.callsign} ${dateFormatter.format(lastEntry.lastSeen)}")
-            stringBuilder.append("\r\n")
+            stringBuilder.append(StringUtils.EOL)
         }
         return stringBuilder.toString()
     }

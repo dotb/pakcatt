@@ -2,15 +2,18 @@ package pakcatt.network.packet.protocol.aprs
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import pakcatt.application.shared.AppInterface
 import pakcatt.network.packet.kiss.model.ControlField
 import pakcatt.network.packet.kiss.model.KissFrame
 import pakcatt.network.packet.kiss.model.ProtocolID
 import pakcatt.network.packet.kiss.queue.DeliveryQueue
 import pakcatt.network.packet.protocol.aprs.model.APRSFrame
+import pakcatt.network.packet.protocol.aprs.model.APRSMessageFrame
+import pakcatt.network.packet.protocol.no_layer_three.model.DeliveryType
 import pakcatt.network.packet.protocol.shared.ProtocolService
 
 @Service
-class aprsService: ProtocolService() {
+class aprsService(private var appService: AppInterface): ProtocolService() {
 
     private val logger = LoggerFactory.getLogger(aprsService::class.java)
 
@@ -29,7 +32,16 @@ class aprsService: ProtocolService() {
     }
 
     override fun queueFramesForDelivery(deliveryQueue: DeliveryQueue) {
-
+        // Queue any adhoc frames requested by apps, for delivery
+        for (adhocDelivery in appService.getAdhocResponses(DeliveryType.APRS_FIRE_AND_FORGET)) {
+            if (adhocDelivery.deliveryType == DeliveryType.APRS_FIRE_AND_FORGET) {
+                val aprsMessageFrame = APRSMessageFrame()
+                aprsMessageFrame.setSourceCallsign(adhocDelivery.myCallsign)
+                aprsMessageFrame.setMessageDestinationCallsign(adhocDelivery.remoteCallsign)
+                aprsMessageFrame.setMessage(adhocDelivery.message)
+                deliveryQueue.addFrame(aprsMessageFrame)
+            }
+        }
     }
 
 }

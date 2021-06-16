@@ -86,7 +86,18 @@ class StringUtils {
             true -> callsign.split("-")[0]
             false -> callsign
         }
-        return  callsignOnly.toUpperCase()
+        return callsignOnly.toUpperCase()
+    }
+
+    /**
+     * Format a callsign, ensuring it has at least
+     * the default SSID
+     */
+    fun formatCallsignEnsureSSID(callsign: String): String {
+        return when (callsign.contains("-")) {
+            true -> callsign.toUpperCase()
+            false -> "$callsign-0".toUpperCase()
+        }
     }
 
     /**
