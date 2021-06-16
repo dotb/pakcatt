@@ -12,7 +12,7 @@ import pakcatt.network.radio.protocol.packet.model.LinkResponse
  */
 class TellApp(private val destinationCallsign: String, private val myCallsign: String, private val senderCallsign: String): SubApp() {
 
-    private val messagePrefix = "${stringUtils.formatCallsignRemoveSSID(destinationCallsign)} says:"
+    private val messagePrefix = "${stringUtils.formatCallsignRemoveSSID(senderCallsign)} says:"
 
     override fun returnCommandPrompt(): String {
         val maxContentLength = APRSMessageFrame.MAX_CONTENT_LENGTH - messagePrefix.length
