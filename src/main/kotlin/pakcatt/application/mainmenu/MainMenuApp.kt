@@ -73,7 +73,7 @@ class MainMenuApp(val myCall: String,
     private fun handleTell(request: LinkRequest): LinkResponse {
         val destinationCallsign = parseStringArgument(request.message, "")
         return if (destinationCallsign.isNotBlank()) {
-            LinkResponse.sendText("", TellApp(destinationCallsign, myCall))
+            LinkResponse.sendText("", TellApp(destinationCallsign, myCall, request.remoteCallsign))
         } else {
             LinkResponse.sendText("You need to specify a callsign")
         }

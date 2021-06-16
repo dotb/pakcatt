@@ -10,6 +10,13 @@ class APRSMessageFrame: APRSFrame() {
     3a 56 4b 32 56 52 4f 2d 37 20 3a 68 65 6c 6c 6f 7b 34 37 0d
      */
 
+    companion object {
+        const val MAX_CONTENT_LENGTH = 67
+        const val MAX_MESSAGE_NUMBER_LENGTH = 5
+        const val MAX_MESSAGE_NUMBER = 99999
+        const val MAX_DEST_CALLSIGN_LENGTH = 9
+    }
+
     private var messageDestinationCallsign = ""
     private var message = ""
     private var messageNumber = -1
@@ -106,17 +113,17 @@ class APRSMessageFrame: APRSFrame() {
 
     private fun updateFrameFieldsUsingAPRSMessageParameters() {
         // The destination callsign must be 9 characters in length and message numbers 5
-        this.message = stringUtils.trimmedString(message, 67)
-        this.messageNumber = stringUtils.trimmedString(messageNumber.toString(), 5).toInt()
-        this.messageDestinationCallsign = stringUtils.trimmedString(messageDestinationCallsign, 9)
-        val fixedLengthDestination = stringUtils.fixedSizeString(messageDestinationCallsign, 9)
+        this.message = stringUtils.trimmedString(message, MAX_CONTENT_LENGTH)
+        this.messageNumber = stringUtils.trimmedString(messageNumber.toString(), MAX_MESSAGE_NUMBER_LENGTH).toInt()
+        this.messageDestinationCallsign = stringUtils.trimmedString(messageDestinationCallsign, MAX_DEST_CALLSIGN_LENGTH)
+        val fixedLengthDestination = stringUtils.fixedSizeString(messageDestinationCallsign, MAX_DEST_CALLSIGN_LENGTH)
         // Construct the payload using our local variables
         val stringPayloadBuilder = StringBuilder()
         stringPayloadBuilder.append(":")
         stringPayloadBuilder.append(fixedLengthDestination)
         stringPayloadBuilder.append(":")
         stringPayloadBuilder.append(message)
-        if (messageNumber >= 0) {
+        if (messageNumber in 0..MAX_MESSAGE_NUMBER) {
             stringPayloadBuilder.append("{")
             stringPayloadBuilder.append(messageNumber)
         }
