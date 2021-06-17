@@ -9,5 +9,5 @@ cd docker
 docker build -t pakcatt .
 cd ..
 docker images
-docker save utiku_api | gzip > /tmp/pakcatt.tar.gz
+docker save pakcatt | gzip > /tmp/pakcatt.tar.gz
 ls -lah /tmp/pakcatt.tar.gz
