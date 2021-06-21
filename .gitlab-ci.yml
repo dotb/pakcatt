@@ -1,0 +1,19 @@
+stages:
+        - build
+        - run
+
+build-maven:
+        stage: build
+        script: ./build.sh
+        artifacts:
+            paths:
+                - target/*.jar
+            expire_in: 1 day
+        only:
+                - master
+
+run-packatt:
+        stage: run
+        script: java -jar ./target/pakcatt-0.1.jar --spring.config.location=/opt/pakcatt/application.properties
+        only:
+                - master
