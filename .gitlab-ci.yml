@@ -5,7 +5,6 @@ stages:
 build-maven:
         stage: build
         script: ./build.sh
-        script: 'mv target build'
 
 run-packatt:
         stage: run
