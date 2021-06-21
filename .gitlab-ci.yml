@@ -8,4 +8,4 @@ build-maven:
 
 run-packatt:
         stage: run
-        script: java -jar ./target/pakcatt-0.1.jar --spring.config.location=/opt/pakcatt/application.properties
+        script: java -jar ./docker/pakcatt-0.1.jar --spring.config.location=/opt/pakcatt/application.properties
