@@ -1,7 +1,11 @@
 stages:
         - build
+        - run
 
 build-maven:
-        script: ./build.sh
         stage: build
+        script: ./build.sh
 
+run-packatt:
+        stage: run
+        script: java -jar /opt/pakcatt/pakcatt-0.1.jar --spring.config.location=/opt/pakcatt/application.properties
