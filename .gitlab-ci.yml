@@ -1,0 +1,7 @@
+stages:
+        - build
+
+build-maven:
+        script: build.sh
+        stage: build
+
