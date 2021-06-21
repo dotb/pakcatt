@@ -6,7 +6,7 @@ mvn install
 ## Generate docker images
 #docker image rm -f pakcatt
 #rm docker/*.jar
-cp target/*.jar docker/
+#cp target/*.jar docker/
 #cd docker
 #docker build -t pakcatt .
 #cd ..
