@@ -2,14 +2,13 @@ stages:
         - build
         - run
 
-artifacts:
-        paths:
-                - target/*.jar
-        expire_in: 1 day
-
 build-maven:
         stage: build
         script: ./build.sh
+        artifacts:
+            paths:
+                - target/*.jar
+            expire_in: 1 day
 
 run-packatt:
         stage: run
