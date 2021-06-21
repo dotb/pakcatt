@@ -10,10 +10,10 @@ build-maven:
                 - target/*.jar
             expire_in: 1 day
         only:
-                - master
+                - main
 
 run-packatt:
         stage: run
         script: java -jar ./target/pakcatt-0.1.jar --spring.config.location=/opt/pakcatt/application.properties
         only:
-                - master
+                - main
