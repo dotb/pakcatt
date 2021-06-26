@@ -2,13 +2,13 @@ package pakcatt.application.shared
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import pakcatt.network.radio.protocol.packet.model.*
+import pakcatt.application.shared.model.*
 import pakcatt.util.StringUtils
 
 interface AppInterface {
-    fun getDecisionOnConnectionRequest(request: LinkRequest): LinkResponse
-    fun getResponseForReceivedMessage(request: LinkRequest): LinkResponse
-    fun getAdhocResponses(forDeliveryType: DeliveryType): List<LinkAdhoc>
+    fun getDecisionOnConnectionRequest(request: AppRequest): AppResponse
+    fun getResponseForReceivedMessage(request: AppRequest): AppResponse
+    fun getAdhocResponses(forDeliveryType: DeliveryType): List<AdhocMessage>
     fun closeConnection(remoteCallsign: String, myCallsign: String)
 }
 
@@ -20,7 +20,7 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
     private var currentUsers = HashMap<String, UserContext>()
 
     /* AppInterface methods delegated from the LinkService */
-    override fun getDecisionOnConnectionRequest(request: LinkRequest): LinkResponse {
+    override fun getDecisionOnConnectionRequest(request: AppRequest): AppResponse {
         // Ensure any previous connection is closed, and open a new one
         closeConnection(request.remoteCallsign, request.addressedToCallsign)
         val userContext = contextForConversation(request.remoteCallsign, request.addressedToCallsign)
@@ -30,12 +30,12 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
 
         // Update the app focus state in the user context if required.
         updateAppFocus(connectionResponse.nextApp(), userContext)
-        return addPromptToResponse(userContext.engagedApplication(), connectionResponse) as LinkResponse
+        return addPromptToResponse(userContext.engagedApplication(), connectionResponse) as AppResponse
     }
 
-    private fun findAppWillingToAcceptConnection(request: LinkRequest): LinkResponse {
+    private fun findAppWillingToAcceptConnection(request: AppRequest): AppResponse {
         // Start with the default decision to ignore this connect request
-        var finalConnectionDecision = LinkResponse.ignore()
+        var finalConnectionDecision = AppResponse.ignore()
 
         // Find a root application who wants to accept the connection
         for (app in rootApplications) {
@@ -50,9 +50,9 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
     }
 
     // We've received data from a client, share it with listening apps and get a response for the client
-    override fun getResponseForReceivedMessage(request: LinkRequest): LinkResponse {
+    override fun getResponseForReceivedMessage(request: AppRequest): AppResponse {
         // Sometimes a TNC will send is only \r, we rewrite these to \n\r
-        val cleanedRequest = LinkRequest(request.remoteCallsign, request.addressedToCallsign, stringUtils.fixEndOfLineCharacters(request.message))
+        val cleanedRequest = AppRequest(request.remoteCallsign, request.addressedToCallsign, stringUtils.fixEndOfLineCharacters(request.message))
         // Get this user's context
         val userContext = contextForConversation(cleanedRequest.remoteCallsign, cleanedRequest.addressedToCallsign)
         // Get the interaction response from the app
@@ -63,17 +63,17 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         return addPromptToResponse(userContext.engagedApplication(), interactionResponse)
     }
 
-    override fun getAdhocResponses(forDeliveryType: DeliveryType): List<LinkAdhoc> {
-        val allAdhocResponses = ArrayList<LinkAdhoc>()
+    override fun getAdhocResponses(forDeliveryType: DeliveryType): List<AdhocMessage> {
+        val allAdhocResponses = ArrayList<AdhocMessage>()
         for (app in rootApplications) {
             allAdhocResponses.addAll(app.flushAdhocResponses(forDeliveryType))
         }
         return allAdhocResponses
     }
 
-    private fun getResponseForReceivedMessage(request: LinkRequest, userContext: UserContext): LinkResponse  {
+    private fun getResponseForReceivedMessage(request: AppRequest, userContext: UserContext): AppResponse  {
         // Start with a default response to ignored the incoming request
-        var finalInteractionResponse = LinkResponse.ignore()
+        var finalInteractionResponse = AppResponse.ignore()
 
         // Share the request with app registered root level apps for processing
         for (app in rootApplications) {
@@ -115,7 +115,7 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
     }
 
     // Rewrite the prompt string into the textual response
-    private fun addPromptToResponse(app: SubApp?, response: LinkResponse): LinkResponse {
+    private fun addPromptToResponse(app: SubApp?, response: AppResponse): AppResponse {
         val message = response.responseString()
 
         when (val prompt = app?.returnCommandPrompt()) {

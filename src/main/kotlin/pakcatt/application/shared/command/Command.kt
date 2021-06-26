@@ -1,9 +1,9 @@
 package pakcatt.application.shared.command
 
 import pakcatt.application.shared.SubApp
-import pakcatt.network.radio.protocol.packet.model.LinkRequest
-import pakcatt.network.radio.protocol.packet.model.LinkResponse
-import pakcatt.network.radio.protocol.packet.model.ResponseType
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.AppResponse
+import pakcatt.application.shared.model.ResponseType
 
 data class Command(private val fullCommand: String,
                    private var description: String? = null,
@@ -11,7 +11,7 @@ data class Command(private val fullCommand: String,
                    private var response: ResponseType = ResponseType.IGNORE,
                    private var message: String? = null,
                    private var nextApp: SubApp? = null,
-                   private var function: ((request: LinkRequest) -> LinkResponse)? = null) {
+                   private var function: ((request: AppRequest) -> AppResponse)? = null) {
 
     fun description(description: String): Command {
         this.description = description
@@ -43,7 +43,7 @@ data class Command(private val fullCommand: String,
         return this
     }
 
-    fun function(function: (request: LinkRequest) -> LinkResponse): Command {
+    fun function(function: (request: AppRequest) -> AppResponse): Command {
         this.function = function
         return this
     }
@@ -63,17 +63,17 @@ data class Command(private val fullCommand: String,
         return description
     }
 
-    fun execute(request: LinkRequest): LinkResponse {
+    fun execute(request: AppRequest): AppResponse {
         val myMessage = message
         val myNextApp = nextApp
         val myFunction = function
         return when {
-            response == ResponseType.ACK_ONLY -> LinkResponse.acknowledgeOnly()
-            null != myMessage && null != myNextApp -> LinkResponse.sendText(myMessage, nextApp)
-            null != myMessage -> LinkResponse.sendText(myMessage)
-            null != myNextApp -> LinkResponse.acknowledgeOnly(nextApp)
+            response == ResponseType.ACK_ONLY -> AppResponse.acknowledgeOnly()
+            null != myMessage && null != myNextApp -> AppResponse.sendText(myMessage, nextApp)
+            null != myMessage -> AppResponse.sendText(myMessage)
+            null != myNextApp -> AppResponse.acknowledgeOnly(nextApp)
             null != myFunction -> myFunction(request)
-            else -> LinkResponse.ignore()
+            else -> AppResponse.ignore()
         }
     }
 

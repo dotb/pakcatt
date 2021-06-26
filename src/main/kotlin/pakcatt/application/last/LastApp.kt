@@ -4,8 +4,8 @@ import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import pakcatt.application.last.persistence.LastEntryStore
 import pakcatt.application.shared.RootApp
-import pakcatt.network.radio.protocol.packet.model.LinkRequest
-import pakcatt.network.radio.protocol.packet.model.LinkResponse
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.AppResponse
 import pakcatt.util.StringUtils
 import java.text.SimpleDateFormat
 import java.util.*
@@ -24,14 +24,14 @@ class LastApp(private val lastEntryStore: LastEntryStore): RootApp() {
         return ""
     }
 
-    override fun decisionOnConnectionRequest(request: LinkRequest): LinkResponse {
+    override fun decisionOnConnectionRequest(request: AppRequest): AppResponse {
         updateCallsignEntry(request.remoteCallsign)
-        return LinkResponse.ignore()
+        return AppResponse.ignore()
     }
 
-    override fun handleReceivedMessage(request: LinkRequest): LinkResponse {
+    override fun handleReceivedMessage(request: AppRequest): AppResponse {
         updateCallsignEntry(request.remoteCallsign)
-        return LinkResponse.ignore()
+        return AppResponse.ignore()
     }
 
     fun lastEntryFor(callsign: String): String {

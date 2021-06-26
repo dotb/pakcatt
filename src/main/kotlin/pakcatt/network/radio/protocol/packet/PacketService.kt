@@ -7,27 +7,27 @@ import pakcatt.network.radio.kiss.model.ControlField
 import pakcatt.network.radio.kiss.model.KissFrame
 import pakcatt.network.radio.kiss.queue.DeliveryQueue
 import pakcatt.network.radio.protocol.packet.connection.ConnectionHandler
-import pakcatt.network.radio.protocol.packet.model.DeliveryType
-import pakcatt.network.radio.protocol.packet.model.LinkRequest
-import pakcatt.network.radio.protocol.packet.model.LinkResponse
+import pakcatt.application.shared.model.DeliveryType
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.AppResponse
 import pakcatt.network.radio.protocol.shared.ProtocolService
 import java.util.*
 import kotlin.collections.HashMap
 
 interface LinkInterface {
-    fun getDecisionOnConnectionRequest(request: LinkRequest): LinkResponse
-    fun getResponseForReceivedMessage(request: LinkRequest): LinkResponse
+    fun getDecisionOnConnectionRequest(request: AppRequest): AppResponse
+    fun getResponseForReceivedMessage(request: AppRequest): AppResponse
 }
 
 @Service
-class LinkService(private var appService: AppInterface,
-                  private val frameSizeMax: Int,
-                  private val framesPerOver: Int,
-                  private val minTXPauseSeconds: Int,
-                  private val maxDeliveryAttempts: Int,
-                  private val deliveryRetryTimeSeconds: Int): LinkInterface, ProtocolService() {
+class PacketService(private var appService: AppInterface,
+                    private val frameSizeMax: Int,
+                    private val framesPerOver: Int,
+                    private val minTXPauseSeconds: Int,
+                    private val maxDeliveryAttempts: Int,
+                    private val deliveryRetryTimeSeconds: Int): LinkInterface, ProtocolService() {
 
-    private val logger = LoggerFactory.getLogger(LinkService::class.java)
+    private val logger = LoggerFactory.getLogger(PacketService::class.java)
     private var connectionHandlers = HashMap<String, ConnectionHandler>()
     private var receiveQueue = LinkedList<KissFrame>()
     private var lastTransmitTimestamp: Long = 0
@@ -38,7 +38,7 @@ class LinkService(private var appService: AppInterface,
     }
 
     override fun handleFrame(incomingFrame: KissFrame) {
-        logger.trace("NO_LAYER_3: handling frame: {}", incomingFrame)
+        logger.trace("Packet Service: handling frame: {}", incomingFrame)
         receiveQueue.add(incomingFrame)
     }
 
@@ -106,11 +106,11 @@ class LinkService(private var appService: AppInterface,
     }
 
     /* LinkInterface Methods delegated from ConnectionHandlers */
-    override fun getDecisionOnConnectionRequest(request: LinkRequest): LinkResponse {
+    override fun getDecisionOnConnectionRequest(request: AppRequest): AppResponse {
         return appService.getDecisionOnConnectionRequest(request)
     }
 
-    override fun getResponseForReceivedMessage(request: LinkRequest): LinkResponse {
+    override fun getResponseForReceivedMessage(request: AppRequest): AppResponse {
         return appService.getResponseForReceivedMessage(request)
     }
 

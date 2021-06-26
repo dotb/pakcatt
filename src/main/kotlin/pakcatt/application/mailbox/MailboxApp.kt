@@ -5,8 +5,8 @@ import pakcatt.application.mailbox.persistence.MailMessage
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.shared.*
 import pakcatt.application.shared.command.Command
-import pakcatt.network.radio.protocol.packet.model.LinkRequest
-import pakcatt.network.radio.protocol.packet.model.LinkResponse
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.AppResponse
 import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 import java.text.SimpleDateFormat
@@ -27,16 +27,16 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         return "mail>"
     }
 
-    override fun handleReceivedMessage(request: LinkRequest): LinkResponse {
+    override fun handleReceivedMessage(request: AppRequest): AppResponse {
         return handleRequestWithRegisteredCommand(request)
     }
 
-    fun unreadMessageCount(request: LinkRequest): Int {
+    fun unreadMessageCount(request: AppRequest): Int {
         val formattedCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         return mailboxStore.getUnreadMessagesTo(formattedCallsign).size
     }
 
-    private fun listMessages(request: LinkRequest): LinkResponse {
+    private fun listMessages(request: AppRequest): AppResponse {
         val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign)
         val listResponse = StringBuilder()
         val messageCount = userMessages.size
@@ -65,10 +65,10 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         listResponse.append(messageCount)
         listResponse.append(" messages")
         listResponse.append(StringUtils.EOL)
-        return LinkResponse.sendText(listResponse.toString())
+        return AppResponse.sendText(listResponse.toString())
     }
 
-    private fun readMessage(request: LinkRequest): LinkResponse {
+    private fun readMessage(request: AppRequest): AppResponse {
         val userCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         var message: MailMessage? = null
         val messageNumber = parseIntArgument(request.message)
@@ -81,20 +81,20 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
                 message.isRead = true
                 mailboxStore.updateMessage(message)
             }
-            LinkResponse.sendText("${StringUtils.EOL}Subject: ${message.subject}${StringUtils.EOL}${message.body.toString()}")
+            AppResponse.sendText("${StringUtils.EOL}Subject: ${message.subject}${StringUtils.EOL}${message.body.toString()}")
         } else {
-            LinkResponse.sendText("No message found")
+            AppResponse.sendText("No message found")
         }
     }
 
-    private fun sendMessage(request: LinkRequest): LinkResponse {
+    private fun sendMessage(request: AppRequest): AppResponse {
         val arg = parseStringArgument(request.message, "")
         val fromCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         val toCallsign = stringUtils.formatCallsignRemoveSSID(arg)
-        return LinkResponse.sendText("", EditSubjectApp(MailMessage(fromCallsign, toCallsign), mailboxStore))
+        return AppResponse.sendText("", EditSubjectApp(MailMessage(fromCallsign, toCallsign), mailboxStore))
     }
 
-    private fun deleteMessage(request: LinkRequest): LinkResponse {
+    private fun deleteMessage(request: AppRequest): AppResponse {
         var message: MailMessage? = null
         val userCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         val messageNumber = parseIntArgument(request.message)
@@ -102,8 +102,8 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
             message = mailboxStore.deleteMessage(userCallsign, messageNumber)
         }
         return when (message) {
-            null -> LinkResponse.sendText("No message found")
-            else -> return LinkResponse.sendText("Deleted $messageNumber ${message.subject}")
+            null -> AppResponse.sendText("No message found")
+            else -> return AppResponse.sendText("Deleted $messageNumber ${message.subject}")
         }
     }
 

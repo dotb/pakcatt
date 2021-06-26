@@ -9,7 +9,7 @@ import pakcatt.network.radio.kiss.model.ProtocolID
 import pakcatt.network.radio.kiss.queue.DeliveryQueue
 import pakcatt.network.radio.protocol.aprs.model.APRSFrame
 import pakcatt.network.radio.protocol.aprs.model.APRSMessageFrame
-import pakcatt.network.radio.protocol.packet.model.DeliveryType
+import pakcatt.application.shared.model.DeliveryType
 import pakcatt.network.radio.protocol.shared.ProtocolService
 
 @Service
@@ -25,7 +25,7 @@ class APRSService(private var appService: AppInterface): ProtocolService() {
     }
 
     override fun handleFrame(incomingKissFrame: KissFrame) {
-        logger.trace("APRS: Handling frame: {}", incomingKissFrame)
+        logger.trace("APRS Service: Handling frame: {}", incomingKissFrame)
         val aprsFrame = APRSFrame()
         aprsFrame.populateFromKissFrame(incomingKissFrame)
         logger.debug("Decoded APRS Frame: {}", aprsFrame.toString())

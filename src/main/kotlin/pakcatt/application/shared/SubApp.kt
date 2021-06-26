@@ -1,9 +1,9 @@
 package pakcatt.application.shared
 
 import pakcatt.application.shared.command.Command
-import pakcatt.network.radio.protocol.packet.model.DeliveryType
-import pakcatt.network.radio.protocol.packet.model.LinkRequest
-import pakcatt.network.radio.protocol.packet.model.LinkResponse
+import pakcatt.application.shared.model.DeliveryType
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.AppResponse
 import pakcatt.util.StringUtils
 import java.lang.NumberFormatException
 import java.lang.StringBuilder
@@ -16,17 +16,17 @@ abstract class SubApp {
 
     abstract fun returnCommandPrompt(): String
 
-    abstract fun handleReceivedMessage(request: LinkRequest): LinkResponse
+    abstract fun handleReceivedMessage(request: AppRequest): AppResponse
 
     fun registerCommand(command: Command) {
         commands.add(command)
     }
 
-    fun handleRequestWithRegisteredCommand(request: LinkRequest): LinkResponse {
+    fun handleRequestWithRegisteredCommand(request: AppRequest): AppResponse {
         val commandText = parseCommand(request.message)
         if (commandText.isEmpty()) {
             // An empty request should return only the prompt / new line
-            return LinkResponse.sendText("")
+            return AppResponse.sendText("")
         } else {
             // Find a command that handles the command sent to us
             for (command in commands) {
@@ -77,7 +77,7 @@ abstract class SubApp {
         }
     }
 
-    private fun helpResponse(): LinkResponse {
+    private fun helpResponse(): AppResponse {
         val stringBuilder = StringBuilder()
         stringBuilder.append("\r\n")
         for (command in commands) {
@@ -93,7 +93,7 @@ abstract class SubApp {
         stringBuilder.append("\t- ")
         stringBuilder.append("Display this list of commands")
         stringBuilder.append("\r\n")
-        return LinkResponse.sendText(stringBuilder.toString())
+        return AppResponse.sendText(stringBuilder.toString())
     }
 
 }

@@ -2,9 +2,9 @@ package pakcatt.application
 
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
-import pakcatt.network.radio.protocol.packet.model.LinkRequest
+import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.RootApp
-import pakcatt.network.radio.protocol.packet.model.LinkResponse
+import pakcatt.application.shared.model.AppResponse
 import pakcatt.util.StringUtils
 
 @Component
@@ -22,17 +22,17 @@ class TestApp: RootApp() {
         return "test>"
     }
 
-    override fun decisionOnConnectionRequest(request: LinkRequest): LinkResponse {
-        return LinkResponse.acknowledgeOnly()
+    override fun decisionOnConnectionRequest(request: AppRequest): AppResponse {
+        return AppResponse.acknowledgeOnly()
     }
 
-    override fun handleReceivedMessage(request: LinkRequest): LinkResponse {
+    override fun handleReceivedMessage(request: AppRequest): AppResponse {
         return when (stringUtils.removeEOLChars(request.message)) {
-            "nop" -> LinkResponse.acknowledgeOnly()
-            "Hello!" -> LinkResponse.sendText("Hi, there! *wave*")
-            "ping" -> LinkResponse.sendText("pong")
-            "longtest" -> LinkResponse.sendText(largeResponse())
-            else ->  LinkResponse.sendText("Test")
+            "nop" -> AppResponse.acknowledgeOnly()
+            "Hello!" -> AppResponse.sendText("Hi, there! *wave*")
+            "ping" -> AppResponse.sendText("pong")
+            "longtest" -> AppResponse.sendText(largeResponse())
+            else ->  AppResponse.sendText("Test")
         }
     }
 

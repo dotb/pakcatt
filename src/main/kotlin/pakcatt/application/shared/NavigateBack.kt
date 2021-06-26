@@ -1,7 +1,7 @@
 package pakcatt.application.shared
 
-import pakcatt.network.radio.protocol.packet.model.LinkRequest
-import pakcatt.network.radio.protocol.packet.model.LinkResponse
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.AppResponse
 
 /**
  * A simple class that represents navigation to any previous app
@@ -11,7 +11,7 @@ class NavigateBack(val steps: Int): SubApp() {
         return ""
     }
 
-    override fun handleReceivedMessage(request: LinkRequest): LinkResponse {
-        return LinkResponse.ignore()
+    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+        return AppResponse.ignore()
     }
 }

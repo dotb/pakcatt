@@ -5,11 +5,11 @@ import org.springframework.stereotype.Component
 import pakcatt.application.last.LastApp
 import pakcatt.application.mailbox.MailboxApp
 import pakcatt.application.mailbox.persistence.MailboxStore
-import pakcatt.network.radio.protocol.packet.model.LinkRequest
+import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.RootApp
 import pakcatt.application.shared.command.Command
 import pakcatt.application.tell.TellApp
-import pakcatt.network.radio.protocol.packet.model.LinkResponse
+import pakcatt.application.shared.model.AppResponse
 import java.lang.StringBuilder
 import kotlin.math.sqrt
 
@@ -45,7 +45,7 @@ class MainMenuApp(val myCall: String,
         return "menu>"
     }
 
-    override fun decisionOnConnectionRequest(request: LinkRequest): LinkResponse {
+    override fun decisionOnConnectionRequest(request: AppRequest): AppResponse {
         return if (isAddressedToMe(request, myCall)) {
             val stringBuilder = StringBuilder()
             val mailboxApp = MailboxApp(mailboxStore)
@@ -57,47 +57,47 @@ class MainMenuApp(val myCall: String,
             } else if (unreadMessages > 0) {
                 stringBuilder.append("You have an unread message.\r\n")
             }
-            LinkResponse.sendText(stringBuilder.toString(), this)
+            AppResponse.sendText(stringBuilder.toString(), this)
         } else {
-            LinkResponse.ignore()
+            AppResponse.ignore()
         }
     }
 
-    override fun handleReceivedMessage(request: LinkRequest): LinkResponse {
+    override fun handleReceivedMessage(request: AppRequest): AppResponse {
        return when (isAddressedToMe(request, myCall)) {
            true -> handleRequestWithRegisteredCommand(request)
-           else -> LinkResponse.ignore()
+           else -> AppResponse.ignore()
        }
     }
 
-    private fun handleTell(request: LinkRequest): LinkResponse {
+    private fun handleTell(request: AppRequest): AppResponse {
         val destinationCallsign = parseStringArgument(request.message, "")
         return if (destinationCallsign.isNotBlank()) {
-            LinkResponse.sendText("", TellApp(destinationCallsign, myCall, request.remoteCallsign))
+            AppResponse.sendText("", TellApp(destinationCallsign, myCall, request.remoteCallsign))
         } else {
-            LinkResponse.sendText("You need to specify a callsign")
+            AppResponse.sendText("You need to specify a callsign")
         }
     }
 
-    private fun handleSQRT(request: LinkRequest): LinkResponse {
+    private fun handleSQRT(request: AppRequest): AppResponse {
         val arg = parseStringArgument(request.message, "0")
         val result = sqrt(arg.toDouble()).toString()
-        return LinkResponse.sendText("Square root of $arg is $result")
+        return AppResponse.sendText("Square root of $arg is $result")
     }
 
-    private fun handleLast(request: LinkRequest): LinkResponse {
+    private fun handleLast(request: AppRequest): AppResponse {
         return when (val arg = parseStringArgument(request.message, "")) {
-            "" -> LinkResponse.sendText(lastApp.lastEntries())
-            else -> LinkResponse.sendText(lastApp.lastEntryFor(arg))
+            "" -> AppResponse.sendText(lastApp.lastEntries())
+            else -> AppResponse.sendText(lastApp.lastEntryFor(arg))
         }
     }
 
-    private fun allTheStyles(): LinkResponse {
+    private fun allTheStyles(): AppResponse {
         val returnString = StringBuilder()
         for (style in 1..8) {
             returnString.append("$escapeChar[${style}m Style $style $escapeChar[0m\r\n")
         }
-        return LinkResponse.sendText(returnString.toString())
+        return AppResponse.sendText(returnString.toString())
     }
 
 }
