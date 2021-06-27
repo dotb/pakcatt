@@ -2,12 +2,13 @@ package pakcatt.application.shared
 
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import pakcatt.network.packet.link.model.*
+import pakcatt.application.shared.model.*
 import pakcatt.util.StringUtils
 
 interface AppInterface {
-    fun getDecisionOnConnectionRequest(request: LinkRequest): ConnectionResponse
-    fun getResponseForReceivedMessage(request: LinkRequest): InteractionResponse
+    fun getDecisionOnConnectionRequest(request: AppRequest): AppResponse
+    fun getResponseForReceivedMessage(request: AppRequest): AppResponse
+    fun getAdhocResponses(forDeliveryType: DeliveryType): List<AdhocMessage>
     fun closeConnection(remoteCallsign: String, myCallsign: String)
 }
 
@@ -19,7 +20,7 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
     private var currentUsers = HashMap<String, UserContext>()
 
     /* AppInterface methods delegated from the LinkService */
-    override fun getDecisionOnConnectionRequest(request: LinkRequest): ConnectionResponse {
+    override fun getDecisionOnConnectionRequest(request: AppRequest): AppResponse {
         // Ensure any previous connection is closed, and open a new one
         closeConnection(request.remoteCallsign, request.addressedToCallsign)
         val userContext = contextForConversation(request.remoteCallsign, request.addressedToCallsign)
@@ -29,29 +30,29 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
 
         // Update the app focus state in the user context if required.
         updateAppFocus(connectionResponse.nextApp(), userContext)
-        return addPromptToResponse(userContext.engagedApplication(), connectionResponse) as ConnectionResponse
+        return addPromptToResponse(userContext.engagedApplication(), connectionResponse) as AppResponse
     }
 
-    private fun findAppWillingToAcceptConnection(request: LinkRequest): ConnectionResponse {
+    private fun findAppWillingToAcceptConnection(request: AppRequest): AppResponse {
         // Start with the default decision to ignore this connect request
-        var finalConnectionDecision = ConnectionResponse.ignore()
+        var finalConnectionDecision = AppResponse.ignore()
 
         // Find a root application who wants to accept the connection
         for (app in rootApplications) {
             val connectionDecision = app.decisionOnConnectionRequest(request)
             when (connectionDecision.responseType) {
-                ConnectionResponseType.CONNECT_WITH_MESSAGE -> finalConnectionDecision = connectionDecision
-                ConnectionResponseType.CONNECT -> finalConnectionDecision = connectionDecision
-                ConnectionResponseType.IGNORE -> logger.trace("App isn't interested in this connection.")
+                ResponseType.ACK_WITH_TEXT -> finalConnectionDecision = connectionDecision
+                ResponseType.ACK_ONLY -> finalConnectionDecision = connectionDecision
+                ResponseType.IGNORE -> logger.trace("App isn't interested in this connection.")
             }
         }
         return finalConnectionDecision
     }
 
     // We've received data from a client, share it with listening apps and get a response for the client
-    override fun getResponseForReceivedMessage(request: LinkRequest): InteractionResponse {
+    override fun getResponseForReceivedMessage(request: AppRequest): AppResponse {
         // Sometimes a TNC will send is only \r, we rewrite these to \n\r
-        val cleanedRequest = LinkRequest(request.remoteCallsign, request.addressedToCallsign, stringUtils.fixEndOfLineCharacters(request.message))
+        val cleanedRequest = AppRequest(request.remoteCallsign, request.addressedToCallsign, stringUtils.fixEndOfLineCharacters(request.message))
         // Get this user's context
         val userContext = contextForConversation(cleanedRequest.remoteCallsign, cleanedRequest.addressedToCallsign)
         // Get the interaction response from the app
@@ -59,20 +60,28 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         // Update any focus state in the user context if required, returned by the selected app.
         updateAppFocus(interactionResponse.nextApp(), userContext)
         // Return any response with an included command prompt string
-        return addPromptToResponse(userContext.engagedApplication(), interactionResponse) as InteractionResponse
+        return addPromptToResponse(userContext.engagedApplication(), interactionResponse)
     }
 
-    private fun getResponseForReceivedMessage(request: LinkRequest, userContext: UserContext): InteractionResponse  {
+    override fun getAdhocResponses(forDeliveryType: DeliveryType): List<AdhocMessage> {
+        val allAdhocResponses = ArrayList<AdhocMessage>()
+        for (app in rootApplications) {
+            allAdhocResponses.addAll(app.flushAdhocResponses(forDeliveryType))
+        }
+        return allAdhocResponses
+    }
+
+    private fun getResponseForReceivedMessage(request: AppRequest, userContext: UserContext): AppResponse  {
         // Start with a default response to ignored the incoming request
-        var finalInteractionResponse = InteractionResponse.ignore()
+        var finalInteractionResponse = AppResponse.ignore()
 
         // Share the request with app registered root level apps for processing
         for (app in rootApplications) {
             val interactionResponse = app.handleReceivedMessage(request)
             when (interactionResponse.responseType) {
-                InteractionResponseType.SEND_TEXT -> finalInteractionResponse = interactionResponse
-                InteractionResponseType.ACK_ONLY -> finalInteractionResponse = interactionResponse
-                InteractionResponseType.IGNORE -> logger.trace("App isn't interested in responding.")
+                ResponseType.ACK_WITH_TEXT -> finalInteractionResponse = interactionResponse
+                ResponseType.ACK_ONLY -> finalInteractionResponse = interactionResponse
+                ResponseType.IGNORE -> logger.trace("App isn't interested in responding.")
             }
         }
 
@@ -100,18 +109,19 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
                 userContext.navigateBack()
             }
         } else if (null != nextApp) {
+            nextApp.setParentRootApp(userContext.rootApplication())
             userContext.navigateToApp(nextApp)
         }
     }
 
     // Rewrite the prompt string into the textual response
-    private fun addPromptToResponse(app: SubApp?, response: LinkResponse): LinkResponse {
+    private fun addPromptToResponse(app: SubApp?, response: AppResponse): AppResponse {
         val message = response.responseString()
 
         when (val prompt = app?.returnCommandPrompt()) {
-            "" -> response.updateResponseString("$message\n\r")
-            null -> response.updateResponseString("$message\n\r")
-            else -> response.updateResponseString("$message\n\r$prompt ")
+            "" -> response.updateResponseString("$message${StringUtils.EOL}")
+            null -> response.updateResponseString("$message${StringUtils.EOL}")
+            else -> response.updateResponseString("$message${StringUtils.EOL}$prompt ")
         }
 
         return response

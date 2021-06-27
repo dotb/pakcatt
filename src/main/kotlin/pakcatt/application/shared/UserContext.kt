@@ -24,4 +24,12 @@ class UserContext(remoteCallsign: String, myCallsign: String) {
         }
     }
 
+    fun rootApplication(): RootApp? {
+        return if (navigationStack.isNotEmpty()) {
+            navigationStack.first as? RootApp
+        } else {
+            null
+        }
+    }
+
 }

@@ -121,4 +121,13 @@ class ByteUtils {
         return index
     }
 
+    fun byteArrayFromInts(vararg elements: Int): ByteArray {
+        val byteArray = ByteArray(elements.size)
+        for ((index, intOctet) in elements.withIndex()) {
+            val byte = intToByte(intOctet)
+            byteArray[index] = byte
+        }
+        return byteArray
+    }
+
 }

@@ -1,9 +1,14 @@
 package pakcatt.util
 
 import org.springframework.stereotype.Component
+import kotlin.math.min
 
 @Component
 class StringUtils {
+
+    companion object {
+        const val EOL = "\n\r"
+    }
 
     fun byteToHex(byte: Byte): String {
         return String.format("%02x", byte)
@@ -42,6 +47,12 @@ class StringUtils {
         return String(byteArray, Charsets.US_ASCII)
     }
 
+    fun convertByteToString(byte: Byte): String {
+        val byteArrayOfOne = ByteArray(1)
+        byteArrayOfOne[0] = byte
+        return convertBytesToString(byteArrayOfOne)
+    }
+
     fun convertStringToBytes(string: String): ByteArray {
         return string.toByteArray(Charsets.US_ASCII)
     }
@@ -58,9 +69,13 @@ class StringUtils {
      * Remove any end-of-line characters from a string
      */
     fun removeEOLChars(input: String): String {
-        var chompedString = input.replace("\r","")
-        chompedString = chompedString.replace("\n", "")
-        return chompedString
+        return removeEOLChars(input, "")
+    }
+
+    fun removeEOLChars(input: String, substitutionString: String): String {
+        var returnedString = input.replace("\r",substitutionString)
+        returnedString = returnedString.replace("\n", substitutionString)
+        return returnedString
     }
 
     /**
@@ -71,7 +86,18 @@ class StringUtils {
             true -> callsign.split("-")[0]
             false -> callsign
         }
-        return  callsignOnly.toUpperCase()
+        return callsignOnly.toUpperCase()
+    }
+
+    /**
+     * Format a callsign, ensuring it has at least
+     * the default SSID
+     */
+    fun formatCallsignEnsureSSID(callsign: String): String {
+        return when (callsign.contains("-")) {
+            true -> callsign.toUpperCase()
+            false -> "$callsign-0".toUpperCase()
+        }
     }
 
     /**
@@ -111,6 +137,22 @@ class StringUtils {
         }
 
         return fixedString.toString()
+    }
+
+    /**
+     * Create a string of a fixed size, padding with space
+     * on the end of the string if required.
+     */
+    fun fixedSizeString(inputString: String, fixedSize: Int): String {
+        var returnedString = inputString
+        for (index in returnedString.length..fixedSize) {
+            returnedString += " "
+        }
+        return trimmedString(returnedString, fixedSize)
+    }
+
+    fun trimmedString(inputString: String, maxLength: Int): String {
+        return inputString.substring(0, min(maxLength, inputString.length))
     }
 
 }
