@@ -91,7 +91,7 @@ abstract class KissFrame() {
         const val SIZE_HEADERS = 18
     }
 
-    open fun populateFromFrameData(frameByteData: ByteArray) {
+    open fun populateFromFrameData(frameByteData: ByteArray): KissFrame {
         // Set defaults for optional fields
         this.repeaterCallsignOne = ByteArray(0)
         this.repeaterCallsignTwo = ByteArray(0)
@@ -142,6 +142,7 @@ abstract class KissFrame() {
         if (frameByteData.size > nextIndex) {
             this.payloadData = frameByteData.copyOfRange(nextIndex, frameByteData.size)
         }
+        return this
     }
 
     open fun packetData(): ByteArray {

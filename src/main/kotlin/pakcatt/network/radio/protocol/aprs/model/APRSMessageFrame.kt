@@ -59,13 +59,14 @@ class APRSMessageFrame: APRSFrame() {
         return messageNumber
     }
 
-    override fun populateFromFrameData(frameByteData: ByteArray) {
+    override fun populateFromFrameData(frameByteData: ByteArray): APRSMessageFrame {
         super.populateFromFrameData(frameByteData)
         // Update our local message variables
         val payloadString = payloadDataString()
         setMessageDestinationCallsignFromPayload(payloadString)
         setMessageFromPayload(payloadString)
         setMessageNumberFromPayload(payloadString)
+        return this
     }
 
     override fun packetData(): ByteArray {

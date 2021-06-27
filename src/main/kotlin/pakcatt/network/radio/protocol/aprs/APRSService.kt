@@ -10,6 +10,7 @@ import pakcatt.network.radio.kiss.queue.DeliveryQueue
 import pakcatt.network.radio.protocol.aprs.model.APRSFrame
 import pakcatt.network.radio.protocol.aprs.model.APRSMessageFrame
 import pakcatt.application.shared.model.DeliveryType
+import pakcatt.network.radio.protocol.aprs.model.APRSDataType
 import pakcatt.network.radio.protocol.shared.ProtocolService
 
 @Service
@@ -26,9 +27,11 @@ class APRSService(private var appService: AppInterface): ProtocolService() {
 
     override fun handleFrame(incomingKissFrame: KissFrame) {
         logger.trace("APRS Service: Handling frame: {}", incomingKissFrame)
-        val aprsFrame = APRSFrame()
-        aprsFrame.populateFromKissFrame(incomingKissFrame)
-        logger.debug("Decoded APRS Frame: {}", aprsFrame.toString())
+        val untypedAPRSFrame = APRSFrame()
+        untypedAPRSFrame.populateFromKissFrame(incomingKissFrame)
+        logger.trace("Decoded APRS Frame: {}", untypedAPRSFrame.toString())
+        val typedAPRSFrame = getTypedAPRSFrame(untypedAPRSFrame)
+        logger.debug("Decoded APRS Frame: {}", typedAPRSFrame.toString())
     }
 
     override fun queueFramesForDelivery(deliveryQueue: DeliveryQueue) {
@@ -41,6 +44,13 @@ class APRSService(private var appService: AppInterface): ProtocolService() {
                 aprsMessageFrame.setMessage(adhocDelivery.message)
                 deliveryQueue.addFrame(aprsMessageFrame)
             }
+        }
+    }
+
+    private fun getTypedAPRSFrame(untypedAPRSFrame: APRSFrame): APRSFrame {
+        return when (untypedAPRSFrame.aprsDataType()) {
+            APRSDataType.MESSAGE -> APRSMessageFrame().populateFromKissFrame(untypedAPRSFrame)
+            else -> untypedAPRSFrame
         }
     }
 

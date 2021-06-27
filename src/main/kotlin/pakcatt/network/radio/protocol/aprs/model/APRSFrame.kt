@@ -56,15 +56,16 @@ open class APRSFrame: KissFrameStandard() {
     }
 
 
-    open fun populateFromKissFrame(kissFrame: KissFrame) {
-        populateFromFrameData(kissFrame.packetData())
+    open fun populateFromKissFrame(kissFrame: KissFrame): APRSFrame {
+        return populateFromFrameData(kissFrame.packetData())
     }
 
-    override fun populateFromFrameData(frameByteData: ByteArray) {
+    override fun populateFromFrameData(frameByteData: ByteArray): APRSFrame {
         super.populateFromFrameData(frameByteData)
         if (payloadData.isNotEmpty()) {
             setDataType(payloadData[0])
         }
+        return this
     }
 
     override fun toString(): String {
@@ -75,7 +76,6 @@ open class APRSFrame: KissFrameStandard() {
         if (payloadData.isNotEmpty()) {
             stringBuilder.append("Payload: ${payloadDataString()}")
         }
-
         return stringBuilder.toString()
     }
 
