@@ -5,10 +5,42 @@ import pakcatt.network.radio.kiss.model.KissFrame
 import pakcatt.network.radio.kiss.model.KissFrameStandard
 
 enum class APRSDataType(val id: Int) {
-    MIC_E(0x1C), MIC_E_OLD(0x1D), MIC_E_C(0x60), LOC_NO_TIME(0x21),
-    ITEM(0x29), LOC_WITH_TIME(0x21), MESSAGE(0x3A),
-    OBJECT(0x3B), LOC_NO_TIME_WITH_MESSAGE(0x3D), STATUS(0x3E),
-    LOC_WITH_TIME_AND_MESSAGE(0x40), TELEMETRY(0x54), WEATHER(0x5F),
+    // MIC-E
+    MIC_E(0x1C), // FS
+    MIC_E_OLD(0x1D), // GS
+    MIC_E_DATA(0x60), // `
+    MIC_E_DATA_OLD(0x27), // '
+
+    // Location
+    LOC_NO_TIME_NO_MESSAGE(0x21), // !
+    LOC_NO_TIME_WITH_MESSAGE(0x3D), // =
+    LOC_WITH_TIME_NO_MESSAGE(0x2F), // /
+    LOC_WITH_TIME_WITH_MESSAGE(0x40), // @
+    SHELTER_WITH_TIME(0x2B), // +
+    RAW_GPS(0x24), // $
+    MAP_FEATURE(0x26), // &
+
+    // Weather
+    WEATHER_SPACE(0x2E), // .
+    WEATHER_NO_LOC(0x5F), // _
+    WEATHER_PEET_BROS_1(0x23), // #
+    WEATHER_PEET_BROS_2(0x2A), // *
+
+    // Message
+    MESSAGE(0x3A), // :
+
+    // Other
+    AGRELO_DFJR(0x25), // %
+    ITEM(0x29), // )
+    OBJECT(0x3B), // ;
+    STATION_CAPABILITIES(0x2C), // <
+    STATUS(0x3E), // >
+    QUERY(0x3F), // ?
+    TELEMETRY(0x54), // T
+    MAIDENHEAD_BEACON(0x5B), // [
+    USER_DEFINED_APRS(0x7B), // {
+    THIRD_PARTY_TRAFFIC(0x7D), // }
+    TEST(0x2C), // ,
     UNKNOWN(0x00)
 }
 
@@ -51,22 +83,13 @@ open class APRSFrame: KissFrameStandard() {
         return aprsDataType
     }
 
-    private fun setDataType(dataTypeByte: Byte) {
-        this.aprsDataType = when (dataTypeByte) {
-            byteUtils.intToByte(APRSDataType.MIC_E.id) -> APRSDataType.MIC_E
-            byteUtils.intToByte(APRSDataType.MIC_E_OLD.id) -> APRSDataType.MIC_E_OLD
-            byteUtils.intToByte(APRSDataType.MIC_E_C.id) -> APRSDataType.MIC_E_C
-            byteUtils.intToByte(APRSDataType.LOC_NO_TIME.id) -> APRSDataType.LOC_NO_TIME
-            byteUtils.intToByte(APRSDataType.ITEM.id) -> APRSDataType.ITEM
-            byteUtils.intToByte(APRSDataType.LOC_WITH_TIME.id) -> APRSDataType.LOC_WITH_TIME
-            byteUtils.intToByte(APRSDataType.MESSAGE.id) -> APRSDataType.MESSAGE
-            byteUtils.intToByte(APRSDataType.OBJECT.id) -> APRSDataType.OBJECT
-            byteUtils.intToByte(APRSDataType.LOC_NO_TIME_WITH_MESSAGE.id) -> APRSDataType.LOC_NO_TIME_WITH_MESSAGE
-            byteUtils.intToByte(APRSDataType.STATUS.id) -> APRSDataType.STATUS
-            byteUtils.intToByte(APRSDataType.LOC_WITH_TIME_AND_MESSAGE.id) -> APRSDataType.LOC_WITH_TIME_AND_MESSAGE
-            byteUtils.intToByte(APRSDataType.TELEMETRY.id) -> APRSDataType.TELEMETRY
-            byteUtils.intToByte(APRSDataType.WEATHER.id) -> APRSDataType.WEATHER
-            else -> APRSDataType.UNKNOWN
+    private fun setDataType(requestedAPRSDataType: Byte) {
+        this.aprsDataType = APRSDataType.UNKNOWN // Start with an unknown type
+        for (aprsDataTypeOption in APRSDataType.values()) {
+            val dataTypeIntValue = byteUtils.byteToInt(requestedAPRSDataType)
+            if (aprsDataTypeOption.id == dataTypeIntValue) {
+                this.aprsDataType = aprsDataTypeOption
+            }
         }
     }
 
