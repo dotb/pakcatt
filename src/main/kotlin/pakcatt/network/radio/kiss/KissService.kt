@@ -73,7 +73,7 @@ class KissService(val tncConnection: TNC,
         if (frame.size >= KissFrame.SIZE_MIN) {
             val kissFrame = KissFrameStandard()
             kissFrame.populateFromFrameData(frame)
-            logger.trace("Decoded hex:\t\t {}", stringUtils.byteArrayToHex(kissFrame.packetData()))
+            logger.trace("Recoded bytes:\t {}", stringUtils.byteArrayToHex(kissFrame.packetData()))
             logger.debug("Received frame:\t {}", stringUtils.removeEOLChars(kissFrame.toString(), " "))
             logger.trace("Decoded data:\t {}", kissFrame.payloadDataString())
             handFrameToProtocolServices(kissFrame)
