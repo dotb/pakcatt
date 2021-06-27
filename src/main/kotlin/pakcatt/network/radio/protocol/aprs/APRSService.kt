@@ -11,6 +11,7 @@ import pakcatt.network.radio.protocol.aprs.model.APRSFrame
 import pakcatt.network.radio.protocol.aprs.model.APRSMessageFrame
 import pakcatt.application.shared.model.DeliveryType
 import pakcatt.network.radio.protocol.aprs.model.APRSDataType
+import pakcatt.network.radio.protocol.aprs.model.APRSMicEDataFrame
 import pakcatt.network.radio.protocol.shared.ProtocolService
 
 @Service
@@ -50,6 +51,10 @@ class APRSService(private var appService: AppInterface): ProtocolService() {
     private fun getTypedAPRSFrame(untypedAPRSFrame: APRSFrame): APRSFrame {
         return when (untypedAPRSFrame.aprsDataType()) {
             APRSDataType.MESSAGE -> APRSMessageFrame().populateFromKissFrame(untypedAPRSFrame)
+            APRSDataType.MIC_E -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
+            APRSDataType.MIC_E_OLD -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
+            APRSDataType.MIC_E_DATA -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
+            APRSDataType.MIC_E_DATA_OLD -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
             else -> untypedAPRSFrame
         }
     }
