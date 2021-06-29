@@ -1,0 +1,40 @@
+## Feature configuration
+# Your callsign-SSID. Connections to this callsign will be accepted.
+pakcatt:
+  application:
+    mycall: PAKCAT-1
+    beacon:
+      message: PAKCAT-1 on frequency, running PakCatt. Connect to PAKCAT-1 to try it out.
+      interval_minutes: 0 # An interval of 0 disables beaconing.
+      destination: CQ # The destination address for beacon messages. This is typically 'CQ'
+
+    ## Serial port / TNC configuration
+  serial-port-path: /dev/<YOUR TNC SERIAL PATH>
+  serial-port-baud: 9600
+
+  ## Packet performance parameters
+  network.packet:
+    frame_size_max: 128 # The maximum number of frames / packets sent in each transmission
+    frames_per_over: 4 # The minimum amount of time left between transmissions
+    minTXPauseSeconds: 2 # The number of times a frame is re-sent if not acknowledged
+    deliveryRetryTimeSeconds: 10 # The maximum number of times delivery is attempted for each frame
+    maxDeliveryAttempts: 10
+
+
+spring:
+  ## Database configuration
+  data.mongodb.database: pakcatt
+
+  ## TCP/IP server
+  #server.address=127.0.0.1
+  server.port: 8080
+
+  freemarker.template-loader-path: classpath:/templates/
+  freemarker.suffix: .ftl
+  profiles.active: production
+
+
+## Logging and development parameters
+logging:
+  pattern.console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%18.18logger{0}]){blue} %clr(${LOG_LEVEL_PATTERN:\t%5p:}) %m%n${LOG_EXCEPTION_CONVERSION_WORD:%wEx}"
+  level.pakcatt: info

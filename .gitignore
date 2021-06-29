@@ -1,4 +1,4 @@
 target
 Docker/*.jar
 pakcatt_db
-dev.application.properties
+dev.application.yml
