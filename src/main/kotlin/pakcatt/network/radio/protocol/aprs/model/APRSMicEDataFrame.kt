@@ -19,7 +19,7 @@ class APRSMicEDataFrame: APRSFrame() {
     }
 
     fun latitudeDegreesMinutesHundredthsWithAmbiguity(): String {
-        return "${latitudeDegrees()}°${latitudeMinutes()}.${latitudeHundredths()}' ${latitudeNorthSouth()}"
+        return "${latitudeDegrees()}.${latitudeMinutes()}.${latitudeHundredths()}${latitudeNorthSouth()}"
     }
 
     fun latitudeDegrees(): String {
@@ -50,7 +50,7 @@ class APRSMicEDataFrame: APRSFrame() {
 
     fun longitudeDegreesMinutesHundredthsWithAmbiguity(): String {
         // Both longitude and latitude values share the same level of ambiguity
-        var longitudeString = "${longitudeDegrees()}°${longitudeMinutes()}.${longitudeHundredths()}' ${longitudeWestEast()}"
+        var longitudeString = "${longitudeDegrees()}.${longitudeMinutes()}.${longitudeHundredths()}${longitudeWestEast()}"
         val latitudeString = latitudeDegreesMinutesHundredthsWithAmbiguity()
         for ((index, char) in latitudeString.withIndex()) {
             if (char == '?') {
