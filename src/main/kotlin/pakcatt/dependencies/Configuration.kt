@@ -75,7 +75,6 @@ class Configuration {
         return serialPortPath
     }
 
-
     @Value("\${pakcatt.serial-port-baud}")
     private lateinit var serialPortBaud: Number
     @Bean
@@ -89,7 +88,6 @@ class Configuration {
     fun frameSizeMax(): Int {
         return frameSizeMax.toInt()
     }
-
 
     @Value("\${pakcatt.network.packet.frames_per_over}")
     private lateinit var framesPerOver: Number

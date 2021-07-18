@@ -32,21 +32,6 @@ class Configuration {
     }
 
     @Bean
-    fun scriptWorkingDir(): String {
-        return "scripts/"
-    }
-
-    @Bean
-    fun scriptTimeout(): Long {
-        return 2
-    }
-
-    @Bean
-    fun scriptableScripts(): List<Script> {
-        return listOf(Script("connect.sh", "example_date_connect.sh", "example_date_prompt.sh", "example_date_request.sh"))
-    }
-
-    @Bean
     fun serialPortPath(): String {
         return "/dev/null"
     }

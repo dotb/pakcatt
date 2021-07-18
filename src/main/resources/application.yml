@@ -9,12 +9,12 @@ pakcatt:
       destination: CQ # The destination address for beacon messages. This is typically 'CQ'
 
     scriptable:
-      workingDir: scripts/
+      workingDir: ./
       timeout: 60 # Time allowed for scripts to run
       scripts:
         - name: 'Example Date'
           pathConnect: 'scripts/example_date_connect.sh'
-          pathPrompt: 'scripts/example_date_path.sh'
+          pathPrompt: 'scripts/example_date_prompt.sh'
           pathRequest: 'scripts/example_date_request.sh'
         - name: 'Example Message'
           pathConnect: 'scripts/example_hello.sh'

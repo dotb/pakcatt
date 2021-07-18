@@ -33,7 +33,6 @@ class AppResponse(val responseType: ResponseType,
         }
     }
 
-
     fun nextApp(): SubApp? {
         return nextApp
     }
