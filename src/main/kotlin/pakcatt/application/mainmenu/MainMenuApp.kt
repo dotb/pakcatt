@@ -32,6 +32,7 @@ class MainMenuApp(val myCall: String,
         // Cute responses
         registerCommand(Command("hello").reply("Hi, there! *wave*") .description("Just a friendly welcome :-)"))
         registerCommand(Command("ping") .reply("Pong!").description("I'll reply with a pong"))
+        registerCommand(Command("pong") .reply("Ping! haha :P").description("I'll reply with a pong"))
         registerCommand(Command("beep") .reply("beep! $beepChar").description("Send a beep instruction to your terminal"))
 
         // Terminal tests
