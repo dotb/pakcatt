@@ -14,12 +14,7 @@ pakcatt:
       scripts:
         - name: 'Example Date'
           pathConnect: 'scripts/example_date_connect.sh'
-          pathPrompt: 'scripts/example_date_prompt.sh'
           pathRequest: 'scripts/example_date_request.sh'
-        - name: 'Example Message'
-          pathConnect: 'scripts/example_hello.sh'
-          pathPrompt: 'scripts/example_hello.sh'
-          pathRequest: 'scripts/example_hello.sh'
 
   ## Serial port / TNC configuration
   serial-port-path: /dev/<YOUR TNC SERIAL PATH>

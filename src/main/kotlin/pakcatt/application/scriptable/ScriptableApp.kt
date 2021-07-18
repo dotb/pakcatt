@@ -17,6 +17,11 @@ import java.util.concurrent.TimeUnit
  * The Scriptable app provides an interface to external software, for example
  * command-line shell or python scripts.
  */
+
+enum class ScriptType {
+    CONNECT, REQUEST
+}
+
 @Component
 @Profile("production")
 class ScriptableApp(private val scriptableScripts: List<Script>,
@@ -25,26 +30,41 @@ class ScriptableApp(private val scriptableScripts: List<Script>,
 
     val logger: Logger = LoggerFactory.getLogger(ScriptableApp::class.java)
 
+    /**
+     * Find a script that will accept this connection.
+     * Only one script can accept and handle a connection.
+     */
     override fun decisionOnConnectionRequest(request: AppRequest): AppResponse {
+        return handleRequestWithScript(ScriptType.CONNECT, request)
+    }
+
+    /**
+     * Scripts don't support a prompt. A prompt can be injected into the response
+     * by the script, based in any state the script is keeping.
+     */
+    override fun returnCommandPrompt(): String {
+        return ""
+    }
+
+    /**
+     * Find a script that will handle this message.
+     * Only one script can handle the message. The first non-ignored response will be selected.
+     */
+    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+        return handleRequestWithScript(ScriptType.REQUEST, request)
+    }
+
+    private fun handleRequestWithScript(scriptType: ScriptType, request: AppRequest): AppResponse {
         for (script in scriptableScripts) {
-            val connectScriptPath = script.pathConnect
+            val connectScriptPath = when (scriptType) {
+                ScriptType.CONNECT -> script.pathConnect
+                ScriptType.REQUEST -> script.pathRequest
+            }
             val responseString = getOutputFromScript(connectScriptPath, request.addressedToCallsign, request.remoteCallsign, request.message)
             val scriptResponse = parseAppResponse(responseString)
             if (scriptResponse.responseType != ResponseType.IGNORE) {
                 return scriptResponse
             }
-        }
-        return AppResponse.ignore()
-    }
-
-    override fun returnCommandPrompt(): String {
-        return ""
-    }
-
-    override fun handleReceivedMessage(request: AppRequest): AppResponse {
-        for (script in scriptableScripts) {
-            val connectScriptPath = script.pathRequest
-            getOutputFromScript(connectScriptPath, request.addressedToCallsign, request.remoteCallsign, request.message)
         }
         return AppResponse.ignore()
     }
