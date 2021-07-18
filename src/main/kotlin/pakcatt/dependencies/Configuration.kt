@@ -1,17 +1,21 @@
 package pakcatt.dependencies
 
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import pakcatt.application.scriptable.model.Script
+import pakcatt.application.scriptable.model.ScriptableConfig
 import java.lang.NumberFormatException
 
 @Configuration
 @Profile("production")
 class Configuration {
 
-    val logger = LoggerFactory.getLogger(Configuration::class.java)
+    val logger: Logger = LoggerFactory.getLogger(Configuration::class.java)
 
     @Value("\${pakcatt.application.mycall}")
     private lateinit var myCall: String
@@ -44,6 +48,24 @@ class Configuration {
     @Bean
     fun beaconDestination(): String {
         return beaconDestination
+    }
+
+    @Autowired
+    private lateinit var scriptableConfig: ScriptableConfig
+
+    @Bean
+    fun scriptWorkingDir(): String {
+        return scriptableConfig.workingDir
+    }
+
+    @Bean
+    fun scriptTimeout(): Long {
+        return scriptableConfig.timeout
+    }
+
+    @Bean
+    fun scriptableScripts(): List<Script> {
+        return scriptableConfig.scripts
     }
 
     @Value("\${pakcatt.serial-port-path}")

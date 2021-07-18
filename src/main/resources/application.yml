@@ -8,14 +8,27 @@ pakcatt:
       interval_minutes: 0 # An interval of 0 disables beaconing.
       destination: CQ # The destination address for beacon messages. This is typically 'CQ'
 
-    ## Serial port / TNC configuration
+    scriptable:
+      workingDir: scripts/
+      timeout: 60 # Time allowed for scripts to run
+      scripts:
+        - name: 'Example Date'
+          pathConnect: 'scripts/example_date_connect.sh'
+          pathPrompt: 'scripts/example_date_path.sh'
+          pathRequest: 'scripts/example_date_request.sh'
+        - name: 'Example Message'
+          pathConnect: 'scripts/example_hello.sh'
+          pathPrompt: 'scripts/example_hello.sh'
+          pathRequest: 'scripts/example_hello.sh'
+
+  ## Serial port / TNC configuration
   serial-port-path: /dev/<YOUR TNC SERIAL PATH>
   serial-port-baud: 9600
 
   ## Packet performance parameters
   network.packet:
     frame_size_max: 128 # The maximum number of frames / packets sent in each transmission
-    frames_per_over: 4 # The minimum amount of time left between transmissions
+    frames_per_over: 6 # The minimum amount of time left between transmissions
     minTXPauseSeconds: 2 # The number of times a frame is re-sent if not acknowledged
     deliveryRetryTimeSeconds: 10 # The maximum number of times delivery is attempted for each frame
     maxDeliveryAttempts: 10
@@ -24,6 +37,8 @@ pakcatt:
 spring:
   ## Database configuration
   data.mongodb.database: pakcatt
+  #spring.data.mongodb.host: 127.0.0.1
+  #spring.data.mongodb.port: 27017
 
   ## TCP/IP server
   #server.address=127.0.0.1
