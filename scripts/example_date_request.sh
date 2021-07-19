@@ -4,8 +4,8 @@
 # RESPONSE_TYPE [MESSAGE]
 
 # Here are a few examples:
-# ACK_WITH_TEXT <message goes here> # Acknowlege the message and reply with a message
-# ACK_ONLY # Just acknowlege the message
+# ACK_WITH_TEXT <message goes here> # Acknowledge the message and reply with a message
+# ACK_ONLY # Just Acknowledge the message
 # IGNORE # Ignore the message
 
 # This example responds to messages to 'MYCALL' sending static date
