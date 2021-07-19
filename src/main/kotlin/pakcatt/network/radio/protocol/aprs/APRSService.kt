@@ -33,9 +33,9 @@ class APRSService(private val myCall: String,
         logger.trace("APRS Service: Handling frame: {}", incomingKissFrame)
         val untypedAPRSFrame = APRSFrame()
         untypedAPRSFrame.populateFromKissFrame(incomingKissFrame)
-        logger.trace("Decoded APRS Frame: {}", untypedAPRSFrame.toString())
+        logger.trace("Untyped APRS Frame: {}", untypedAPRSFrame.toString())
         val typedAPRSFrame = getTypedAPRSFrame(untypedAPRSFrame)
-        logger.debug("Decoded APRS Frame: {}", typedAPRSFrame.toString())
+        logger.debug("Typed APRS Frame: {}", typedAPRSFrame.toString())
         handleTypedAPRSFrame(typedAPRSFrame)
     }
 
@@ -68,7 +68,10 @@ class APRSService(private val myCall: String,
             APRSDataType.MIC_E_OLD -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
             APRSDataType.MIC_E_DATA -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
             APRSDataType.MIC_E_DATA_OLD -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
-            else -> untypedAPRSFrame
+            else -> {
+                logger.error("Could not type APRS frame {}", untypedAPRSFrame)
+                untypedAPRSFrame
+            }
         }
     }
 

@@ -99,6 +99,16 @@ class APRSMicEDataFrame: APRSFrame() {
         return decodeDirectionDegrees(byteUtils.byteToInt(payloadData[5]), byteUtils.byteToInt(payloadData[6]))
     }
 
+    fun statusText(): String {
+        val payloadString = payloadDataString()
+        return if (payloadString.contains("}")) {
+            val startIndex = payloadString.lastIndexOf("}") + 1
+            payloadString.substring(startIndex, payloadString.length - 3)
+        } else {
+            ""
+        }
+    }
+
     /**
      * Return the ambiguity of the location
      * 0 - no ambiguity
@@ -119,7 +129,8 @@ class APRSMicEDataFrame: APRSFrame() {
         stringBuilder.append("Ambiguity: ${ambiguity()} ")
         stringBuilder.append("Speed: ${speedKmh()}km/h ")
         stringBuilder.append("Knots: ${speedKnots()} ")
-        stringBuilder.append("Course: ${courseDegrees()}")
+        stringBuilder.append("Course: ${courseDegrees()} ")
+        stringBuilder.append("Status: ${statusText()}")
         if (payloadData.isNotEmpty()) {
             stringBuilder.append(" Payload: ${payloadDataString()}")
         }
