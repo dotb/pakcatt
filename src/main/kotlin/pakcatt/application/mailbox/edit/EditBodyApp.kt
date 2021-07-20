@@ -16,7 +16,7 @@ class EditBodyApp(private val mailMessage: MailMessage, private val mailboxStore
     }
 
     override fun handleReceivedMessage(request: AppRequest): AppResponse {
-        val bodyText = request.message
+        val bodyText = request.content
         return if (stringUtils.removeEOLChars(bodyText) == ".") {
             // Finish editing the body
             mailMessage.body = composedBody.toString()

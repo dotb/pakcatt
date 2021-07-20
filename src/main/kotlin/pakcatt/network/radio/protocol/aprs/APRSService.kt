@@ -57,7 +57,13 @@ class APRSService(private val myCall: String,
     private fun handleTypedAPRSFrame(typedAPRSFrame: APRSFrame) {
         when (typedAPRSFrame.aprsDataType()) {
             APRSDataType.MESSAGE -> APRSMessageHandler(myCall, aprsQueue, appInterface, stringUtils).handleAPRSFrame(typedAPRSFrame)
+            APRSDataType.MIC_E -> APRSMicEDataHandler(myCall, aprsQueue, appInterface, stringUtils).handleAPRSFrame(typedAPRSFrame)
+            APRSDataType.MIC_E_OLD -> APRSMicEDataHandler(myCall, aprsQueue, appInterface, stringUtils).handleAPRSFrame(typedAPRSFrame)
             APRSDataType.MIC_E_DATA -> APRSMicEDataHandler(myCall, aprsQueue, appInterface, stringUtils).handleAPRSFrame(typedAPRSFrame)
+            APRSDataType.MIC_E_DATA_OLD -> APRSMicEDataHandler(myCall, aprsQueue, appInterface, stringUtils).handleAPRSFrame(typedAPRSFrame)
+            else -> {
+                logger.info("APRS frame typed {} is not yet able to be handled", typedAPRSFrame.aprsDataType())
+            }
         }
     }
 
@@ -69,7 +75,7 @@ class APRSService(private val myCall: String,
             APRSDataType.MIC_E_DATA -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
             APRSDataType.MIC_E_DATA_OLD -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
             else -> {
-                logger.error("Could not type APRS frame {}", untypedAPRSFrame)
+                logger.info("APRS frame typed {} is not yet supported", untypedAPRSFrame.aprsDataType())
                 untypedAPRSFrame
             }
         }

@@ -52,7 +52,7 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
     // We've received data from a client, share it with listening apps and get a response for the client
     override fun getResponseForReceivedMessage(request: AppRequest): AppResponse {
         // Sometimes a TNC will send is only \r, we rewrite these to \n\r
-        val cleanedRequest = AppRequest(request.remoteCallsign, request.addressedToCallsign, stringUtils.fixEndOfLineCharacters(request.message))
+        val cleanedRequest = AppRequest(request.remoteCallsign, request.addressedToCallsign, stringUtils.fixEndOfLineCharacters(request.content))
         // Get this user's context
         val userContext = contextForConversation(cleanedRequest.remoteCallsign, cleanedRequest.addressedToCallsign)
         // Get the interaction response from the app

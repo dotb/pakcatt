@@ -87,7 +87,7 @@ class APRSMicEDataFrame: APRSFrame() {
         return decodeLongitudeOffset(destCallsign[4])
     }
 
-    fun speedKnots(): Int {
+    fun speedKnots(): Double {
         return decodeSpeedKnots(byteUtils.byteToInt(payloadData[4]), byteUtils.byteToInt(payloadData[5]))
     }
 
@@ -103,7 +103,12 @@ class APRSMicEDataFrame: APRSFrame() {
         val payloadString = payloadDataString()
         return if (payloadString.contains("}")) {
             val startIndex = payloadString.lastIndexOf("}") + 1
-            payloadString.substring(startIndex, payloadString.length - 3)
+            val endIndex = payloadString.length - 1
+            if (startIndex < endIndex) {
+                payloadString.substring(startIndex, endIndex)
+            } else {
+                ""
+            }
         } else {
             ""
         }
@@ -303,7 +308,7 @@ class APRSMicEDataFrame: APRSFrame() {
         SE+28: To obtain the tens and units of degrees, subtract 28 from the SE+28 value.
         If the computed speed is >= 800 knots, subtract 800.
      */
-    private fun decodeSpeedKnots(speedPlusTwentyEight: Int, directionPlusTwentyEight: Int): Int {
+    private fun decodeSpeedKnots(speedPlusTwentyEight: Int, directionPlusTwentyEight: Int): Double {
         // SP+28: To obtain the speed in tens of knots, subtract 28 from the SP+28 value and multiply by 10.
         var speed = (speedPlusTwentyEight - 28) * 10
         // DC+28: Subtract 28 from the DC+28 value and divide the result by 10. The quotient is the units of speed.
@@ -311,9 +316,9 @@ class APRSMicEDataFrame: APRSFrame() {
         speed += speedUnits
         // If the computed speed is >= 800 knots, subtract 800.
         return if (speed >= 800) {
-            speed - 800
+            speed.toDouble() - 800
         } else {
-            speed
+            speed.toDouble()
         }
     }
 

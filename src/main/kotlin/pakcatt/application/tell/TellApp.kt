@@ -20,7 +20,7 @@ class TellApp(private val destinationCallsign: String, private val myCallsign: S
     }
 
     override fun handleReceivedMessage(request: AppRequest): AppResponse {
-        val message = "$messagePrefix ${stringUtils.removeEOLChars(request.message)}"
+        val message = "$messagePrefix ${stringUtils.removeEOLChars(request.content)}"
         queueAdhocMessageForTransmission(destinationCallsign, myCallsign, message, DeliveryType.APRS_FIRE_AND_FORGET)
         return AppResponse.sendText("Thanks, I'll send that right away!", NavigateBack(1))
     }

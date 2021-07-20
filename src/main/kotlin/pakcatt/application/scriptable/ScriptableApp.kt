@@ -60,7 +60,7 @@ class ScriptableApp(private val scriptableScripts: List<Script>,
                 ScriptType.CONNECT -> script.pathConnect
                 ScriptType.REQUEST -> script.pathRequest
             }
-            val responseString = getOutputFromScript(connectScriptPath, request.addressedToCallsign, request.remoteCallsign, request.message)
+            val responseString = getOutputFromScript(connectScriptPath, request.addressedToCallsign, request.remoteCallsign, request.content)
             val scriptResponse = parseAppResponse(responseString)
             if (scriptResponse.responseType != ResponseType.IGNORE) {
                 return scriptResponse

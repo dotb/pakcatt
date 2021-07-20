@@ -27,7 +27,7 @@ class TestApp: RootApp() {
     }
 
     override fun handleReceivedMessage(request: AppRequest): AppResponse {
-        return when (stringUtils.removeEOLChars(request.message)) {
+        return when (stringUtils.removeEOLChars(request.content)) {
             "nop" -> AppResponse.acknowledgeOnly()
             "Hello!" -> AppResponse.sendText("Hi, there! *wave*")
             "ping" -> AppResponse.sendText("pong")

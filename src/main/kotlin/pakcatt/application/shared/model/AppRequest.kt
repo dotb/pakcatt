@@ -1,7 +1,6 @@
 package pakcatt.application.shared.model
 
-class AppRequest(public val remoteCallsign: String,
+data class AppRequest(public val remoteCallsign: String,
                  public val addressedToCallsign: String,
-                 public val message: String) {
-
-}
+                 public val content: String,
+                 public val location: Location? = null)
