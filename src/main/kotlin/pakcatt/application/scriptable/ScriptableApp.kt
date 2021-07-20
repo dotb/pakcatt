@@ -1,5 +1,6 @@
 package pakcatt.application.scriptable
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
@@ -54,13 +55,13 @@ class ScriptableApp(private val scriptableScripts: List<Script>,
         return handleRequestWithScript(ScriptType.REQUEST, request)
     }
 
-    private fun handleRequestWithScript(scriptType: ScriptType, request: AppRequest): AppResponse {
+    private fun handleRequestWithScript(scriptType: ScriptType, appRequest: AppRequest): AppResponse {
         for (script in scriptableScripts) {
             val connectScriptPath = when (scriptType) {
                 ScriptType.CONNECT -> script.pathConnect
                 ScriptType.REQUEST -> script.pathRequest
             }
-            val responseString = getOutputFromScript(connectScriptPath, request.addressedToCallsign, request.remoteCallsign, request.content)
+            val responseString = getOutputFromScript(connectScriptPath, appRequest)
             val scriptResponse = parseAppResponse(responseString)
             if (scriptResponse.responseType != ResponseType.IGNORE) {
                 return scriptResponse
@@ -76,8 +77,8 @@ class ScriptableApp(private val scriptableScripts: List<Script>,
             val responseTypeString = parameters[0]
             return when (responseTypeString) {
                 "ACK_WITH_TEXT" -> AppResponse.sendText(chompedString.substring(14))
-                    "ACK_ONLY" -> AppResponse.acknowledgeOnly()
-                    "IGNORE" -> AppResponse.ignore()
+                "ACK_ONLY" -> AppResponse.acknowledgeOnly()
+                "IGNORE" -> AppResponse.ignore()
                 else -> {
                     logger.error("Script returned an invalid response type: $responseTypeString")
                     AppResponse.ignore()
@@ -89,10 +90,12 @@ class ScriptableApp(private val scriptableScripts: List<Script>,
         }
     }
 
-    private fun getOutputFromScript(scriptPath: String, addressedToCallsign: String, remoteCallsign: String, message: String): String {
+    private fun getOutputFromScript(scriptPath: String, appRequest: AppRequest): String {
         val workingDir = File(scriptWorkingDir)
         return try {
-            val proc = ProcessBuilder(scriptPath, addressedToCallsign, remoteCallsign, message)
+            val objectMapper = ObjectMapper()
+            val jsonInputArguments = objectMapper.writeValueAsString(appRequest)
+            val proc = ProcessBuilder(scriptPath, jsonInputArguments)
                 .directory(workingDir)
                 .redirectOutput(ProcessBuilder.Redirect.PIPE)
                 .redirectError(ProcessBuilder.Redirect.PIPE)
@@ -100,7 +103,7 @@ class ScriptableApp(private val scriptableScripts: List<Script>,
             proc.waitFor(scriptTimeout, TimeUnit.SECONDS)
             proc.inputStream.bufferedReader().readText()
         } catch(e: IOException) {
-            logger.error(e.localizedMessage)
+            logger.error("Exception while executing script {} {}", scriptPath, e.localizedMessage)
             ""
         }
     }
