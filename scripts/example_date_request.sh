@@ -8,12 +8,16 @@
 # ACK_ONLY # Just Acknowledge the message
 # IGNORE # Ignore the message
 
+# The input to the script is JSON, for example:
+# '{"remoteCallsign":"VK3LIT-1","addressedToCallsign":"AB3CDE","content":"Hello friend!","location":null}'
+# This example script uses the jq command to decode the input JSON, and the sed command to remove " characters
+
 # This example responds to messages to 'MYCALL' sending static date
 
 #!/bin/sh
-MYCALL=$1
-THEIR_CALL=$2
-MESSAGE=$3
+MYCALL=`echo $1 | jq .addressedToCallsign | sed 's/"//g'`
+THEIR_CALL=`echo $1 | jq .remoteCallsign | sed 's/"//g'`
+MESSAGE=`echo $1 | jq .content | sed 's/"//g'`
 
 if [ $MYCALL = 'MYCALL' ]; then
   if [ $MESSAGE = 'date' ]; then

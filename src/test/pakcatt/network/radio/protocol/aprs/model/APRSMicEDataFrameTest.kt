@@ -5,12 +5,10 @@ import org.junit.Test
 import pakcatt.network.radio.kiss.model.ControlField
 import pakcatt.network.radio.kiss.model.ProtocolID
 import pakcatt.util.ByteUtils
-import pakcatt.util.StringUtils
 
 class APRSMicEDataFrameTest: TestCase() {
 
-    val byteUtils = ByteUtils()
-    val stringUtils = StringUtils()
+    private val byteUtils = ByteUtils()
 
     @Test
     fun testPopulateFromFrameData() {
@@ -34,9 +32,10 @@ class APRSMicEDataFrameTest: TestCase() {
         assertEquals(100, aprsMicEDataFrame.longitudeOffset())
         assertEquals("37.40.00S", aprsMicEDataFrame.latitudeDegreesMinutesHundredths())
         assertEquals("144.50.00E", aprsMicEDataFrame.longitudeDegreesMinutesHundredths())
-        assertEquals(0, aprsMicEDataFrame.speedKnots())
+        assertEquals(0.0, aprsMicEDataFrame.speedKnots())
         assertEquals(0.0, aprsMicEDataFrame.speedKmh())
         assertEquals(167, aprsMicEDataFrame.courseDegrees())
+        assertEquals("146.450MHz - Brad - vk3lit.com", aprsMicEDataFrame.statusText())
     }
 
 
@@ -62,9 +61,37 @@ class APRSMicEDataFrameTest: TestCase() {
         assertEquals(100, aprsMicEDataFrame.longitudeOffset())
         assertEquals("37.46.06S", aprsMicEDataFrame.latitudeDegreesMinutesHundredths())
         assertEquals("144.57.22E", aprsMicEDataFrame.longitudeDegreesMinutesHundredths())
-        assertEquals(20, aprsMicEDataFrame.speedKnots())
+        assertEquals(20.0, aprsMicEDataFrame.speedKnots())
         assertEquals(37.04002, aprsMicEDataFrame.speedKmh())
         assertEquals(98, aprsMicEDataFrame.courseDegrees())
+        assertEquals("146.450MHz Brad", aprsMicEDataFrame.statusText())
+    }
+
+    @Test
+    fun testAmbiguity() {
+        /*
+            Received frame:	 From: VK3LIT-2 to: SW34ZL-0 controlType: Via1: WIDE1-1 Via2: WIDE2-1 controlType: U_UNNUMBERED_INFORMATION Payload: `HFmSw>/`"6W}Just cruising ^:-}_"
+            Typed APRS Frame: Data Type: MIC_E_DATA From: VK3TKK-9 Lat: 37.34.00S Lon: 144.42.00E Ambiguity: 2 Speed: 27.780015km/h Knots: 15.0 Course: 191 Status: _" Payload: `HFmSw>/`"6W}Just cruising ^:-}_"
+        */
+        val messageFrameBytes = byteUtils.byteArrayFromInts(0x00, 0xa6, 0xae, 0x66, 0x68, 0xb4, 0x98, 0x60, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe4, 0xae, 0x92, 0x88, 0x8a, 0x62, 0x40, 0x62, 0xae, 0x92, 0x88, 0x8a, 0x64, 0x40, 0x63, 0x03, 0xf0, 0x60, 0x48, 0x46, 0x1c, 0x6d, 0x53, 0x77, 0x3e, 0x2f, 0x60, 0x22, 0x36, 0x57, 0x7d, 0x4a, 0x75, 0x73, 0x74, 0x20, 0x63, 0x72, 0x75, 0x69, 0x73, 0x69, 0x6e, 0x67, 0x20, 0x5e, 0x3a, 0x2d, 0x7d, 0x5f, 0x22, 0x0d)
+        val aprsMicEDataFrame = APRSMicEDataFrame()
+        aprsMicEDataFrame.populateFromFrameData(messageFrameBytes)
+
+        assertEquals(ControlField.U_UNNUMBERED_INFORMATION, aprsMicEDataFrame.controlField())
+        assertEquals(byteUtils.intToByte(ProtocolID.NO_LAYER_3.id), aprsMicEDataFrame.protocolID())
+        assertEquals(APRSDataType.MIC_E_DATA, aprsMicEDataFrame.aprsDataType())
+        assertEquals("VK3LIT-2", aprsMicEDataFrame.sourceCallsign())
+        assertEquals("WIDE1-1", aprsMicEDataFrame.repeaterCallsignOne())
+        assertEquals("WIDE2-1", aprsMicEDataFrame.repeaterCallsignTwo())
+        assertEquals(MIC_E.EN_ROUTE, aprsMicEDataFrame.micEType())
+        assertEquals(2, aprsMicEDataFrame.ambiguity())
+        assertEquals(100, aprsMicEDataFrame.longitudeOffset())
+        assertEquals("37.34.00S", aprsMicEDataFrame.latitudeDegreesMinutesHundredths())
+        assertEquals("144.42.00E", aprsMicEDataFrame.longitudeDegreesMinutesHundredths())
+        assertEquals(15.0, aprsMicEDataFrame.speedKnots())
+        assertEquals(27.780015, aprsMicEDataFrame.speedKmh())
+        assertEquals(191, aprsMicEDataFrame.courseDegrees())
+        assertEquals("Just cruising ^:-}", aprsMicEDataFrame.statusText())
     }
 
 }
