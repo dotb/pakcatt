@@ -8,7 +8,22 @@ enum class MIC_E {
     CUSTOM_1, CUSTOM_2, CUSTOM_3, CUSTOM_4, CUSTOM_5, CUSTOM_6, EMERGENCY, UNKNOWN
 }
 
+/* NOTE - the 101 APRS spec PDF is out of date.
+ * The telemetry was abandonded and instead
+ * the field is used for compabitility
+ * http://www.aprs.org/aprs12/mic-e-types.txt */
+enum class RadioCompatibility {
+    BEACON,
+    MESSAGE,
+    UNKNOWN
+}
+
 class APRSMicEDataFrame: APRSFrame() {
+
+    // These are manufacture / radio model codes found on the end of a status strings
+    private val radioModelCodes = listOf<String>("v", "=", "v", "=", "^", "Mv", "Mv", "_b", "_\"", "_#", "_$",
+        "_%", "_\\)", "_\\(", "_0", "_1", " X", "\\(5", "\\(8", "|3", "|4", "\\v", "/v", "^v", "\\*v", ":4", ":8", "~v",
+        "`v", "'v", "/v", "-v", ":v", ";v", "v")
 
     init {
         aprsDataType = APRSDataType.MIC_E_DATA
@@ -99,19 +114,60 @@ class APRSMicEDataFrame: APRSFrame() {
         return decodeDirectionDegrees(byteUtils.byteToInt(payloadData[5]), byteUtils.byteToInt(payloadData[6]))
     }
 
+    fun symbolCode(): String {
+        return stringUtils.convertByteToString(payloadData[7])
+    }
+
+    fun symbolTableId(): String {
+        return stringUtils.convertByteToString(payloadData[8])
+    }
+
+    /**
+     *  See page 54 of the APRS Spec on telemetry, but note it was abandoned
+     *  in favor of defining radio compatibility described here:
+     *  http://www.aprs.org/aprs12/mic-e-types.txt
+     *  If the 9th byte is:
+     *  ‘ = 0x60 = message compatible device
+     *  ' = 0x27 = beacon / location only compatible device
+     */
+    fun radioCompatibility(): RadioCompatibility {
+        return when (payloadData[9].toChar()) {
+            ' ' -> RadioCompatibility.BEACON
+            '\'' -> RadioCompatibility.BEACON
+            'T' -> RadioCompatibility.BEACON
+            '>' -> RadioCompatibility.MESSAGE
+            ']' -> RadioCompatibility.MESSAGE
+            '`' -> RadioCompatibility.MESSAGE
+            else -> RadioCompatibility.UNKNOWN
+        }
+    }
+
+    fun hasAltitude(): Boolean {
+        return payloadData[13].toChar() == '}'
+    }
+
     fun statusText(): String {
+
         val payloadString = payloadDataString()
-        return if (payloadString.contains("}")) {
-            val startIndex = payloadString.lastIndexOf("}") + 1
-            val endIndex = payloadString.length - 1
-            if (startIndex < endIndex) {
-                payloadString.substring(startIndex, endIndex)
-            } else {
-                ""
-            }
+        // The status text starts after the symbol bytes, if there isn't telemetry data then it starts after the telemetry data
+        var startIndex = when (hasAltitude()) {
+            true -> 14
+            else -> 10
+        }
+        val endIndex = payloadString.length - 1
+
+        var statusString = if (startIndex < endIndex) {
+            payloadString.substring(startIndex, endIndex)
         } else {
             ""
         }
+
+        // Clean up any manufacturer / radio model characters from the end of the string
+        for (modelStr in radioModelCodes) {
+            val regex = "${modelStr}\$".toRegex()
+            statusString = statusString.replace(regex, "")
+        }
+        return statusString
     }
 
     /**
@@ -135,6 +191,8 @@ class APRSMicEDataFrame: APRSFrame() {
         stringBuilder.append("Speed: ${speedKmh()}km/h ")
         stringBuilder.append("Knots: ${speedKnots()} ")
         stringBuilder.append("Course: ${courseDegrees()} ")
+        stringBuilder.append("Symbol: ${symbolCode()}${symbolTableId()} ")
+        stringBuilder.append("Compat: ${radioCompatibility()} ")
         stringBuilder.append("Status: ${statusText()}")
         if (payloadData.isNotEmpty()) {
             stringBuilder.append(" Payload: ${payloadDataString()}")
