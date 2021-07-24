@@ -143,11 +143,10 @@ class APRSMicEDataFrame: APRSFrame() {
     }
 
     fun hasAltitude(): Boolean {
-        return payloadData[13].toChar() == '}'
+        return payloadData.size >= 14 && payloadData[13].toChar() == '}'
     }
 
     fun statusText(): String {
-
         val payloadString = payloadDataString()
         // The status text starts after the symbol bytes, if there isn't telemetry data then it starts after the telemetry data
         var startIndex = when (hasAltitude()) {

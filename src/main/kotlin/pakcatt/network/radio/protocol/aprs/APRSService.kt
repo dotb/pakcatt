@@ -62,7 +62,8 @@ class APRSService(private val myCall: String,
             APRSDataType.MIC_E_DATA -> APRSMicEDataHandler(myCall, aprsQueue, appInterface, stringUtils).handleAPRSFrame(typedAPRSFrame)
             APRSDataType.MIC_E_DATA_OLD -> APRSMicEDataHandler(myCall, aprsQueue, appInterface, stringUtils).handleAPRSFrame(typedAPRSFrame)
             else -> {
-                logger.info("APRS frame typed {} is not yet able to be handled", typedAPRSFrame.aprsDataType())
+                logger.error("PakCatt does not yet support frame type: {}", typedAPRSFrame)
+                logger.error("APRS frame data {}", stringUtils.byteArrayToHex(typedAPRSFrame.packetData()))
             }
         }
     }
@@ -75,7 +76,8 @@ class APRSService(private val myCall: String,
             APRSDataType.MIC_E_DATA -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
             APRSDataType.MIC_E_DATA_OLD -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
             else -> {
-                logger.info("APRS frame typed {} is not yet supported", untypedAPRSFrame.aprsDataType())
+                logger.error("PakCatt does not yet handle frame: {}", untypedAPRSFrame)
+                logger.error("APRS frame data {}", stringUtils.byteArrayToHex(untypedAPRSFrame.packetData()))
                 untypedAPRSFrame
             }
         }

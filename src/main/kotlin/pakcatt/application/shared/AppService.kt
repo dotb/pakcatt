@@ -81,7 +81,7 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
             when (interactionResponse.responseType) {
                 ResponseType.ACK_WITH_TEXT -> finalInteractionResponse = interactionResponse
                 ResponseType.ACK_ONLY -> finalInteractionResponse = interactionResponse
-                ResponseType.IGNORE -> logger.trace("App isn't interested in responding.")
+                ResponseType.IGNORE -> logger.trace("App isn't interested in responding {}", app)
             }
         }
 
