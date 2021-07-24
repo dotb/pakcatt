@@ -1,5 +1,6 @@
 package pakcatt.network.radio.protocol.aprs.model
 
+import java.lang.NumberFormatException
 import java.lang.StringBuilder
 
 class APRSMessageFrame: APRSFrame() {
@@ -64,8 +65,8 @@ class APRSMessageFrame: APRSFrame() {
         // Update our local message variables
         val payloadString = payloadDataString()
         setMessageDestinationCallsignFromPayload(payloadString)
-        setMessageFromPayload(payloadString)
         setMessageNumberFromPayload(payloadString)
+        setMessageFromPayload(payloadString)
         return this
     }
 
@@ -94,19 +95,29 @@ class APRSMessageFrame: APRSFrame() {
     }
 
     private fun setMessageFromPayload(payloadDataString: String) {
-        var parsedMessage = payloadDataString.split(":")[2]
-        if (parsedMessage.contains("{")) {
-            parsedMessage = parsedMessage.split("{")[0]
+        var parsedMessage = stringUtils.removeEOLChars(payloadDataString)
+        // Find the second instance of ':' That's where the message starts
+        val startIndex = parsedMessage.indexOf(":", 1) + 1
+        parsedMessage = parsedMessage.substring(startIndex, parsedMessage.length)
+        // Remove the message ID, if there is one.
+        if (messageNumber > -1 && parsedMessage.contains("{")) {
+            val indexOfMessageId = parsedMessage.lastIndexOf("{")
+            parsedMessage = parsedMessage.substring(0, indexOfMessageId)
         }
         this.message = parsedMessage
     }
 
     private fun setMessageNumberFromPayload(payloadDataString: String) {
-        if (payloadDataString.contains("{")) {
-            var messageNumberString = payloadDataString().split("{")[1]
-            messageNumberString = stringUtils.removeEOLChars(messageNumberString)
-            this.messageNumber = messageNumberString.toInt()
-        } else {
+        try {
+            var cleanedPayloadString = stringUtils.removeEOLChars(payloadDataString)
+            if (cleanedPayloadString.contains("{")) {
+                val indexOfMessageId = cleanedPayloadString.lastIndexOf("{") + 1
+                var messageNumberString = payloadDataString().substring(indexOfMessageId, cleanedPayloadString.length)
+                this.messageNumber = messageNumberString.toInt()
+            } else {
+                this.messageNumber = -1
+            }
+        } catch (e: NumberFormatException) {
             this.messageNumber = -1
         }
     }
