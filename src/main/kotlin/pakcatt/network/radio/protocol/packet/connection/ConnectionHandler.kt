@@ -58,7 +58,7 @@ class ConnectionHandler(private val remoteCallsign: String,
                 }
             }
             else -> {
-                logger.debug("Not connected:\t {}", incomingFrame)
+                logger.trace("Not connected:\t {}", incomingFrame)
             }
         }
     }

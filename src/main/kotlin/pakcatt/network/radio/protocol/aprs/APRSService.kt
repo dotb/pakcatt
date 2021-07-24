@@ -64,8 +64,8 @@ class APRSService(private val appInterface: AppInterface,
         }
 
         if (!frameWasHandled) {
-            logger.error("PakCatt does not yet support frame type: {}", typedAPRSFrame)
-            logger.error("APRS frame data: {}", stringUtils.byteArrayToHex(typedAPRSFrame.packetData()))
+            logger.trace("PakCatt does not yet support frame type: {}", typedAPRSFrame)
+            logger.trace("APRS frame data:\t {}", stringUtils.byteArrayToHex(typedAPRSFrame.packetData()))
         }
     }
 
@@ -79,7 +79,7 @@ class APRSService(private val appInterface: AppInterface,
             APRSDataType.STATUS -> APRSStatusFrame().populateFromKissFrame(untypedAPRSFrame)
             else -> {
                 logger.error("PakCatt does not yet handle frame: {}", untypedAPRSFrame)
-                logger.error("APRS frame data: {}", stringUtils.byteArrayToHex(untypedAPRSFrame.packetData()))
+                logger.error("APRS frame data:\t {}", stringUtils.byteArrayToHex(untypedAPRSFrame.packetData()))
                 untypedAPRSFrame
             }
         }

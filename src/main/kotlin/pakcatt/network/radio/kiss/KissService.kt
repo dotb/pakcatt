@@ -69,7 +69,7 @@ class KissService(val tncConnection: TNC,
     }
 
     private fun handleNewFrame(frame: ByteArray) {
-        logger.trace("Received bytes:\t {}", stringUtils.byteArrayToHex(frame))
+        logger.debug("Received bytes:\t {}", stringUtils.byteArrayToHex(frame))
         if (frame.size >= KissFrame.SIZE_MIN) {
             val kissFrame = KissFrameStandard()
             kissFrame.populateFromFrameData(frame)
