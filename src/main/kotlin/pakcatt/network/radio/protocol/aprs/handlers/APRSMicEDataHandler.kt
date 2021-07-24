@@ -6,10 +6,7 @@ import pakcatt.application.shared.AppInterface
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.Location
 import pakcatt.application.shared.model.ResponseType
-import pakcatt.network.radio.protocol.aprs.model.APRSDataType
-import pakcatt.network.radio.protocol.aprs.model.APRSFrame
-import pakcatt.network.radio.protocol.aprs.model.APRSMicEDataFrame
-import pakcatt.network.radio.protocol.aprs.model.APRSQueue
+import pakcatt.network.radio.protocol.aprs.model.*
 import pakcatt.util.StringUtils
 
 @Component
@@ -26,7 +23,6 @@ class APRSMicEDataHandler(myCall: String,
                       APRSDataType.MIC_E_DATA,
                       APRSDataType.MIC_E_DATA_OLD).contains(aprsDataType)
     }
-
 
     override fun handleAPRSFrame(aprsFrame: APRSFrame) {
         val micEDataFrame = aprsFrame as? APRSMicEDataFrame
@@ -45,8 +41,9 @@ class APRSMicEDataHandler(myCall: String,
     }
 
     private fun constructAppRequest(micEDataFrame: APRSMicEDataFrame): AppRequest {
+        val remoteStationCanReceiveResponse = micEDataFrame.radioCompatibility() == RadioCompatibility.MESSAGE
         val location = Location(micEDataFrame.latitudeDegreesMinutesHundredths(), micEDataFrame.longitudeDegreesMinutesHundredthsWithAmbiguity(), micEDataFrame.ambiguity(), micEDataFrame.speedKmh(), micEDataFrame.speedKnots(), micEDataFrame.courseDegrees())
-        return AppRequest(micEDataFrame.sourceCallsign(), micEDataFrame.destCallsign(), micEDataFrame.statusText(), location)
+        return AppRequest(micEDataFrame.sourceCallsign(), micEDataFrame.destCallsign(), micEDataFrame.statusText(), remoteStationCanReceiveResponse, location)
     }
 
 }

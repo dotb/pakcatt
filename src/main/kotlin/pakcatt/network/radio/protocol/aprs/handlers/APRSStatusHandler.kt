@@ -5,10 +5,7 @@ import org.springframework.stereotype.Component
 import pakcatt.application.shared.AppInterface
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.ResponseType
-import pakcatt.network.radio.protocol.aprs.model.APRSDataType
-import pakcatt.network.radio.protocol.aprs.model.APRSFrame
-import pakcatt.network.radio.protocol.aprs.model.APRSQueue
-import pakcatt.network.radio.protocol.aprs.model.APRSStatusFrame
+import pakcatt.network.radio.protocol.aprs.model.*
 import pakcatt.util.StringUtils
 
 @Component

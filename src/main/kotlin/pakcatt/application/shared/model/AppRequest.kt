@@ -1,6 +1,9 @@
 package pakcatt.application.shared.model
 
-data class AppRequest(public val remoteCallsign: String,
-                 public val addressedToCallsign: String,
-                 public val content: String,
-                 public val location: Location? = null)
+import pakcatt.network.radio.protocol.aprs.model.APRSFrame
+
+data class AppRequest(var remoteCallsign: String,
+                      var addressedToCallsign: String,
+                      var content: String,
+                      var remoteStationCanReceiveResponse: Boolean = false,
+                      var location: Location? = null)
