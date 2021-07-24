@@ -8,16 +8,15 @@ import pakcatt.network.radio.kiss.model.KissFrame
 import pakcatt.network.radio.kiss.model.ProtocolID
 import pakcatt.network.radio.kiss.queue.DeliveryQueue
 import pakcatt.application.shared.model.DeliveryType
-import pakcatt.network.radio.protocol.aprs.handlers.APRSMessageHandler
-import pakcatt.network.radio.protocol.aprs.handlers.APRSMicEDataHandler
+import pakcatt.network.radio.protocol.aprs.handlers.APRSHandler
 import pakcatt.network.radio.protocol.aprs.model.*
 import pakcatt.network.radio.protocol.shared.ProtocolService
 import pakcatt.util.StringUtils
 
 @Service
-class APRSService(private val myCall: String,
-                  private val appInterface: AppInterface,
-                  private val aprsQueue: APRSQueue): ProtocolService() {
+class APRSService(private val appInterface: AppInterface,
+                  private val aprsQueue: APRSQueue,
+                  private val aprsFrameHandlers: List<APRSHandler>): ProtocolService() {
 
     private val logger = LoggerFactory.getLogger(APRSService::class.java)
     private val stringUtils = StringUtils()
@@ -55,16 +54,18 @@ class APRSService(private val myCall: String,
     }
 
     private fun handleTypedAPRSFrame(typedAPRSFrame: APRSFrame) {
-        when (typedAPRSFrame.aprsDataType()) {
-            APRSDataType.MESSAGE -> APRSMessageHandler(myCall, aprsQueue, appInterface, stringUtils).handleAPRSFrame(typedAPRSFrame)
-            APRSDataType.MIC_E -> APRSMicEDataHandler(myCall, aprsQueue, appInterface, stringUtils).handleAPRSFrame(typedAPRSFrame)
-            APRSDataType.MIC_E_OLD -> APRSMicEDataHandler(myCall, aprsQueue, appInterface, stringUtils).handleAPRSFrame(typedAPRSFrame)
-            APRSDataType.MIC_E_DATA -> APRSMicEDataHandler(myCall, aprsQueue, appInterface, stringUtils).handleAPRSFrame(typedAPRSFrame)
-            APRSDataType.MIC_E_DATA_OLD -> APRSMicEDataHandler(myCall, aprsQueue, appInterface, stringUtils).handleAPRSFrame(typedAPRSFrame)
-            else -> {
-                logger.error("PakCatt does not yet support frame type: {}", typedAPRSFrame)
-                logger.error("APRS frame data: {}", stringUtils.byteArrayToHex(typedAPRSFrame.packetData()))
+        // Find a handler for this frame
+        var frameWasHandled = false
+        for (aprsFrameHandler in aprsFrameHandlers) {
+            if (aprsFrameHandler.isAbleToSupport(typedAPRSFrame.aprsDataType())) {
+                aprsFrameHandler.handleAPRSFrame(typedAPRSFrame)
+                frameWasHandled = true
             }
+        }
+
+        if (!frameWasHandled) {
+            logger.error("PakCatt does not yet support frame type: {}", typedAPRSFrame)
+            logger.error("APRS frame data: {}", stringUtils.byteArrayToHex(typedAPRSFrame.packetData()))
         }
     }
 
@@ -75,6 +76,7 @@ class APRSService(private val myCall: String,
             APRSDataType.MIC_E_OLD -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
             APRSDataType.MIC_E_DATA -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
             APRSDataType.MIC_E_DATA_OLD -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
+            APRSDataType.STATUS -> APRSStatusFrame().populateFromKissFrame(untypedAPRSFrame)
             else -> {
                 logger.error("PakCatt does not yet handle frame: {}", untypedAPRSFrame)
                 logger.error("APRS frame data: {}", stringUtils.byteArrayToHex(untypedAPRSFrame.packetData()))

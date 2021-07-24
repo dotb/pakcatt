@@ -1,20 +1,27 @@
 package pakcatt.network.radio.protocol.aprs.handlers
 
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import pakcatt.application.shared.AppInterface
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.ResponseType
+import pakcatt.network.radio.protocol.aprs.model.APRSDataType
 import pakcatt.network.radio.protocol.aprs.model.APRSFrame
 import pakcatt.network.radio.protocol.aprs.model.APRSMessageFrame
 import pakcatt.network.radio.protocol.aprs.model.APRSQueue
 import pakcatt.util.StringUtils
 
+@Component
 class APRSMessageHandler(myCall: String,
                          aprsQueue: APRSQueue,
                          appInterface: AppInterface,
                          stringUtils: StringUtils): APRSHandler(myCall, aprsQueue, appInterface, stringUtils) {
 
     private val logger = LoggerFactory.getLogger(APRSMessageHandler::class.java)
+
+    override fun isAbleToSupport(aprsDataType: APRSDataType): Boolean {
+        return aprsDataType == APRSDataType.MESSAGE
+    }
 
     override fun handleAPRSFrame(aprsFrame: APRSFrame) {
         val aprsMessageFrame = aprsFrame as? APRSMessageFrame
