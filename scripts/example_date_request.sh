@@ -17,7 +17,7 @@
 #!/bin/sh
 MYCALL=`echo $1 | jq .addressedToCallsign | sed 's/"//g'`
 THEIR_CALL=`echo $1 | jq .remoteCallsign | sed 's/"//g'`
-MESSAGE=`echo $1 | jq .content | sed 's/"//g'`
+MESSAGE=`echo $1 | jq .message | sed 's/"//g'`
 
 if [ $MYCALL = 'MYCALL' ]; then
   if [ $MESSAGE = 'date' ]; then

@@ -93,4 +93,34 @@ class APRSMicEDataFrameTest: TestCase() {
         assertEquals("Just cruising ^:-}", aprsMicEDataFrame.statusText())
     }
 
+    @Test
+    fun testLatLonConversionToDegrees() {
+        /*
+            Received bytes:	 00 88 90 8a 6c a0 6c 60 ac 96 66 98 92 a8 e4 ae 92 88 8a 62 40 62 ae 92 88 8a 64 40 63 03 f0 60 48 55 32 6e 20 7e 3e 2f 60 22 34 4c 7d 31 34 36 2e 34 35 30 4d 48 7a 20 42 72 61 64 5f 31 0d
+            Received frame:	 From: VK3LIT-2 to: DHE6P6-0 controlType: Via1: WIDE1-1 Via2: WIDE2-1 controlType: U_UNNUMBERED_INFORMATION Payload: `HU2n ~>/`"4L}146.450MHz Brad_1
+            Decoded data:	 `HU2n ~>/`"4L}146.450MHz Brad_1
+        */
+        val messageFrameBytes = byteUtils.byteArrayFromInts(0x00, 0x88, 0x90, 0x8a, 0x6c, 0xa0, 0x6c, 0x60, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe4, 0xae, 0x92, 0x88, 0x8a, 0x62, 0x40, 0x62, 0xae, 0x92, 0x88, 0x8a, 0x64, 0x40, 0x63, 0x03, 0xf0, 0x60, 0x48, 0x55, 0x32, 0x6e, 0x20, 0x7e, 0x3e, 0x2f, 0x60, 0x22, 0x34, 0x4c, 0x7d, 0x31, 0x34, 0x36, 0x2e, 0x34, 0x35, 0x30, 0x4d, 0x48, 0x7a, 0x20, 0x42, 0x72, 0x61, 0x64, 0x5f, 0x31, 0x0d)
+        val aprsMicEDataFrame = APRSMicEDataFrame()
+        aprsMicEDataFrame.populateFromFrameData(messageFrameBytes)
+
+        assertEquals(ControlField.U_UNNUMBERED_INFORMATION, aprsMicEDataFrame.controlField())
+        assertEquals(byteUtils.intToByte(ProtocolID.NO_LAYER_3.id), aprsMicEDataFrame.protocolID())
+        assertEquals(APRSDataType.MIC_E_DATA, aprsMicEDataFrame.aprsDataType())
+        assertEquals("VK3LIT-2", aprsMicEDataFrame.sourceCallsign())
+        assertEquals("WIDE1-1", aprsMicEDataFrame.repeaterCallsignOne())
+        assertEquals("WIDE2-1", aprsMicEDataFrame.repeaterCallsignTwo())
+        assertEquals(MIC_E.CUSTOM_0, aprsMicEDataFrame.micEType())
+        assertEquals(0, aprsMicEDataFrame.ambiguity())
+        assertEquals(100, aprsMicEDataFrame.longitudeOffset())
+        assertEquals("37.46.06S", aprsMicEDataFrame.latitudeDegreesMinutesHundredths())
+        assertEquals("144.57.22E", aprsMicEDataFrame.longitudeDegreesMinutesHundredths())
+        assert(aprsMicEDataFrame.latitudeDecimalDegreesNorth() - -37.767666667 < 0.000001)
+        assert(144.953666667 - aprsMicEDataFrame.longitudeDecimalDegreesEast() < 0.000001)
+        assertEquals(20.0, aprsMicEDataFrame.speedKnots())
+        assertEquals(37.04002, aprsMicEDataFrame.speedKmh())
+        assertEquals(98, aprsMicEDataFrame.courseDegrees())
+        assertEquals("146.450MHz Brad", aprsMicEDataFrame.statusText())
+    }
+
 }

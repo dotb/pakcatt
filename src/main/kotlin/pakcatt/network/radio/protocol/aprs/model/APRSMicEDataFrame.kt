@@ -29,6 +29,30 @@ class APRSMicEDataFrame: APRSFrame() {
         aprsDataType = APRSDataType.MIC_E_DATA
     }
 
+    fun latitudeDecimalDegreesNorth(): Double {
+        val degrees = latitudeDegrees().toDouble()
+        val minutes = latitudeMinutes().toDouble()
+        val hundredthsOfAMinute = latitudeHundredths().toDouble()
+        val latDegrees = degrees + (minutes/60) + (hundredthsOfAMinute/100/60)
+        return if (latitudeNorthSouth() == "S") {
+            0 - latDegrees
+        } else {
+            latDegrees
+        }
+    }
+
+    fun longitudeDecimalDegreesEast(): Double {
+        val degrees = longitudeDegrees().toDouble()
+        val minutes = longitudeMinutes().toDouble()
+        val hundredthsOfAMinute = longitudeHundredths().toDouble()
+        val lonDegrees = degrees + (minutes/60) + (hundredthsOfAMinute/100/60)
+        return if (longitudeWestEast() == "W") {
+            0 - lonDegrees
+        } else {
+            lonDegrees
+        }
+    }
+
     fun latitudeDegreesMinutesHundredths(): String {
         return latitudeDegreesMinutesHundredthsWithAmbiguity().replace("?", "0")
     }
@@ -184,8 +208,15 @@ class APRSMicEDataFrame: APRSFrame() {
         val stringBuilder = StringBuilder()
         stringBuilder.append("Data Type: $aprsDataType ")
         stringBuilder.append("From: ${sourceCallsign()} ")
-        stringBuilder.append("Lat: ${latitudeDegreesMinutesHundredths()} ")
-        stringBuilder.append("Lon: ${longitudeDegreesMinutesHundredths()} ")
+        if (repeaterCallsignOne.isNotEmpty()) {
+            stringBuilder.append("Via1: ${repeaterCallsignOne()} ")
+        }
+
+        if (repeaterCallsignTwo.isNotEmpty()) {
+            stringBuilder.append("Via2: ${repeaterCallsignTwo()} ")
+        }
+        stringBuilder.append("Lat: ${latitudeDecimalDegreesNorth()} ")
+        stringBuilder.append("Lon: ${longitudeDecimalDegreesEast()} ")
         stringBuilder.append("Ambiguity: ${ambiguity()} ")
         stringBuilder.append("Speed: ${speedKmh()}km/h ")
         stringBuilder.append("Knots: ${speedKnots()} ")
