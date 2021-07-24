@@ -73,6 +73,13 @@ open class APRSFrame: KissFrameStandard() {
 
         stringBuilder.append("Data Type: $aprsDataType ")
         stringBuilder.append("From: ${sourceCallsign()} ")
+        if (repeaterCallsignOne.isNotEmpty()) {
+            stringBuilder.append("Via1: ${repeaterCallsignOne()} ")
+        }
+
+        if (repeaterCallsignTwo.isNotEmpty()) {
+            stringBuilder.append("Via2: ${repeaterCallsignTwo()} ")
+        }
         if (payloadData.isNotEmpty()) {
             stringBuilder.append("Payload: ${payloadDataString()}")
         }

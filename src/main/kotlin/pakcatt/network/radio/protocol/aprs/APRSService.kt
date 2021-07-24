@@ -78,7 +78,7 @@ class APRSService(private val appInterface: AppInterface,
             APRSDataType.MIC_E_DATA_OLD -> APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)
             APRSDataType.STATUS -> APRSStatusFrame().populateFromKissFrame(untypedAPRSFrame)
             else -> {
-                logger.error("PakCatt does not yet handle frame: {}", untypedAPRSFrame)
+                logger.error("PakCatt does not yet understand {}", untypedAPRSFrame)
                 logger.error("APRS frame data:\t {}", stringUtils.byteArrayToHex(untypedAPRSFrame.packetData()))
                 untypedAPRSFrame
             }

@@ -13,7 +13,7 @@ class EditSubjectApp(private val mailMessage: MailMessage, private val mailboxSt
     }
 
     override fun handleReceivedMessage(request: AppRequest): AppResponse {
-        mailMessage.subject = stringUtils.removeEOLChars(request.content)
+        mailMessage.subject = stringUtils.removeEOLChars(request.message)
         return AppResponse.sendText("Compose your message and finish with . on a line of it's own.", EditBodyApp(mailMessage, mailboxStore))
     }
 

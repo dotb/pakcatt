@@ -71,7 +71,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     private fun readMessage(request: AppRequest): AppResponse {
         val userCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         var message: MailMessage? = null
-        val messageNumber = parseIntArgument(request.content)
+        val messageNumber = parseIntArgument(request.message)
         if (null != messageNumber) {
             message = mailboxStore.getMessage(userCallsign, messageNumber)
         }
@@ -88,7 +88,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun sendMessage(request: AppRequest): AppResponse {
-        val arg = parseStringArgument(request.content, "")
+        val arg = parseStringArgument(request.message, "")
         val fromCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         val toCallsign = stringUtils.formatCallsignRemoveSSID(arg)
         return AppResponse.sendText("", EditSubjectApp(MailMessage(fromCallsign, toCallsign), mailboxStore))
@@ -97,7 +97,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     private fun deleteMessage(request: AppRequest): AppResponse {
         var message: MailMessage? = null
         val userCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
-        val messageNumber = parseIntArgument(request.content)
+        val messageNumber = parseIntArgument(request.message)
         if (null != messageNumber) {
             message = mailboxStore.deleteMessage(userCallsign, messageNumber)
         }

@@ -43,7 +43,12 @@ class APRSMicEDataHandler(myCall: String,
     private fun constructAppRequest(micEDataFrame: APRSMicEDataFrame): AppRequest {
         val remoteStationCanReceiveResponse = micEDataFrame.radioCompatibility() == RadioCompatibility.MESSAGE
         val location = Location(micEDataFrame.latitudeDegreesMinutesHundredths(), micEDataFrame.longitudeDegreesMinutesHundredthsWithAmbiguity(), micEDataFrame.ambiguity(), micEDataFrame.speedKmh(), micEDataFrame.speedKnots(), micEDataFrame.courseDegrees())
-        return AppRequest(micEDataFrame.sourceCallsign(), micEDataFrame.destCallsign(), micEDataFrame.statusText(), remoteStationCanReceiveResponse, location)
+        return AppRequest(micEDataFrame.sourceCallsign(),
+                          micEDataFrame.destCallsign(),
+                          micEDataFrame.statusText(),
+                          micEDataFrame.repeaterCallsignOne(),
+                          micEDataFrame.repeaterCallsignTwo(),
+                          remoteStationCanReceiveResponse, location)
     }
 
 }

@@ -80,6 +80,13 @@ class APRSMessageFrame: APRSFrame() {
         stringBuilder.append("Data Type: $aprsDataType ")
         stringBuilder.append("From: ${sourceCallsign()} ")
         stringBuilder.append("To: ${messageDestinationCallsign()} ")
+        if (repeaterCallsignOne.isNotEmpty()) {
+            stringBuilder.append("Via1: ${repeaterCallsignOne()} ")
+        }
+
+        if (repeaterCallsignTwo.isNotEmpty()) {
+            stringBuilder.append("Via2: ${repeaterCallsignTwo()} ")
+        }
         stringBuilder.append("No: ${messageNumber()} ")
         stringBuilder.append("Message: ${message()} ")
         if (payloadData.isNotEmpty()) {

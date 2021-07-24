@@ -130,6 +130,13 @@ class APRSStatusFrame: APRSFrame() {
         val location = maidenheadGridLocator()
         stringBuilder.append("Data Type: $aprsDataType ")
         stringBuilder.append("From: ${sourceCallsign()} ")
+        if (repeaterCallsignOne.isNotEmpty()) {
+            stringBuilder.append("Via1: ${repeaterCallsignOne()} ")
+        }
+
+        if (repeaterCallsignTwo.isNotEmpty()) {
+            stringBuilder.append("Via2: ${repeaterCallsignTwo()} ")
+        }
         stringBuilder.append("Timestamp: ${dateTimeStamp()} ")
         if (null != location) {
             stringBuilder.append("Location: ${maidenheadGridLocator()} ")

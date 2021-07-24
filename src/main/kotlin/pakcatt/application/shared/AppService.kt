@@ -53,7 +53,7 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
     override fun getResponseForReceivedMessage(request: AppRequest): AppResponse {
         // Sometimes a TNC will send only \r, we rewrite these to \n\r
         var cleanedRequest = request
-        cleanedRequest.content = stringUtils.fixEndOfLineCharacters(cleanedRequest.content)
+        cleanedRequest.message = stringUtils.fixEndOfLineCharacters(cleanedRequest.message)
         // Get this user's context
         val userContext = contextForConversation(cleanedRequest.remoteCallsign, cleanedRequest.addressedToCallsign)
         // Get the interaction response from the app

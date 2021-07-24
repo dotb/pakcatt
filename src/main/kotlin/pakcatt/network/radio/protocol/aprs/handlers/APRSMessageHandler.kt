@@ -29,7 +29,12 @@ class APRSMessageHandler(myCall: String,
             aprsMessageFrame.messageDestinationCallsign() == stringUtils.formatCallsignEnsureSSID(myCall)) {
 
                 // Find an app that will handle this message
-                val appRequest = AppRequest(aprsMessageFrame.messageSourceCallsign(), aprsMessageFrame.messageDestinationCallsign(), aprsMessageFrame.message(), true)
+                val appRequest = AppRequest(aprsMessageFrame.messageSourceCallsign(),
+                                            aprsMessageFrame.messageDestinationCallsign(),
+                                            aprsFrame.repeaterCallsignOne(),
+                                            aprsFrame.repeaterCallsignTwo(),
+                                            aprsMessageFrame.message(),
+                                            true)
                 val appResponse = appInterface.getResponseForReceivedMessage(appRequest)
 
                 // Send an acknowledgement message if a message number was sent to us

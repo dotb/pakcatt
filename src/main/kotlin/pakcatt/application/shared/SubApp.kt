@@ -23,7 +23,7 @@ abstract class SubApp {
     }
 
     fun handleRequestWithRegisteredCommand(request: AppRequest): AppResponse {
-        val commandText = parseCommand(request.content)
+        val commandText = parseCommand(request.message)
         if (commandText.isEmpty()) {
             // An empty request should return only the prompt / new line
             return AppResponse.sendText("")
