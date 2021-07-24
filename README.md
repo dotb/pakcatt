@@ -23,6 +23,8 @@ PakCatt is in its early days! Here are a few of the features it currently suppor
 
 - **AX.25 implementation**, or at least a good start of it ;-)
 
+- **APRS® frames for** Messages, MIC-E, and Status frames.
+
 ## Build instructions
 You'll need:
 
@@ -49,3 +51,5 @@ $ ./build.sh
 
 ## References
 The AX.25 implementation is based on the excellent specification for AX.25 version 2.2, by NJ7P, N7LEM, N7OO, N7CUU and WD5IVD. It is published by TAPR and can be found on [their website](https://www.tapr.org/pdf/AX25.2.2.pdf).
+
+APRS® is a registered trademark of Bob Bruninga
