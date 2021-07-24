@@ -38,7 +38,6 @@ class APRSMicEDataFrameTest: TestCase() {
         assertEquals("146.450MHz - Brad - vk3lit.com", aprsMicEDataFrame.statusText())
     }
 
-
     @Test
     fun testSpeedAndDirection() {
         /*

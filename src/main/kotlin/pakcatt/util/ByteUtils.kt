@@ -130,4 +130,15 @@ class ByteUtils {
         return byteArray
     }
 
+    fun byteArrayFromStringInts(intString: String): ByteArray {
+        val stringInts = intString.split(" ")
+        val byteArray = ByteArray(stringInts.size)
+        for ((index, intStr) in stringInts.withIndex()) {
+            val hexInt = intStr.toInt(16)
+            val byte = intToByte(hexInt)
+            byteArray[index] = byte
+        }
+        return byteArray
+    }
+
 }
