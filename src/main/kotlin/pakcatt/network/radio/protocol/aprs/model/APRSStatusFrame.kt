@@ -139,7 +139,7 @@ class APRSStatusFrame: APRSFrame() {
         }
         stringBuilder.append("Timestamp: ${dateTimeStamp()} ")
         if (null != location) {
-            stringBuilder.append("Location: ${maidenheadGridLocator()} ")
+            stringBuilder.append("Grid: ${maidenheadGridLocator()} ")
             stringBuilder.append("Symbol: ${symbolCode()}${symbolTableId()} ")
         }
         if (null != headingAndERP) {
