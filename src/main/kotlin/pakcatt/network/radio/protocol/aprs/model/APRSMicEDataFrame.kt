@@ -30,9 +30,9 @@ class APRSMicEDataFrame: APRSFrame() {
     }
 
     fun latitudeDecimalDegreesNorth(): Double {
-        val degrees = latitudeDegrees().toDouble()
-        val minutes = latitudeMinutes().toDouble()
-        val hundredthsOfAMinute = latitudeHundredths().toDouble()
+        val degrees = latitudeDegrees().replace("?", "0").toDouble()
+        val minutes = latitudeMinutes().replace("?", "0").toDouble()
+        val hundredthsOfAMinute = latitudeHundredths().replace("?", "0").toDouble()
         val latDegrees = degrees + (minutes/60) + (hundredthsOfAMinute/100/60)
         return if (latitudeNorthSouth() == "S") {
             0 - latDegrees
@@ -42,9 +42,9 @@ class APRSMicEDataFrame: APRSFrame() {
     }
 
     fun longitudeDecimalDegreesEast(): Double {
-        val degrees = longitudeDegrees().toDouble()
-        val minutes = longitudeMinutes().toDouble()
-        val hundredthsOfAMinute = longitudeHundredths().toDouble()
+        val degrees = longitudeDegrees().replace("?", "0").toDouble()
+        val minutes = longitudeMinutes().replace("?", "0").toDouble()
+        val hundredthsOfAMinute = longitudeHundredths().replace("?", "0").toDouble()
         val lonDegrees = degrees + (minutes/60) + (hundredthsOfAMinute/100/60)
         return if (longitudeWestEast() == "W") {
             0 - lonDegrees

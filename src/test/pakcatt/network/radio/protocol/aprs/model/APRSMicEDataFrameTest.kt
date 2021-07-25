@@ -123,4 +123,31 @@ class APRSMicEDataFrameTest: TestCase() {
         assertEquals("146.450MHz Brad", aprsMicEDataFrame.statusText())
     }
 
+    @Test
+    fun testParsingOfLocationToDecimalDegreesWithAmbiguity() {
+        /*
+            Fix for java.lang.NumberFormatException: For input string: "??"
+            Received bytes:	 00 a6 ae 66 6a b4 98 60 ac 96 66 a8 96 96 f2 ac 96 66 a4 9a 88 e2 ac 96 64 ac a4 9e e3 03 f0 60 48 46 1c 6e 54 27 3e 2f 60 22 36 62 7d 4a 75 73 74 20 63 72 75 69 73 69 6e 67 20 5e 3a 2d 7d 5f 22 0d
+            Received frame:	 From: VK3TKK-9 to: SW35ZL-0 controlType: Via1: VK3RMD-1 Via2: VK2VRO-1 controlType: U_UNNUMBERED_INFORMATION Payload: `HFnT'>/`"6b}Just cruising ^:-}_"
+        */
+        val messageFrameBytes = byteUtils.byteArrayFromStringInts("00 a6 ae 66 6a b4 98 60 ac 96 66 a8 96 96 f2 ac 96 66 a4 9a 88 e2 ac 96 64 ac a4 9e e3 03 f0 60 48 46 1c 6e 54 27 3e 2f 60 22 36 62 7d 4a 75 73 74 20 63 72 75 69 73 69 6e 67 20 5e 3a 2d 7d 5f 22 0d")
+        val aprsMicEDataFrame = APRSMicEDataFrame()
+        aprsMicEDataFrame.populateFromFrameData(messageFrameBytes)
+
+        assertEquals(ControlField.U_UNNUMBERED_INFORMATION, aprsMicEDataFrame.controlField())
+        assertEquals(byteUtils.intToByte(ProtocolID.NO_LAYER_3.id), aprsMicEDataFrame.protocolID())
+        assertEquals(APRSDataType.MIC_E_DATA, aprsMicEDataFrame.aprsDataType())
+        assertEquals("VK3TKK-9", aprsMicEDataFrame.sourceCallsign())
+        assertEquals("VK3RMD-1", aprsMicEDataFrame.repeaterCallsignOne())
+        assertEquals("VK2VRO-1", aprsMicEDataFrame.repeaterCallsignTwo())
+        assertEquals(MIC_E.EN_ROUTE, aprsMicEDataFrame.micEType())
+        assertEquals(2, aprsMicEDataFrame.ambiguity())
+        assert(aprsMicEDataFrame.latitudeDecimalDegreesNorth() - -37.583333333333336 < 0.000001)
+        assert(144.7 - aprsMicEDataFrame.longitudeDecimalDegreesEast() < 0.000001)
+        assertEquals(25.0, aprsMicEDataFrame.speedKnots())
+        assertEquals(46.300025, aprsMicEDataFrame.speedKmh())
+        assertEquals(211, aprsMicEDataFrame.courseDegrees())
+        assertEquals("Just cruising ^:-}", aprsMicEDataFrame.statusText())
+    }
+
 }
