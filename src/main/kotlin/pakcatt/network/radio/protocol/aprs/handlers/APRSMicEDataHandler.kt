@@ -48,6 +48,7 @@ class APRSMicEDataHandler(myCall: String,
                                 micEDataFrame.speedKmh(), micEDataFrame.speedKnots(),
                                 micEDataFrame.courseDegrees())
         return AppRequest(micEDataFrame.sourceCallsign(),
+                          stringUtils.formatCallsignRemoveSSID(micEDataFrame.sourceCallsign()),
                           micEDataFrame.destCallsign(),
                           micEDataFrame.statusText(),
                           micEDataFrame.repeaterCallsignOne(),

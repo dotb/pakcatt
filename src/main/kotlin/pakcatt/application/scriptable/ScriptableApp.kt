@@ -78,9 +78,16 @@ class ScriptableApp(private val scriptableScripts: List<Script>,
             return when (responseTypeString) {
                 "ACK_WITH_TEXT" -> AppResponse.sendText(chompedString.substring(14))
                 "ACK_ONLY" -> AppResponse.acknowledgeOnly()
-                "IGNORE" -> AppResponse.ignore()
+                "IGNORE" -> {
+                    // Log any debug text after the IGNORE instruction
+                    if (chompedString.contains(" ")) {
+                        val startLog = chompedString.indexOf(" ") + 1
+                        logger.debug("Script logged: {}", chompedString.substring(startLog, chompedString.length))
+                    }
+                    AppResponse.ignore()
+                }
                 else -> {
-                    logger.error("Script returned an invalid response type: $responseTypeString")
+                    logger.error("Script returned an invalid response type: $chompedString")
                     AppResponse.ignore()
                 }
             }
@@ -101,6 +108,10 @@ class ScriptableApp(private val scriptableScripts: List<Script>,
                 .redirectError(ProcessBuilder.Redirect.PIPE)
                 .start()
             proc.waitFor(scriptTimeout, TimeUnit.SECONDS)
+            val error = proc.errorStream.bufferedReader().readText()
+            if (error.isNotEmpty()) {
+                logger.error("While executing script: {} error: {}", scriptPath, error)
+            }
             proc.inputStream.bufferedReader().readText()
         } catch(e: IOException) {
             logger.error("Exception while executing script {} {}", scriptPath, e.localizedMessage)

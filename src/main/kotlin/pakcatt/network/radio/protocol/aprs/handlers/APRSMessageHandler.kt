@@ -30,6 +30,7 @@ class APRSMessageHandler(myCall: String,
 
                 // Find an app that will handle this message
                 val appRequest = AppRequest(aprsMessageFrame.messageSourceCallsign(),
+                                            stringUtils.formatCallsignRemoveSSID(aprsMessageFrame.messageSourceCallsign()),
                                             aprsMessageFrame.messageDestinationCallsign(),
                                             aprsFrame.repeaterCallsignOne(),
                                             aprsFrame.repeaterCallsignTwo(),

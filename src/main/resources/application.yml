@@ -15,6 +15,11 @@ pakcatt:
         - name: 'Example Date'
           pathConnect: 'scripts/example_date_connect.sh'
           pathRequest: 'scripts/example_date_request.sh'
+#       This script is an example that sends messages to stations that beacon from pre-defined locations
+#       See location_messages_wrapper.sh and location_messages.kts
+#        - name: 'Location messages'
+#          pathConnect: 'scripts/location_messages_wrapper.sh'
+#          pathRequest: 'scripts/location_messages_wrapper.sh'
 
   ## Serial port / TNC configuration
   serial-port-path: /dev/<YOUR TNC SERIAL PATH>

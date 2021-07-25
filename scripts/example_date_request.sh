@@ -1,4 +1,4 @@
-
+#!/bin/sh
 # This script is called when a request is received with a message
 # It should respond with the following format:
 # RESPONSE_TYPE [MESSAGE]
@@ -14,7 +14,6 @@
 
 # This example responds to messages to 'MYCALL' sending static date
 
-#!/bin/sh
 MYCALL=`echo $1 | jq .addressedToCallsign | sed 's/"//g'`
 THEIR_CALL=`echo $1 | jq .remoteCallsign | sed 's/"//g'`
 MESSAGE=`echo $1 | jq .message | sed 's/"//g'`

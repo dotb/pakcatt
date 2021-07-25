@@ -24,7 +24,10 @@ class APRSStatusHandler(myCall: String,
         val aprsStatusFrame = aprsFrame as? APRSStatusFrame
         if (null != aprsStatusFrame) {
             // Find an app that will handle this message
-            val appRequest = AppRequest(aprsStatusFrame.sourceCallsign(), aprsStatusFrame.destCallsign(), aprsStatusFrame.statusText())
+            val appRequest = AppRequest(aprsStatusFrame.sourceCallsign(),
+                                        stringUtils.formatCallsignRemoveSSID(aprsStatusFrame.sourceCallsign()),
+                                        aprsStatusFrame.destCallsign(),
+                                        aprsStatusFrame.statusText())
             val appResponse = appInterface.getResponseForReceivedMessage(appRequest)
 
             // Send a response message if required

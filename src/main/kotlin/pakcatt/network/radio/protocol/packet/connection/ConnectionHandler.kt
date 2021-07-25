@@ -9,6 +9,7 @@ import pakcatt.network.radio.kiss.model.KissFrameExtended
 import pakcatt.network.radio.kiss.model.KissFrameStandard
 import pakcatt.network.radio.kiss.queue.DeliveryQueue
 import pakcatt.network.radio.protocol.packet.LinkInterface
+import pakcatt.util.StringUtils
 import kotlin.collections.ArrayList
 
 enum class ControlMode {
@@ -28,6 +29,7 @@ class ConnectionHandler(private val remoteCallsign: String,
                         deliveryRetryTimeSeconds: Int) {
 
     private val logger = LoggerFactory.getLogger(ConnectionHandler::class.java)
+    private val stringUtils = StringUtils()
     private var controlMode = ControlMode.MODULO_8
     private var nextQueuedControlFrame: KissFrame? = null
     private var unnumberedQueue = ArrayList<KissFrame>()
@@ -138,7 +140,10 @@ class ConnectionHandler(private val remoteCallsign: String,
             handleIncomingAcknowledgement(incomingFrame)
 
             // Share the payload with any listening applications to process
-            val  appResponse = linkInterface.getResponseForReceivedMessage(AppRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
+            val  appResponse = linkInterface.getResponseForReceivedMessage(AppRequest(incomingFrame.sourceCallsign(),
+                                                                            stringUtils.formatCallsignRemoveSSID(incomingFrame.sourceCallsign()),
+                                                                            incomingFrame.destCallsign(),
+                                                                            incomingFrame.payloadDataString()))
             when (appResponse.responseType) {
                 ResponseType.ACK_WITH_TEXT -> queueMessageForDelivery(ControlField.INFORMATION_8, appResponse.responseString())
                 ResponseType.ACK_ONLY -> sendAcknowlegeAndReadyForReceive()
@@ -151,7 +156,10 @@ class ConnectionHandler(private val remoteCallsign: String,
 
     private fun handleConnectionRequest(incomingFrame: KissFrame) {
         // Gather a connection decision from applications
-        val appResponse = linkInterface.getDecisionOnConnectionRequest(AppRequest(incomingFrame.sourceCallsign(), incomingFrame.destCallsign(), incomingFrame.payloadDataString()))
+        val appResponse = linkInterface.getDecisionOnConnectionRequest(AppRequest(incomingFrame.sourceCallsign(),
+                                                                        stringUtils.formatCallsignRemoveSSID(incomingFrame.sourceCallsign()),
+                                                                        incomingFrame.destCallsign(),
+                                                                        incomingFrame.payloadDataString()))
         when (appResponse.responseType) {
             ResponseType.ACK_ONLY -> acceptIncomingConnection()
             ResponseType.ACK_WITH_TEXT -> acceptIncomingConnectionWithMessage(appResponse.responseString())
