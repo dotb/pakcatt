@@ -12,8 +12,8 @@ import org.springframework.integration.ip.tcp.connection.AbstractServerConnectio
 import org.springframework.integration.ip.tcp.connection.TcpNioServerConnectionFactory
 import org.springframework.integration.ip.tcp.serializer.ByteArrayCrLfSerializer
 
-@Configuration
-@EnableIntegration
+//@Configuration
+//@EnableIntegration
 class TCPService {
 
     private val logger = LoggerFactory.getLogger(TCPService::class.java)

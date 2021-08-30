@@ -124,6 +124,34 @@ class APRSMicEDataFrameTest: TestCase() {
     }
 
     @Test
+    fun testMicroTrakCharsInInfoField() {
+        /*
+            Received bytes:	 00 a6 6e aa 62 ae 6e 60 ac 96 66 aa 96 40 78 ac 96 66 a4 9a 88 e2 ae 92 88 8a 64 40 63 03 f0 60 49 35 4d 6f 66 79 3e 2f 27 22 36 65 7d 4d 69 63 72 6f 54 72 61 6b 20 52 54 47 35 30 7c 21 4e 26 30 27 55 7c 21 77 2b 44 21 7c 33
+            Received frame:	 From: VK3UK-12 to: S7U1W7-0 controlType: Via1: VK3RMD-1 Via2: WIDE2-1 controlType: U_UNNUMBERED_INFORMATION Payload: `I5Mofy>/'"6e}MicroTrak RTG50|!N&0'U|!w+D!|3
+            Typed APRS Frame: Data Type: MIC_E_DATA From: VK3UK-12 Via1: VK3RMD-1 Via2: WIDE2-1 Lat: -37.862833333333334 Lon: 145.4248333333333 Ambiguity: 0 Speed: 68.524037km/h Knots: 37.0 Course: 93 Symbol: >/ Compat: BEACON Status: MicroTrak RTG50|!N&0'U|!w+D!| Payload: `I5Mofy>/'"6e}MicroTrak RTG50|!N&0'U|!w+D!|3
+        */
+        val messageFrameBytes = byteUtils.byteArrayFromStringInts("00 a6 6e aa 62 ae 6e 60 ac 96 66 aa 96 40 78 ac 96 66 a4 9a 88 e2 ae 92 88 8a 64 40 63 03 f0 60 49 35 4d 6f 66 79 3e 2f 27 22 36 65 7d 4d 69 63 72 6f 54 72 61 6b 20 52 54 47 35 30 7c 21 4e 26 30 27 55 7c 21 77 2b 44 21 7c 33")
+        val aprsMicEDataFrame = APRSMicEDataFrame()
+        aprsMicEDataFrame.populateFromFrameData(messageFrameBytes)
+
+        assertEquals(ControlField.U_UNNUMBERED_INFORMATION, aprsMicEDataFrame.controlField())
+        assertEquals(byteUtils.intToByte(ProtocolID.NO_LAYER_3.id), aprsMicEDataFrame.protocolID())
+        assertEquals(APRSDataType.MIC_E_DATA, aprsMicEDataFrame.aprsDataType())
+        assertEquals("VK3UK-12", aprsMicEDataFrame.sourceCallsign())
+        assertEquals("VK3RMD-1", aprsMicEDataFrame.repeaterCallsignOne())
+        assertEquals("WIDE2-1", aprsMicEDataFrame.repeaterCallsignTwo())
+        assertEquals(MIC_E.IN_SERVICE, aprsMicEDataFrame.micEType())
+        assertEquals(0, aprsMicEDataFrame.ambiguity())
+        assert(aprsMicEDataFrame.latitudeDecimalDegreesNorth() - -37.862833333333334 < 0.000001)
+        assert(145.4248333333333 - aprsMicEDataFrame.longitudeDecimalDegreesEast() < 0.000001)
+        assertEquals(37.0, aprsMicEDataFrame.speedKnots())
+        assertEquals(68.524037, aprsMicEDataFrame.speedKmh())
+        assertEquals(93, aprsMicEDataFrame.courseDegrees())
+        assertEquals("MicroTrak RTG50|!N&0'U|!w+D!|", aprsMicEDataFrame.statusText())
+    }
+
+
+    @Test
     fun testParsingOfLocationToDecimalDegreesWithAmbiguity() {
         /*
             Fix for java.lang.NumberFormatException: For input string: "??"

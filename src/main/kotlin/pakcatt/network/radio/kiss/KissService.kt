@@ -61,6 +61,8 @@ class KissService(val tncConnection: TNC,
                 // Handle the new frame
                 handleNewFrame(newFrame)
             }
+        } else if (incomingFrameIndex >= incomingFrame.size) {
+            incomingFrameIndex = -1
         } else {
             // Add the next byte to the current incoming frame.
             incomingFrameIndex++
