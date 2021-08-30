@@ -178,4 +178,34 @@ class APRSMicEDataFrameTest: TestCase() {
         assertEquals("Just cruising ^:-}", aprsMicEDataFrame.statusText())
     }
 
+
+@Test
+fun testMICEStatusMessageWithAdditionalParameters() {
+    /*
+        DEBUG: Received bytes:	 00 a6 b0 a4 60 b0 6a 60 ac 96 66 88 a0 ae 62 ac 96 66 a4 9a 88 e2 ae 92 88 8a 64 40 63 03 f0 60 49 58 51 6c 22 71 3e 2f 22 35 2a 7d 2f 56 4b 33 44 50 57 20 57 49 43 45 4e 20 54 65 73 74
+        DEBUG: Received frame:	 From: VK3DPW-1 to: SXR0X5-0 controlType: Via1: VK3RMD-1 Via2: WIDE2-1 controlType: U_UNNUMBERED_INFORMATION Payload: `IXQl"q>/"5*}/VK3DPW WICEN Test
+        DEBUG: Typed APRS Frame: Data Type: MIC_E_DATA From: VK3DPW-1 Via1: VK3RMD-1 Via2: WIDE2-1 Lat: -38.347500000000004 Lon: 145.00883333333334 Ambiguity: 0 Speed: 0.0km/h Knots: 0.0 Course: 285 Symbol: >/ Compat: UNKNOWN Status: 5*}/VK3DPW WICEN Tes Payload: `IXQl"q>/"5*}/VK3DPW WICEN Test
+    */
+
+    val messageFrameBytes = byteUtils.byteArrayFromStringInts("00 a6 b0 a4 60 b0 6a 60 ac 96 66 88 a0 ae 62 ac 96 66 a4 9a 88 e2 ae 92 88 8a 64 40 63 03 f0 60 49 58 51 6c 22 71 3e 2f 22 35 2a 7d 2f 56 4b 33 44 50 57 20 57 49 43 45 4e 20 54 65 73 74")
+    val aprsMicEDataFrame = APRSMicEDataFrame()
+    aprsMicEDataFrame.populateFromFrameData(messageFrameBytes)
+
+    assertEquals(ControlField.U_UNNUMBERED_INFORMATION, aprsMicEDataFrame.controlField())
+    assertEquals(byteUtils.intToByte(ProtocolID.NO_LAYER_3.id), aprsMicEDataFrame.protocolID())
+    assertEquals(APRSDataType.MIC_E_DATA, aprsMicEDataFrame.aprsDataType())
+    assertEquals("VK3DPW-1", aprsMicEDataFrame.sourceCallsign())
+    assertEquals("VK3RMD-1", aprsMicEDataFrame.repeaterCallsignOne())
+    assertEquals("WIDE2-1", aprsMicEDataFrame.repeaterCallsignTwo())
+    assertEquals(MIC_E.OFF_DUTY, aprsMicEDataFrame.micEType())
+    assertEquals(0, aprsMicEDataFrame.ambiguity())
+    assert(aprsMicEDataFrame.latitudeDecimalDegreesNorth() - -37.583333333333336 < 0.000001)
+    assert(144.7 - aprsMicEDataFrame.longitudeDecimalDegreesEast() < 0.000001)
+    assertEquals(0.0, aprsMicEDataFrame.speedKnots())
+    assertEquals(0.0, aprsMicEDataFrame.speedKmh())
+    assertEquals(285, aprsMicEDataFrame.courseDegrees())
+    assertEquals("VK3DPW WICEN Test", aprsMicEDataFrame.statusText())
+}
+
+
 }
