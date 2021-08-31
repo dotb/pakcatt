@@ -27,11 +27,11 @@ pakcatt:
 
   ## Packet performance parameters
   network.packet:
-    frame_size_max: 128 # The maximum number of frames / packets sent in each transmission
-    frames_per_over: 6 # The minimum amount of time left between transmissions
-    minTXPauseSeconds: 2 # The number of times a frame is re-sent if not acknowledged
-    deliveryRetryTimeSeconds: 10 # The maximum number of times delivery is attempted for each frame
-    maxDeliveryAttempts: 10
+    frame_size_max: 128 The maximum number of bytes send in each frame
+    frames_per_over: 4 # The maximum number of frames / packets sent in each transmission
+    minTXPauseSeconds: 2 # The minimum amount of time left between transmissions
+    deliveryRetryTimeSeconds: 10 # The time between re-sending frames that have not been acknowledged
+    maxDeliveryAttempts: 10 # The number of times a frame is re-sent if not acknowledged
 
 
 spring:

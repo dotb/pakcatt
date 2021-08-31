@@ -13,8 +13,6 @@ import java.text.SimpleDateFormat
 
 class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
-    private val tabSpace = "\t"
-
     init {
         registerCommand(Command("list") .function { listMessages(it) }  .description("List the messages available to you"))
         registerCommand(Command("send") .function { sendMessage(it) }   .description("Send a message, passing the destination callsign as an argument"))
@@ -40,7 +38,6 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign)
         val listResponse = StringBuilder()
         val messageCount = userMessages.size
-        val dateFormatter = SimpleDateFormat("dd MMM HH:mm")
 
         if (messageCount > 0) {
             listResponse.append(StringUtils.EOL)
@@ -52,7 +49,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
                 })
                 listResponse.append(message.messageNumber)
                 listResponse.append(tabSpace)
-                listResponse.append(dateFormatter.format(message.dateTime.time))
+                listResponse.append(stringUtils.formattedDate(message.dateTime))
                 listResponse.append("  ")
                 listResponse.append(message.fromCallsign)
                 listResponse.append(tabSpace)

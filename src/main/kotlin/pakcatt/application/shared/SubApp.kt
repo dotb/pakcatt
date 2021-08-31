@@ -11,8 +11,9 @@ import java.lang.StringBuilder
 abstract class SubApp {
 
     private val commands = ArrayList<Command>()
-    protected val stringUtils = StringUtils()
     private var parentRootApp: RootApp? = null
+    protected val stringUtils = StringUtils()
+    protected val tabSpace = "\t"
 
     abstract fun returnCommandPrompt(): String
 

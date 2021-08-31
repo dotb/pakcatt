@@ -2,6 +2,8 @@ package pakcatt.application.mainmenu
 
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
+import pakcatt.application.bulletinboard.BulletinBoardApp
+import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
 import pakcatt.application.last.LastApp
 import pakcatt.application.mailbox.MailboxApp
 import pakcatt.application.mailbox.persistence.MailboxStore
@@ -15,16 +17,18 @@ import kotlin.math.sqrt
 
 @Component
 @Profile("production")
-class MainMenuApp(val myCall: String,
-                  val mailboxStore: MailboxStore,
-                  val lastApp: LastApp): RootApp() {
+class MainMenuApp(private val myCall: String,
+                  private val mailboxStore: MailboxStore,
+                  private val bulletinBoardStore: BulletinBoardStore,
+                  private val lastApp: LastApp): RootApp() {
 
     private val beepChar = 7.toChar()
     private val escapeChar = 27.toChar()
 
     init {
         // Apps and functionality
-        registerCommand(Command("mail") .reply("Launching Mail")    .openApp(MailboxApp(mailboxStore))  .description("Open the Mail app"))
+        registerCommand(Command("board") .reply("Launching Bulletin Board")    .openApp(BulletinBoardApp(bulletinBoardStore))  .description("Open the Bulletin Board"))
+        registerCommand(Command("mail") .reply("Launching Mail")    .openApp(MailboxApp(mailboxStore))  .description("Open your mailbox"))
         registerCommand(Command("last") .function { handleLast(it) }.description("last [callsign] - See when others were last seen"))
         registerCommand(Command("tell") .function { handleTell(it) } .description("tell <callsign> - Send a quick APRS message to someone."))
         registerCommand(Command("sqrt") .function { handleSQRT(it) }.description("sqrt <number> - Calculate the square root of an argument"))

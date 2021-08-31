@@ -1,10 +1,14 @@
 package pakcatt.util
 
 import org.springframework.stereotype.Component
+import java.text.SimpleDateFormat
+import java.util.*
 import kotlin.math.min
 
 @Component
 class StringUtils {
+
+    private val dateFormatter = SimpleDateFormat("dd MMM HH:mm")
 
     companion object {
         const val EOL = "\n\r"
@@ -153,6 +157,10 @@ class StringUtils {
 
     fun trimmedString(inputString: String, maxLength: Int): String {
         return inputString.substring(0, min(maxLength, inputString.length))
+    }
+
+    fun formattedDate(date: Date): String {
+        return dateFormatter.format(date.time)
     }
 
 }
