@@ -12,7 +12,9 @@ import pakcatt.application.shared.model.AppResponse
 import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 
-class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore): SubApp() {
+class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
+                       private val boardPromptTopicLength: Int,
+                       private val boardSummaryLength: Int): SubApp() {
 
     init {
         registerCommand(Command("list") .function { listThreads(it) }  .description("List the threads"))
@@ -38,6 +40,7 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore): SubA
             listResponse.append(StringUtils.EOL)
             listResponse.append("  No${tabSpace}Updated       By${tabSpace}Topic${StringUtils.EOL}")
             for (thread in threadList) {
+                val topicSummary = "${stringUtils.shortenString(thread.topic, boardSummaryLength, true)}"
                 listResponse.append("  ")
                 listResponse.append(thread.threadNumber)
                 listResponse.append(tabSpace)
@@ -45,7 +48,7 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore): SubA
                 listResponse.append("  ")
                 listResponse.append(thread.fromCallsign)
                 listResponse.append(tabSpace)
-                listResponse.append(thread.topic)
+                listResponse.append(topicSummary)
                 listResponse.append(StringUtils.EOL)
             }
         }
@@ -62,7 +65,7 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore): SubA
             returnedThread = bulletinBoardStore.getThread(threadNumber)
         }
         return if (null != returnedThread) {
-            AppResponse.sendText("${StringUtils.EOL}Topic: ${returnedThread.topic}", ReadThreadApp(returnedThread, bulletinBoardStore))
+            AppResponse.sendText("", ReadThreadApp(returnedThread, bulletinBoardStore, boardPromptTopicLength, boardSummaryLength))
         } else {
             AppResponse.sendText("No thread found")
         }

@@ -163,4 +163,13 @@ class StringUtils {
         return dateFormatter.format(date.time)
     }
 
+    fun shortenString(string: String, maxLength: Int, withEllipsis: Boolean): String {
+        val length = maxLength.coerceAtMost(string.length)
+        return if (length < string.length && withEllipsis) {
+            "${string.substring(0 until length)}..."
+        } else {
+            string.substring(0 until length)
+        }
+    }
+
 }

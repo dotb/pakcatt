@@ -12,6 +12,7 @@ import pakcatt.application.shared.RootApp
 import pakcatt.application.shared.command.Command
 import pakcatt.application.tell.TellApp
 import pakcatt.application.shared.model.AppResponse
+import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 import kotlin.math.sqrt
 
@@ -20,14 +21,17 @@ import kotlin.math.sqrt
 class MainMenuApp(private val myCall: String,
                   private val mailboxStore: MailboxStore,
                   private val bulletinBoardStore: BulletinBoardStore,
-                  private val lastApp: LastApp): RootApp() {
+                  private val lastApp: LastApp,
+                  private val welcomeMessage: String,
+                  private val boardPromptTopicLength: Int,
+                  private val boardSummaryLength: Int): RootApp() {
 
     private val beepChar = 7.toChar()
     private val escapeChar = 27.toChar()
 
     init {
         // Apps and functionality
-        registerCommand(Command("board") .reply("Launching Bulletin Board")    .openApp(BulletinBoardApp(bulletinBoardStore))  .description("Open the Bulletin Board"))
+        registerCommand(Command("board") .reply("Launching Bulletin Board")    .openApp(BulletinBoardApp(bulletinBoardStore, boardPromptTopicLength, boardSummaryLength))  .description("Open the Bulletin Board"))
         registerCommand(Command("mail") .reply("Launching Mail")    .openApp(MailboxApp(mailboxStore))  .description("Open your mailbox"))
         registerCommand(Command("last") .function { handleLast(it) }.description("last [callsign] - See when others were last seen"))
         registerCommand(Command("tell") .function { handleTell(it) } .description("tell <callsign> - Send a quick APRS message to someone."))
@@ -56,11 +60,12 @@ class MainMenuApp(private val myCall: String,
             val mailboxApp = MailboxApp(mailboxStore)
             val unreadMessages = mailboxApp.unreadMessageCount(request)
 
-            stringBuilder.append("Welcome to PakCatt! Type help to learn more :-)\r\n")
+            stringBuilder.append(welcomeMessage)
+            stringBuilder.append(StringUtils.EOL)
             if (unreadMessages > 1) {
-                stringBuilder.append("You have $unreadMessages unread messages.\r\n")
+                stringBuilder.append("You have $unreadMessages unread messages.${StringUtils.EOL}")
             } else if (unreadMessages > 0) {
-                stringBuilder.append("You have an unread message.\r\n")
+                stringBuilder.append("You have an unread message.${StringUtils.EOL}")
             }
             AppResponse.sendText(stringBuilder.toString(), this)
         } else {

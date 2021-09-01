@@ -12,17 +12,20 @@ import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 
 class ReadThreadApp(private val parentThread: BulletinBoardThread,
-                    private val bulletinBoardStore: BulletinBoardStore): SubApp() {
+                    private val bulletinBoardStore: BulletinBoardStore,
+                    private val boardPromptTopicLength: Int,
+                    private val boardSummaryLength: Int): SubApp() {
 
     init {
         registerCommand(Command("list") .function { listPosts(it) }  .description("List posts"))
         registerCommand(Command("read") .function { readPost(it) }   .description("Read a post"))
         registerCommand(Command("post") .function { newPost(it) }   .description("Add a post"))
-        registerCommand(Command("back") .openApp(NavigateBack(1)).description("Return to the list of topics"))
+        registerCommand(Command("back") .reply("") .openApp(NavigateBack(1)).description("Return to the list of topics"))
     }
 
     override fun returnCommandPrompt(): String {
-        return "${parentThread.threadNumber} ${parentThread.topic}>"
+        val topicSummary = "${stringUtils.shortenString(parentThread.topic, boardPromptTopicLength, false)}"
+        return "board/${parentThread.threadNumber} ${topicSummary}>"
     }
 
     override fun handleReceivedMessage(request: AppRequest): AppResponse {
@@ -36,10 +39,9 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
 
         if (postCount > 0) {
             listResponse.append(StringUtils.EOL)
-            listResponse.append("No${tabSpace}Updated         By${tabSpace}Topic${StringUtils.EOL}")
+            listResponse.append("No${tabSpace}Updated       By${tabSpace}Message${StringUtils.EOL}")
             for (post in postList) {
-                val summaryLength = 20.coerceAtMost(post.body.length)
-                val summary = post.body.substring(0..summaryLength)
+                val summary = "${stringUtils.shortenString(post.body, boardSummaryLength, true)}"
                 listResponse.append(post.postNumber)
                 listResponse.append(tabSpace)
                 listResponse.append(stringUtils.formattedDate(post.postDateTime))

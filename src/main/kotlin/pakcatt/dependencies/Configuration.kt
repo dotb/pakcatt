@@ -24,6 +24,27 @@ class Configuration {
         return myCall
     }
 
+    @Value("\${pakcatt.application.welcomeMessage}")
+    private lateinit var welcomeMessage: String
+    @Bean
+    fun welcomeMessage(): String {
+        return welcomeMessage
+    }
+
+    @Value("\${pakcatt.application.board.summaryLength}")
+    private lateinit var boardSummaryLength: String
+    @Bean
+    fun boardSummaryLength(): Int {
+        return boardSummaryLength.toInt()
+    }
+
+    @Value("\${pakcatt.application.board.promptTopicLength}")
+    private lateinit var boardPromptTopicLength: String
+    @Bean
+    fun boardPromptTopicLength(): Int {
+        return boardPromptTopicLength.toInt()
+    }
+
     @Value("\${pakcatt.application.beacon.message}")
     private lateinit var beaconMessage: String
     @Bean

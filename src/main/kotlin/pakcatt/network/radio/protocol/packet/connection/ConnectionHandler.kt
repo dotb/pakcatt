@@ -217,6 +217,7 @@ class ConnectionHandler(private val remoteCallsign: String,
 
     private fun handleDisconnectRequest() {
         logger.trace("Disconnecting from $remoteCallsign")
+        resetConnection()
         val frame = newResponseFrame(ControlField.U_UNNUMBERED_ACKNOWLEDGE_P, false)
         queueFrameForControl(frame)
         connectionStatus = ConnectionStatus.DISCONNECTED

@@ -1,11 +1,8 @@
 package pakcatt.dependencies
 
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
-import pakcatt.application.scriptable.model.Script
-import pakcatt.application.scriptable.model.ScriptableConfig
 
 @Configuration
 @Profile("test")
