@@ -21,9 +21,14 @@ class AddPostApp(private val parentThread: BulletinBoardThread,
     override fun handleReceivedMessage(request: AppRequest): AppResponse {
         val bodyText = request.message
         return if (stringUtils.removeEOLChars(bodyText) == ".") {
+            // New topics need 2 steps back, while posts to an existing topic need one step back.
+            val stepsBack = when (parentThread.threadNumber) {
+                0 -> 2
+                else -> 1
+            }
             newPost.body = composedBody.toString()
             bulletinBoardStore.addPostToThread(newPost, parentThread)
-            AppResponse.sendText("Thanks. Your post has been stored.", NavigateBack(2))
+            AppResponse.sendText("Thanks. Your post has been stored.", NavigateBack(stepsBack))
         } else {
             composedBody.append(bodyText)
             AppResponse.acknowledgeOnly()
