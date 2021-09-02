@@ -72,8 +72,8 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
     }
 
     private fun postNewThread(request: AppRequest): AppResponse {
-        val fromCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
-        return AppResponse.sendText("", AddThreadApp(BulletinBoardThread(fromCallsign), bulletinBoardStore))
+        val authorCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
+        return AppResponse.sendText("", AddThreadApp(BulletinBoardThread(authorCallsign), bulletinBoardStore))
     }
 
 }

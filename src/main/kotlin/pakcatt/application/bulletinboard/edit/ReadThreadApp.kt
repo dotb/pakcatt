@@ -72,8 +72,9 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
     }
 
     private fun newPost(request: AppRequest): AppResponse {
+        val authorCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         return AppResponse.sendText("Compose your post and finish with . on a line of it's own.", AddPostApp(parentThread,
-                                                                                                            BulletinBoardPost(request.remoteCallsign),
+                                                                                                            BulletinBoardPost(authorCallsign),
                                                                                                             bulletinBoardStore
         ))
     }
