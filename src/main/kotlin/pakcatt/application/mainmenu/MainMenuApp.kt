@@ -5,6 +5,8 @@ import org.springframework.stereotype.Component
 import pakcatt.application.bulletinboard.BulletinBoardApp
 import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
 import pakcatt.application.last.LastApp
+import pakcatt.application.last.persistence.LastEntryRepository
+import pakcatt.application.last.persistence.LastEntryStore
 import pakcatt.application.mailbox.MailboxApp
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.shared.model.AppRequest
@@ -21,11 +23,12 @@ import kotlin.math.sqrt
 class MainMenuApp(private val myCall: String,
                   private val mailboxStore: MailboxStore,
                   private val bulletinBoardStore: BulletinBoardStore,
-                  private val lastApp: LastApp,
+                  private val lastEntryStore: LastEntryStore,
                   private val welcomeMessage: String,
                   private val boardPromptTopicLength: Int,
                   private val boardSummaryLength: Int): RootApp() {
 
+    private val lastApp = LastApp(lastEntryStore)
     private val beepChar = 7.toChar()
     private val escapeChar = 27.toChar()
 
