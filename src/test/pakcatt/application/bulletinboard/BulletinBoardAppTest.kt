@@ -55,15 +55,15 @@ class BulletinBoardAppTest: AppServiceTest() {
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${EOL}" +
-                "No\tUpdated       By${EOL}" +
-                "1\t01 Jan 10:00  VK2VRO${EOL}" +
+                "No\tUpdated       By\t\tSize${EOL}" +
+                "1\t01 Jan 10:00  VK2VRO\t573B${EOL}" +
                 "Sed ut perspiciatis${EOL}" +
                 "unde omnis iste natus${EOL}" +
                 "error sit voluptatem accusantium${EOL}" +
                 "do...${EOL}${EOL}" +
-                "2\t01 Jan 10:00  VK3LIT${EOL}" +
+                "2\t01 Jan 10:00  VK3LIT\t572B${EOL}" +
                 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${EOL}${EOL}" +
-                "2\t01 Jan 10:00  PACKATT${EOL}" +
+                "2\t01 Jan 10:00  PACKATT\t567B${EOL}" +
                 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${EOL}${EOL}" +
                 "3 posts${EOL}" +
                 "${EOL}" +
