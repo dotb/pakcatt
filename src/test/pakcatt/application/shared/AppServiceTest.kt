@@ -27,7 +27,7 @@ open class AppServiceTest: TestCase() {
     protected val EOL = "\n\r"
 
     @Test
-    fun testStartConnection() {
+    fun `test starting a connection to the BBS`() {
         val request = testRequest()
 
         val response = appService.getDecisionOnConnectionRequest(request)

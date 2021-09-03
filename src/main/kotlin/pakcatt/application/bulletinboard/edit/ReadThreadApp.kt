@@ -40,11 +40,12 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
         if (postCount > 0) {
             listResponse.append(StringUtils.EOL)
             listResponse.append("No${tabSpace}Posted       By${tabSpace}${tabSpace}Size${StringUtils.EOL}")
-            for (post in postList) {
+            for ((index, post) in postList.withIndex()) {
                 val summary = "${stringUtils.shortenString(post.body, boardSummaryLength, true)}"
                 listResponse.append("---")
                 listResponse.append(StringUtils.EOL)
-                listResponse.append(post.postNumber)
+                listResponse.append(index)
+                listResponse.append(")")
                 listResponse.append(tabSpace)
                 listResponse.append(stringUtils.formattedDate(post.postDateTime))
                 listResponse.append("  ")
@@ -71,12 +72,12 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
         var post: BulletinBoardPost? = null
         val postNumber = parseIntArgument(request.message)
         if (null != postNumber) {
-            post = bulletinBoardStore.getPost(postNumber)
+            post = bulletinBoardStore.getPost(postNumber, parentThread.threadNumber)
         }
         return if (null != post && post.threadNumber == parentThread.threadNumber) {
             AppResponse.sendText("${StringUtils.EOL}${post.body}")
         } else {
-            AppResponse.sendText("No post found")
+            AppResponse.sendText("Post not found")
         }
     }
 

@@ -24,11 +24,18 @@ class BulletinBoardStore(val bulletinBoardThreadRepository: BulletinBoardThreadR
         return bulletinBoardPostRepository.findByThreadNumber(threadId).sortedBy { it.postDateTime }
     }
 
-    fun getPost(postId: Int): BulletinBoardPost? {
-        val optionalPost =  bulletinBoardPostRepository.findById(postId)
-        return when (optionalPost.isPresent) {
-            true -> optionalPost.get()
-            false -> null
+    /**
+     * Fetch a post based on it's indexed position in the list of posts
+     * within a topic. This method is inefficient and be improved, perhaps
+     * through caching. But, it should still be faster than a 9600baud modem :)
+     * When we implement an Internet facing interface it'll become more of a concern.
+     */
+    fun getPost(postIndex: Int, threadId: Int): BulletinBoardPost? {
+        val allPosts = getPostsInThread(threadId)
+        return if (allPosts.size - 1 > postIndex) {
+            allPosts[postIndex]
+        } else {
+            null
         }
     }
 
