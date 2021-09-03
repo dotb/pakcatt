@@ -5,6 +5,7 @@ import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
 import pakcatt.application.bulletinboard.persistence.BulletinBoardThread
 import pakcatt.application.shared.NavigateBack
 import pakcatt.application.shared.SubApp
+import pakcatt.application.shared.FORMAT
 import pakcatt.application.shared.command.Command
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
@@ -47,12 +48,15 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
         val listResponse = StringBuilder()
         if (totalPosts > 0) {
             listResponse.append(StringUtils.EOL)
-            listResponse.append("No${tabSpace}Posted       By${tabSpace}${tabSpace}Size${StringUtils.EOL}")
+            listResponse.append(format(FORMAT.BOLD))
+            listResponse.append("No${tabSpace}Posted       By${tabSpace}${tabSpace}Size")
+            listResponse.append(format(FORMAT.RESET))
+            listResponse.append(StringUtils.EOL)
             for ((index, post) in postList.withIndex()) {
                 if (rangeOfIndexesToInclude.contains(index)) {
                     val summary = "${stringUtils.shortenString(post.body, boardSummaryLength, true)}"
-                    listResponse.append("---")
                     listResponse.append(StringUtils.EOL)
+                    listResponse.append(format(FORMAT.BOLD))
                     listResponse.append(index)
                     listResponse.append(")")
                     listResponse.append(tabSpace)
@@ -62,13 +66,13 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
                     listResponse.append(tabSpace)
                     listResponse.append(post.body.length)
                     listResponse.append("B")
+                    listResponse.append(format(FORMAT.RESET))
                     listResponse.append(StringUtils.EOL)
                     listResponse.append(summary)
                     listResponse.append(StringUtils.EOL)
                     listResponse.append(StringUtils.EOL)
                 }
             }
-            listResponse.append("---")
         }
         listResponse.append(StringUtils.EOL)
         listResponse.append(totalPosts)

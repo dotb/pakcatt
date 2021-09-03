@@ -8,12 +8,37 @@ import pakcatt.util.StringUtils
 import java.lang.NumberFormatException
 import java.lang.StringBuilder
 
+enum class FORMAT(val ansiCode: Int) {
+    RESET(0),
+    BOLD(1),
+    DIM(2),
+    STANDOUT(3),
+    UNDERLINE(4),
+    BLINK(5),
+    INVERT(7),
+    HIDDEN(8)
+}
+
+enum class COLOUR(val ansiCode: Int) {
+    BLACK(0),
+    RED(1),
+    GREEN(2),
+    YELLOW(3),
+    BLUE(4),
+    MAGENTA(5),
+    CYAN(6),
+    WHITE(7),
+    DEFAULT(9)
+}
+
 abstract class SubApp {
 
     private val commands = ArrayList<Command>()
     private var parentRootApp: RootApp? = null
     protected val stringUtils = StringUtils()
     protected val tabSpace = "\t"
+    protected val beepChar = 7.toChar()
+    protected val escapeChar = 27.toChar()
 
     abstract fun returnCommandPrompt(): String
 
@@ -76,6 +101,18 @@ abstract class SubApp {
         } catch (e: NumberFormatException) {
             null
         }
+    }
+
+    protected fun format(formatCode: FORMAT): String {
+        return "$escapeChar[${formatCode.ansiCode}m"
+    }
+
+    protected fun fgColour(colourCode: COLOUR): String {
+        return "$escapeChar[3${colourCode.ansiCode}m"
+    }
+
+    protected fun bgColour(colourCode: COLOUR): String {
+        return "$escapeChar[4${colourCode.ansiCode}m"
     }
 
     private fun helpResponse(): AppResponse {

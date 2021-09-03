@@ -56,17 +56,17 @@ class BulletinBoardAppTest: AppServiceTest() {
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${EOL}" +
-                "No\tPosted       By\t\tSize${EOL}" +
-                "---${EOL}" +
-                "1)\t01 Jan 10:16  VK2VRO\t573B${EOL}" +
+                "${startBold}No\tPosted       By\t\tSize${resetFormat}${EOL}" +
+                "${EOL}" +
+                "${startBold}1)\t01 Jan 10:16  VK2VRO\t573B${resetFormat}${EOL}" +
                 "Sed ut perspiciatis${EOL}" +
                 "unde omnis iste natus${EOL}" +
                 "error sit voluptatem accusantium${EOL}" +
                 "do...${EOL}${EOL}" +
-                "---${EOL}" +
-                "2)\t01 Jan 10:33  PACKATT\t567B${EOL}" +
+                "${EOL}" +
+                "${startBold}2)\t01 Jan 10:33  PACKATT\t567B${resetFormat}${EOL}" +
                 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${EOL}${EOL}" +
-                "---${EOL}" +
+                "${EOL}" +
                 "3 posts in: This is topic 1${EOL}" +
                 "${EOL}" +
                 "board/1 This is topic 1> ", response.responseString())
@@ -89,11 +89,11 @@ class BulletinBoardAppTest: AppServiceTest() {
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${EOL}" +
-                "No\tPosted       By\t\tSize${EOL}" +
-                "---${EOL}" +
-                "2)\t01 Jan 10:33  PACKATT\t567B${EOL}" +
+                "${startBold}No\tPosted       By\t\tSize${resetFormat}${EOL}" +
+                "${EOL}" +
+                "${startBold}2)\t01 Jan 10:33  PACKATT\t567B${resetFormat}${EOL}" +
                 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${EOL}${EOL}" +
-                "---${EOL}" +
+                "${EOL}" +
                 "3 posts in: This is topic 1${EOL}" +
                 "${EOL}" +
                 "board/1 This is topic 1> ", response.responseString())

@@ -30,8 +30,6 @@ class MainMenuApp(private val myCall: String,
                   private val boardPostListLength: Int): RootApp() {
 
     private val lastApp = LastApp(lastEntryStore)
-    private val beepChar = 7.toChar()
-    private val escapeChar = 27.toChar()
 
     init {
         // Apps and functionality
@@ -48,7 +46,7 @@ class MainMenuApp(private val myCall: String,
         registerCommand(Command("beep") .reply("beep! $beepChar").description("Send a beep instruction to your terminal"))
 
         // Terminal tests
-        registerCommand(Command("bold") .reply("This should be $escapeChar[1mBOLD$escapeChar[0m and this, should not be bold.").description("Test the bold control character on your terminal"))
+        registerCommand(Command("bold") .reply("$escapeChar[1mThis should be BOLD and$escapeChar[0m this should not be bold.").description("Test the bold control character on your terminal"))
         registerCommand(Command("styles").function { allTheStyles() }.description("Test the styles supported by your terminal"))
         registerCommand(Command("nop")  .ackOnly().description("I'll do nothing, just acknowledge your request"))
         registerCommand(Command("ignore").ignore().description("I'll receive your command but won't acknowledge it."))

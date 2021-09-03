@@ -26,6 +26,9 @@ open class AppServiceTest: TestCase() {
 
     protected val appService = AppService(listOf(mainMenuApp))
     protected val EOL = "\n\r"
+    protected val escapeChar = 27.toChar()
+    protected val startBold = "${escapeChar}[1m"
+    protected val resetFormat = "${escapeChar}[0m"
 
     @Test
     fun `test starting a connection to the BBS`() {
