@@ -38,15 +38,14 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
 
         if (threadCount > 0) {
             listResponse.append(StringUtils.EOL)
-            listResponse.append("  No${tabSpace}Updated       By${tabSpace}Topic${StringUtils.EOL}")
+            listResponse.append("  No  ${tabSpace}Updated     ${tabSpace}Topic${StringUtils.EOL}")
             for (thread in threadList) {
                 val topicSummary = "${stringUtils.shortenString(thread.topic, boardSummaryLength, true)}"
                 listResponse.append("  ")
                 listResponse.append(thread.threadNumber)
+                listResponse.append("  ")
                 listResponse.append(tabSpace)
                 listResponse.append(stringUtils.formattedDate(thread.lastUpdatedDataTime))
-                listResponse.append("  ")
-                listResponse.append(thread.fromCallsign)
                 listResponse.append(tabSpace)
                 listResponse.append(topicSummary)
                 listResponse.append(StringUtils.EOL)

@@ -20,7 +20,12 @@ class MockedBulletinBoardThreadRepository: BulletinBoardThreadRepository {
                                 BulletinBoardThread("VK3LIT", Date(0), Date(0), "This is topic 2", 2),
                                 BulletinBoardThread("PAKCATT", Date(0), Date(0), "This is topic 3", 3),
                                 BulletinBoardThread("VK2VRO", Date(0), Date(900000000000), "This is topic 4", 4),
-                                BulletinBoardThread("VK3LIT", Date(0), Date(0), "This is topic 5", 5))
+                                BulletinBoardThread("VK3LIT", Date(0), Date(0), "This is topic 5", 5),
+                                BulletinBoardThread("VK3LIT", Date(0), Date(0), "This is topic 6", 6),
+                                BulletinBoardThread("VK3LIT", Date(0), Date(0), "This is topic 7", 7),
+                                BulletinBoardThread("VK3LIT", Date(0), Date(0), "This is topic 8", 8),
+                                BulletinBoardThread("VK3LIT", Date(0), Date(0), "This is topic 9", 9),
+                                BulletinBoardThread("VK3LIT", Date(0), Date(0), "This is topic 10", 10))
     }
 
     override fun findAll(p0: Sort): MutableList<BulletinBoardThread> {

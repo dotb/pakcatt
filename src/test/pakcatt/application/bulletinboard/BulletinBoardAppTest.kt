@@ -23,13 +23,18 @@ class BulletinBoardAppTest: AppServiceTest() {
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${EOL}" +
-                "  No\tUpdated       By\tTopic${EOL}" +
-                "  2\t01 Jan 10:00  VK3LIT\tThis is topic 2${EOL}" +
-                "  3\t01 Jan 10:00  PAKCATT\tThis is topic 3${EOL}" +
-                "  5\t01 Jan 10:00  VK3LIT\tThis is topic 5${EOL}" +
-                "  1\t01 Jan 12:46  VK2VRO\tThis is topic 1${EOL}" +
-                "  4\t10 Jul 02:00  VK2VRO\tThis is topic 4${EOL}" +
-                "5 threads${EOL}" +
+                "  No  \tUpdated     \tTopic${EOL}" +
+                "  2  \t01 Jan 10:00\tThis is topic 2${EOL}" +
+                "  3  \t01 Jan 10:00\tThis is topic 3${EOL}" +
+                "  5  \t01 Jan 10:00\tThis is topic 5${EOL}" +
+                "  6  \t01 Jan 10:00\tThis is topic 6${EOL}" +
+                "  7  \t01 Jan 10:00\tThis is topic 7${EOL}" +
+                "  8  \t01 Jan 10:00\tThis is topic 8${EOL}" +
+                "  9  \t01 Jan 10:00\tThis is topic 9${EOL}" +
+                "  10  \t01 Jan 10:00\tThis is topic 10${EOL}" +
+                "  1  \t01 Jan 12:46\tThis is topic 1${EOL}" +
+                "  4  \t10 Jul 02:00\tThis is topic 4${EOL}" +
+                "10 threads${EOL}" +
                 "${EOL}" +
                 "board> ", response.responseString())
     }
