@@ -74,7 +74,7 @@ class BulletinBoardAppTest: AppServiceTest() {
                 "2\t01 Jan 10:33  PACKATT\t567B${EOL}" +
                 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${EOL}${EOL}" +
                 "---${EOL}" +
-                "3 posts${EOL}" +
+                "3 posts in: This is topic 1${EOL}" +
                 "${EOL}" +
                 "board/1 This is topic 1> ", response.responseString())
     }

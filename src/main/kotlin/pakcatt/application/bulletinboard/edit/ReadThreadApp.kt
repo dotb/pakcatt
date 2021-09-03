@@ -61,7 +61,8 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
         listResponse.append("---")
         listResponse.append(StringUtils.EOL)
         listResponse.append(postCount)
-        listResponse.append(" posts")
+        listResponse.append(" posts in: ")
+        listResponse.append(parentThread.topic)
         listResponse.append(StringUtils.EOL)
         return AppResponse.sendText(listResponse.toString())
     }
