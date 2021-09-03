@@ -16,10 +16,10 @@ class MockedBulletinBoardThreadRepository: BulletinBoardThreadRepository {
     }
 
     override fun findAll(): MutableList<BulletinBoardThread> {
-        return mutableListOf(BulletinBoardThread("VK2VRO", Date(0), Date(0), "This is topic 1", 1),
+        return mutableListOf(BulletinBoardThread("VK2VRO", Date(0), Date(10000000), "This is topic 1", 1),
                                 BulletinBoardThread("VK3LIT", Date(0), Date(0), "This is topic 2", 2),
                                 BulletinBoardThread("PAKCATT", Date(0), Date(0), "This is topic 3", 3),
-                                BulletinBoardThread("VK2VRO", Date(0), Date(0), "This is topic 4", 4),
+                                BulletinBoardThread("VK2VRO", Date(0), Date(900000000000), "This is topic 4", 4),
                                 BulletinBoardThread("VK3LIT", Date(0), Date(0), "This is topic 5", 5))
     }
 

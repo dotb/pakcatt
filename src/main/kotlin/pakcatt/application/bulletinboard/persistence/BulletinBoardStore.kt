@@ -9,7 +9,7 @@ class BulletinBoardStore(val bulletinBoardThreadRepository: BulletinBoardThreadR
                          val bulletinBoardPostRepository: BulletinBoardPostRepository) {
 
     fun getThreads(): List<BulletinBoardThread> {
-        return bulletinBoardThreadRepository.findAll()
+        return bulletinBoardThreadRepository.findAll().sortedBy { it.lastUpdatedDataTime }
     }
 
     fun getThread(threadId: Int): BulletinBoardThread? {
@@ -21,7 +21,7 @@ class BulletinBoardStore(val bulletinBoardThreadRepository: BulletinBoardThreadR
     }
 
     fun getPostsInThread(threadId: Int): List<BulletinBoardPost> {
-        return bulletinBoardPostRepository.findByThreadNumber(threadId)
+        return bulletinBoardPostRepository.findByThreadNumber(threadId).sortedBy { it.postDateTime }
     }
 
     fun getPost(postId: Int): BulletinBoardPost? {
