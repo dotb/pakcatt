@@ -14,11 +14,12 @@ import java.lang.StringBuilder
 class ReadThreadApp(private val parentThread: BulletinBoardThread,
                     private val bulletinBoardStore: BulletinBoardStore,
                     private val boardPromptTopicLength: Int,
-                    private val boardSummaryLength: Int): SubApp() {
+                    private val boardSummaryLength: Int,
+                    private val defaultPostListLength: Int): SubApp() {
 
     init {
-        registerCommand(Command("list") .function { listPosts(it) }  .description("List posts"))
-        registerCommand(Command("read") .function { readPost(it) }   .description("Read a post"))
+        registerCommand(Command("list") .function { listPosts(it) }  .description("list [number of posts] - List posts specifying an optional length"))
+        registerCommand(Command("read") .function { readPost(it) }   .description("Read a post."))
         registerCommand(Command("post") .function { newPost(it) }   .description("Add a post"))
         registerCommand(Command("back") .reply("") .openApp(NavigateBack(1)).description("Return to the list of topics"))
     }
@@ -34,38 +35,47 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
 
     private fun listPosts(request: AppRequest): AppResponse {
         val postList = bulletinBoardStore.getPostsInThread(parentThread.threadNumber)
-        val listResponse = StringBuilder()
-        val postCount = postList.size
+        val totalPosts = postList.size
+        val requestedNumberOfPosts = parseIntArgument(request.message)
+        val numberOfPostsToList = requestedNumberOfPosts ?: defaultPostListLength
+        val rangeOfIndexesToInclude = totalPosts - numberOfPostsToList..totalPosts
+        val responseString = compilePostListResponse(postList, totalPosts, rangeOfIndexesToInclude)
+        return AppResponse.sendText(responseString)
+    }
 
-        if (postCount > 0) {
+    private fun compilePostListResponse(postList: List<BulletinBoardPost>, totalPosts: Int, rangeOfIndexesToInclude: IntRange): String {
+        val listResponse = StringBuilder()
+        if (totalPosts > 0) {
             listResponse.append(StringUtils.EOL)
             listResponse.append("No${tabSpace}Posted       By${tabSpace}${tabSpace}Size${StringUtils.EOL}")
             for ((index, post) in postList.withIndex()) {
-                val summary = "${stringUtils.shortenString(post.body, boardSummaryLength, true)}"
-                listResponse.append("---")
-                listResponse.append(StringUtils.EOL)
-                listResponse.append(index)
-                listResponse.append(")")
-                listResponse.append(tabSpace)
-                listResponse.append(stringUtils.formattedDate(post.postDateTime))
-                listResponse.append("  ")
-                listResponse.append(post.fromCallsign)
-                listResponse.append(tabSpace)
-                listResponse.append(post.body.length)
-                listResponse.append("B")
-                listResponse.append(StringUtils.EOL)
-                listResponse.append(summary)
-                listResponse.append(StringUtils.EOL)
-                listResponse.append(StringUtils.EOL)
+                if (rangeOfIndexesToInclude.contains(index)) {
+                    val summary = "${stringUtils.shortenString(post.body, boardSummaryLength, true)}"
+                    listResponse.append("---")
+                    listResponse.append(StringUtils.EOL)
+                    listResponse.append(index)
+                    listResponse.append(")")
+                    listResponse.append(tabSpace)
+                    listResponse.append(stringUtils.formattedDate(post.postDateTime))
+                    listResponse.append("  ")
+                    listResponse.append(post.fromCallsign)
+                    listResponse.append(tabSpace)
+                    listResponse.append(post.body.length)
+                    listResponse.append("B")
+                    listResponse.append(StringUtils.EOL)
+                    listResponse.append(summary)
+                    listResponse.append(StringUtils.EOL)
+                    listResponse.append(StringUtils.EOL)
+                }
             }
+            listResponse.append("---")
         }
-        listResponse.append("---")
         listResponse.append(StringUtils.EOL)
-        listResponse.append(postCount)
+        listResponse.append(totalPosts)
         listResponse.append(" posts in: ")
         listResponse.append(parentThread.topic)
         listResponse.append(StringUtils.EOL)
-        return AppResponse.sendText(listResponse.toString())
+        return listResponse.toString()
     }
 
     private fun readPost(request: AppRequest): AppResponse {

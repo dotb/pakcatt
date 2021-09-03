@@ -26,7 +26,8 @@ class MainMenuApp(private val myCall: String,
                   private val lastEntryStore: LastEntryStore,
                   private val welcomeMessage: String,
                   private val boardPromptTopicLength: Int,
-                  private val boardSummaryLength: Int): RootApp() {
+                  private val boardSummaryLength: Int,
+                  private val boardPostListLength: Int): RootApp() {
 
     private val lastApp = LastApp(lastEntryStore)
     private val beepChar = 7.toChar()
@@ -34,7 +35,7 @@ class MainMenuApp(private val myCall: String,
 
     init {
         // Apps and functionality
-        registerCommand(Command("board") .reply("Launching Bulletin Board")    .openApp(BulletinBoardApp(bulletinBoardStore, boardPromptTopicLength, boardSummaryLength))  .description("Open the Bulletin Board"))
+        registerCommand(Command("board") .reply("Launching Bulletin Board")    .openApp(BulletinBoardApp(bulletinBoardStore, boardPromptTopicLength, boardSummaryLength, boardPostListLength))  .description("Open the Bulletin Board"))
         registerCommand(Command("mail") .reply("Launching Mail")    .openApp(MailboxApp(mailboxStore))  .description("Open your mailbox"))
         registerCommand(Command("last") .function { handleLast(it) }.description("last [callsign] - See when others were last seen"))
         registerCommand(Command("tell") .function { handleTell(it) } .description("tell <callsign> - Send a quick APRS message to someone."))

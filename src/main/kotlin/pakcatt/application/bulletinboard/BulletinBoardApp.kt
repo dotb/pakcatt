@@ -14,7 +14,8 @@ import java.lang.StringBuilder
 
 class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
                        private val boardPromptTopicLength: Int,
-                       private val boardSummaryLength: Int): SubApp() {
+                       private val boardSummaryLength: Int,
+                       private val defaultPostListLength: Int): SubApp() {
 
     init {
         registerCommand(Command("list") .function { listThreads(it) }  .description("List the threads"))
@@ -64,7 +65,7 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
             returnedThread = bulletinBoardStore.getThread(threadNumber)
         }
         return if (null != returnedThread) {
-            AppResponse.sendText("", ReadThreadApp(returnedThread, bulletinBoardStore, boardPromptTopicLength, boardSummaryLength))
+            AppResponse.sendText("", ReadThreadApp(returnedThread, bulletinBoardStore, boardPromptTopicLength, boardSummaryLength, defaultPostListLength))
         } else {
             AppResponse.sendText("No thread found")
         }

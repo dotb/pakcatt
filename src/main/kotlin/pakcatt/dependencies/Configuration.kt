@@ -45,6 +45,13 @@ class Configuration {
         return boardPromptTopicLength.toInt()
     }
 
+    @Value("\${pakcatt.application.board.defaultPostListLength}")
+    private lateinit var defaultPostListLength: String
+    @Bean
+    fun boardPostListLength(): Int {
+        return defaultPostListLength.toInt()
+    }
+
     @Value("\${pakcatt.application.beacon.message}")
     private lateinit var beaconMessage: String
     @Bean

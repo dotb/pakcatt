@@ -40,36 +40,56 @@ class BulletinBoardAppTest: AppServiceTest() {
     }
 
     @Test
-    fun `test open the board and then a topic and list posts`() {
+    fun `test open the board and then a topic and list posts with a default length`() {
         var request = testRequest("board")
-
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("Launching Bulletin Board\n\rboard> ", response.responseString())
 
         request = testRequest("open 1")
-
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${EOL}" +
                 "board/1 This is topic 1> ", response.responseString())
 
-
         request = testRequest("list")
-
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${EOL}" +
                 "No\tPosted       By\t\tSize${EOL}" +
                 "---${EOL}" +
-                "0)\t01 Jan 10:00  VK2VRO\t573B${EOL}" +
+                "1)\t01 Jan 10:16  VK2VRO\t573B${EOL}" +
                 "Sed ut perspiciatis${EOL}" +
                 "unde omnis iste natus${EOL}" +
                 "error sit voluptatem accusantium${EOL}" +
                 "do...${EOL}${EOL}" +
                 "---${EOL}" +
-                "1)\t01 Jan 10:16  VK3LIT\t572B${EOL}" +
+                "2)\t01 Jan 10:33  PACKATT\t567B${EOL}" +
                 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${EOL}${EOL}" +
+                "---${EOL}" +
+                "3 posts in: This is topic 1${EOL}" +
+                "${EOL}" +
+                "board/1 This is topic 1> ", response.responseString())
+    }
+
+    @Test
+    fun `test open the board and then a topic and list posts with a specified length`() {
+        var request = testRequest("board")
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Launching Bulletin Board\n\rboard> ", response.responseString())
+
+        request = testRequest("open 1")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("${EOL}" +
+                "board/1 This is topic 1> ", response.responseString())
+
+        request = testRequest("list 1")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("${EOL}" +
+                "No\tPosted       By\t\tSize${EOL}" +
                 "---${EOL}" +
                 "2)\t01 Jan 10:33  PACKATT\t567B${EOL}" +
                 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${EOL}${EOL}" +
@@ -82,22 +102,18 @@ class BulletinBoardAppTest: AppServiceTest() {
     @Test
     fun `test open a topic and read a post that exists and one that does not exist`() {
         var request = testRequest("board")
-
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("Launching Bulletin Board\n\rboard> ", response.responseString())
 
         request = testRequest("open 1")
-
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${EOL}" +
                 "board/1 This is topic 1> ", response.responseString())
 
-
         // Read a post that exists
-        request = testRequest("read 1")
-
+        request = testRequest("read 0")
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("\n\rSed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque" +
@@ -111,7 +127,6 @@ class BulletinBoardAppTest: AppServiceTest() {
 
         // Read a post that does not exist
         request = testRequest("read 3")
-
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("Post not found\n\r" +

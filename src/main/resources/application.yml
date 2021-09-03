@@ -15,6 +15,7 @@ pakcatt:
     board:
       summaryLength: 10 # The length of topic and message summary test in listings
       promptTopicLength: 8 # The length of the topic summary placed in the prompt displayed when in a topic
+      defaultPostListLength: 10 # The default number of posts presented in a listing within a topic
 
     scriptable:
       workingDir: ./

@@ -21,7 +21,8 @@ open class AppServiceTest: TestCase() {
                                     LastEntryStore(MockedLastEntryRepository()),
                                     "Welcome",
                                     20,
-                                    80)
+                                    80,
+                                    2)
 
     protected val appService = AppService(listOf(mainMenuApp))
     protected val EOL = "\n\r"
