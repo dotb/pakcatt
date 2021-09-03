@@ -42,6 +42,8 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
             listResponse.append("No${tabSpace}Posted       By${tabSpace}${tabSpace}Size${StringUtils.EOL}")
             for (post in postList) {
                 val summary = "${stringUtils.shortenString(post.body, boardSummaryLength, true)}"
+                listResponse.append("---------------------------------")
+                listResponse.append(StringUtils.EOL)
                 listResponse.append(post.postNumber)
                 listResponse.append(tabSpace)
                 listResponse.append(stringUtils.formattedDate(post.postDateTime))
@@ -56,6 +58,8 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
                 listResponse.append(StringUtils.EOL)
             }
         }
+        listResponse.append("---------------------------------")
+        listResponse.append(StringUtils.EOL)
         listResponse.append(postCount)
         listResponse.append(" posts")
         listResponse.append(StringUtils.EOL)
