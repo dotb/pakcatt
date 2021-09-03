@@ -32,7 +32,7 @@ class BulletinBoardStore(val bulletinBoardThreadRepository: BulletinBoardThreadR
      */
     fun getPost(postIndex: Int, threadId: Int): BulletinBoardPost? {
         val allPosts = getPostsInThread(threadId)
-        return if (allPosts.size - 1 > postIndex) {
+        return if (allPosts.size > postIndex) {
             allPosts[postIndex]
         } else {
             null
