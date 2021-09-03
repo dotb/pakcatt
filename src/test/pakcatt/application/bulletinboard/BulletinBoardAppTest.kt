@@ -60,7 +60,7 @@ class BulletinBoardAppTest: AppServiceTest() {
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${EOL}" +
-                "No\tUpdated       By\t\tSize${EOL}" +
+                "No\tPosted       By\t\tSize${EOL}" +
                 "1\t01 Jan 10:00  VK2VRO\t573B${EOL}" +
                 "Sed ut perspiciatis${EOL}" +
                 "unde omnis iste natus${EOL}" +

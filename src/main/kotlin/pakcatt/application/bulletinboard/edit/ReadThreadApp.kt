@@ -39,7 +39,7 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
 
         if (postCount > 0) {
             listResponse.append(StringUtils.EOL)
-            listResponse.append("No${tabSpace}Updated       By${tabSpace}${tabSpace}Size${StringUtils.EOL}")
+            listResponse.append("No${tabSpace}Posted       By${tabSpace}${tabSpace}Size${StringUtils.EOL}")
             for (post in postList) {
                 val summary = "${stringUtils.shortenString(post.body, boardSummaryLength, true)}"
                 listResponse.append(post.postNumber)
