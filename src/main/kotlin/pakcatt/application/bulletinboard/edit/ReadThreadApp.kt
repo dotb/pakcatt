@@ -39,7 +39,7 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
 
         if (postCount > 0) {
             listResponse.append(StringUtils.EOL)
-            listResponse.append("No${tabSpace}Updated       By${tabSpace}Message${StringUtils.EOL}")
+            listResponse.append("No${tabSpace}Updated       By${StringUtils.EOL}")
             for (post in postList) {
                 val summary = "${stringUtils.shortenString(post.body, boardSummaryLength, true)}"
                 listResponse.append(post.postNumber)
@@ -47,8 +47,9 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
                 listResponse.append(stringUtils.formattedDate(post.postDateTime))
                 listResponse.append("  ")
                 listResponse.append(post.fromCallsign)
-                listResponse.append(tabSpace)
+                listResponse.append(StringUtils.EOL)
                 listResponse.append(summary)
+                listResponse.append(StringUtils.EOL)
                 listResponse.append(StringUtils.EOL)
             }
         }

@@ -192,7 +192,7 @@ class ConnectionHandler(private val remoteCallsign: String,
     }
 
     private fun handleIncomingAcknowledgement(incomingFrame: KissFrame) {
-        // If our record of our last acknowledged sent frame is already updated, then the remote party may be asking us to re-sync with an RR_P
+        // If our record of our last acknowledged sent frame is already updated, then the remote party may be asking us to re-sync with an RECEIVE_READY_P
         if (sequencedQueue.handleIncomingAcknowledgementAndIfRepeated(incomingFrame)
             && (incomingFrame.controlField() == ControlField.S_8_RECEIVE_READY_P
                     || incomingFrame.controlField() == ControlField.S_128_RECEIVE_READY_P)) {

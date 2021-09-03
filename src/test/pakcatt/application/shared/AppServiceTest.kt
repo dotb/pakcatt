@@ -16,12 +16,12 @@ import pakcatt.application.shared.model.ResponseType
 open class AppServiceTest: TestCase() {
 
     protected val mainMenuApp = MainMenuApp("PAKCATT",
-        MailboxStore(MockedMailMessageRepository()),
-        BulletinBoardStore(MockedBulletinBoardThreadRepository(), MockedBulletinBoardPostRepository()),
-        LastEntryStore(MockedLastEntryRepository()),
-        "Welcome",
-        20,
-        10)
+                                    MailboxStore(MockedMailMessageRepository()),
+                                    BulletinBoardStore(MockedBulletinBoardThreadRepository(), MockedBulletinBoardPostRepository()),
+                                    LastEntryStore(MockedLastEntryRepository()),
+                                    "Welcome",
+                                    20,
+                                    80)
 
     protected val appService = AppService(listOf(mainMenuApp))
     protected val EOL = "\n\r"
