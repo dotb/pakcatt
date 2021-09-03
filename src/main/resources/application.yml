@@ -37,7 +37,7 @@ pakcatt:
   ## Packet performance parameters
   network.packet:
     frame_size_max: 128 # The maximum number of bytes sent in each AX.25 frame
-    frames_per_over: 4 # The maximum number of frames / packets sent in each transmission
+    frames_per_over: 4 # The maximum number of frames / packets sent in each transmission. 4 seems to be a good value. I wouldn't go more than 6.
     minTXPauseSeconds: 2 # The minimum amount of time left between transmissions
     deliveryRetryTimeSeconds: 10 # The time between re-sending frames that have not been acknowledged
     maxDeliveryAttempts: 10 # The number of times a frame is re-sent if not acknowledged
