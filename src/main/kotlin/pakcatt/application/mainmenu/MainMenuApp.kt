@@ -10,6 +10,8 @@ import pakcatt.application.last.persistence.LastEntryStore
 import pakcatt.application.mailbox.MailboxApp
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.settings.SettingsApp
+import pakcatt.application.shared.COLOUR
+import pakcatt.application.shared.FORMAT
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.RootApp
 import pakcatt.application.shared.command.Command
@@ -23,12 +25,12 @@ import kotlin.math.sqrt
 @Profile("production")
 class MainMenuApp(private val myCall: String,
                   private val mailboxStore: MailboxStore,
-                  private val bulletinBoardStore: BulletinBoardStore,
-                  private val lastEntryStore: LastEntryStore,
+                  bulletinBoardStore: BulletinBoardStore,
+                  lastEntryStore: LastEntryStore,
                   private val welcomeMessage: String,
-                  private val boardPromptTopicLength: Int,
-                  private val boardSummaryLength: Int,
-                  private val boardPostListLength: Int): RootApp() {
+                  boardPromptTopicLength: Int,
+                  boardSummaryLength: Int,
+                  boardPostListLength: Int): RootApp() {
 
     private val lastApp = LastApp(lastEntryStore)
 
@@ -111,9 +113,16 @@ class MainMenuApp(private val myCall: String,
 
     private fun allTheStyles(): AppResponse {
         val returnString = StringBuilder()
-        for (style in 1..8) {
-            returnString.append("$escapeChar[${style}m Style $style $escapeChar[0m${stringUtils.EOL}")
+        for (style in FORMAT.values()) {
+            returnString.append("$escapeChar[${style.ansiCode}m Style $style $escapeChar[0m${stringUtils.EOL}")
         }
+        for (colour in COLOUR.values()) {
+            returnString.append("$escapeChar[3${colour.ansiCode}m Foreground Colour $colour $escapeChar[39m${stringUtils.EOL}")
+        }
+        for (colour in COLOUR.values()) {
+            returnString.append("$escapeChar[4${colour.ansiCode}m Background Colour $colour $escapeChar[49m${stringUtils.EOL}")
+        }
+
         return AppResponse.sendText(returnString.toString())
     }
 
