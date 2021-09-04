@@ -1,5 +1,7 @@
 package pakcatt.application.shared.model
 
+import pakcatt.application.shared.UserContext
+
 data class AppRequest(var remoteCallsign: String,
                       var remoteCallsignWithoutSSID: String,
                       var addressedToCallsign: String,
@@ -7,4 +9,5 @@ data class AppRequest(var remoteCallsign: String,
                       var viaRepeaterOne: String? = null,
                       var viaRepeaterTwo: String? = null,
                       var canReceiveMessage: Boolean = false,
-                      var location: Location? = null)
+                      var location: Location? = null,
+                      var userContext: UserContext? = null)

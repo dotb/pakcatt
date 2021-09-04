@@ -1,10 +1,12 @@
 package pakcatt.application.shared
 
+import pakcatt.util.StringUtils
 import java.util.*
 
 class UserContext(remoteCallsign: String, myCallsign: String) {
 
     private var navigationStack = LinkedList<SubApp>()
+    var eolSequence = StringUtils().EOL
 
     fun navigateToApp(app: SubApp) {
         navigationStack.push(app)

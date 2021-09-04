@@ -24,13 +24,14 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         // Ensure any previous connection is closed, and open a new one
         closeConnection(request.remoteCallsign, request.addressedToCallsign)
         val userContext = contextForConversation(request.remoteCallsign, request.addressedToCallsign)
-
         // Find an app who is willing to connect
         val connectionResponse = findAppWillingToAcceptConnection(request)
-
         // Update the app focus state in the user context if required.
         updateAppFocus(connectionResponse.nextApp(), userContext)
-        return addPromptToResponse(userContext.engagedApplication(), connectionResponse) as AppResponse
+        addPromptToResponse(userContext.engagedApplication(), connectionResponse)
+        // Customise the EOL characters based on user configuration
+        translateEOLForUser(connectionResponse, userContext)
+        return connectionResponse
     }
 
     private fun findAppWillingToAcceptConnection(request: AppRequest): AppResponse {
@@ -51,17 +52,23 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
 
     // We've received data from a client, share it with listening apps and get a response for the client
     override fun getResponseForReceivedMessage(request: AppRequest): AppResponse {
-        // Sometimes a TNC will send only \r, we rewrite these to a standard EOL char or sequence
-        var cleanedRequest = request
-        cleanedRequest.message = stringUtils.fixEndOfLineCharacters(cleanedRequest.message)
         // Get this user's context
-        val userContext = contextForConversation(cleanedRequest.remoteCallsign, cleanedRequest.addressedToCallsign)
+        val userContext = contextForConversation(request.remoteCallsign, request.addressedToCallsign)
+        request.userContext = userContext
+        // Try autodetect the incoming EOL sequence
+        updateUserContextWithAutodetectedEOLSequence(request.message, userContext)
+        // Re-write incoming EOL sequences to a configured standard
+        var cleanedRequest = request
+        cleanedRequest.message = stringUtils.fixEndOfLineCharacters(cleanedRequest.message, stringUtils.EOL)
         // Get the interaction response from the app
         val interactionResponse = getResponseForReceivedMessage(cleanedRequest, userContext)
         // Update any focus state in the user context if required, returned by the selected app.
         updateAppFocus(interactionResponse.nextApp(), userContext)
         // Return any response with an included command prompt string
-        return addPromptToResponse(userContext.engagedApplication(), interactionResponse)
+        addPromptToResponse(userContext.engagedApplication(), interactionResponse)
+        // Customise the EOL characters based on user configuration
+        translateEOLForUser(interactionResponse, userContext)
+        return interactionResponse
     }
 
     override fun getAdhocResponses(forDeliveryType: DeliveryType): List<AdhocMessage> {
@@ -103,6 +110,26 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
 
     /* Methods that handle the user context objects */
 
+    // Updated the user context with their preferred EOL characters, based on what they have sent us.
+    private fun updateUserContextWithAutodetectedEOLSequence(requestString: String, userContext: UserContext) {
+        testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\r\n")
+        testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\n\r")
+        testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\r")
+        testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\n")
+    }
+
+    private fun testForEOLSequenceAndUpdateUserContext(requestString: String, userContext: UserContext, eolSequence: String) {
+        if (requestString.contains(eolSequence)) {
+            userContext.eolSequence = eolSequence
+        }
+    }
+
+    // Customise EOL characters to that responses are well formatted for a different types of remote terminal
+    private fun translateEOLForUser(interactionResponse: AppResponse, userContext: UserContext) {
+        val adjustedResponseString = stringUtils.fixEndOfLineCharacters(interactionResponse.responseString(), userContext.eolSequence)
+        interactionResponse.updateResponseString(adjustedResponseString)
+    }
+
     // Update the app focus state in the user context if required.
     private fun updateAppFocus(nextApp: SubApp?, userContext: UserContext) {
         if (null != nextApp && nextApp is NavigateBack) {
@@ -116,7 +143,7 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
     }
 
     // Rewrite the prompt string into the textual response
-    private fun addPromptToResponse(app: SubApp?, response: AppResponse): AppResponse {
+    private fun addPromptToResponse(app: SubApp?, response: AppResponse) {
         val message = response.responseString()
 
         when (val prompt = app?.returnCommandPrompt()) {
@@ -124,8 +151,6 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
             null -> response.updateResponseString("$message${stringUtils.EOL}")
             else -> response.updateResponseString("$message${stringUtils.EOL}$prompt ")
         }
-
-        return response
     }
 
     private fun contextForConversation(remoteCallsign: String, myCallsign: String): UserContext {

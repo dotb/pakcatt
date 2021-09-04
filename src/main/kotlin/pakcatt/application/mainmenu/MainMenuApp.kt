@@ -9,6 +9,7 @@ import pakcatt.application.last.persistence.LastEntryRepository
 import pakcatt.application.last.persistence.LastEntryStore
 import pakcatt.application.mailbox.MailboxApp
 import pakcatt.application.mailbox.persistence.MailboxStore
+import pakcatt.application.settings.SettingsApp
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.RootApp
 import pakcatt.application.shared.command.Command
@@ -53,6 +54,7 @@ class MainMenuApp(private val myCall: String,
         registerCommand(Command("styles").function { allTheStyles() }.description("Test the styles supported by your terminal"))
         registerCommand(Command("nop")  .ackOnly().description("I'll do nothing, just acknowledge your request"))
         registerCommand(Command("ignore").ignore().description("I'll receive your command but won't acknowledge it."))
+        registerCommand(Command("settings").reply("Launching Settings") .openApp(SettingsApp()).description("View your environment settings."))
     }
 
     override fun returnCommandPrompt(): String {

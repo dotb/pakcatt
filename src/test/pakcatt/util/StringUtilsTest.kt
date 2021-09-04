@@ -37,19 +37,19 @@ class StringUtilsTest : TestCase() {
 
 
         // An array that already has both EOL characters should not be updated. We're not fussy about the order of EOL chars.
-        assertEquals(subject.stringToHex(arrayWithCarriageReturnThenLineFeed), subject.stringToHex(subject.fixEndOfLineCharacters(arrayWithCarriageReturnThenLineFeed)))
-        assertEquals(subject.stringToHex(arrayWithLineFeedThenCarriageReturn), subject.stringToHex(subject.fixEndOfLineCharacters(arrayWithLineFeedThenCarriageReturn)))
+        assertEquals(subject.stringToHex(arrayWithCarriageReturnThenLineFeed), subject.stringToHex(subject.fixEndOfLineCharacters(arrayWithCarriageReturnThenLineFeed, subject.EOL)))
+        assertEquals(subject.stringToHex(arrayWithLineFeedThenCarriageReturn), subject.stringToHex(subject.fixEndOfLineCharacters(arrayWithLineFeedThenCarriageReturn, subject.EOL)))
 
         // Arrays with only one EOL character should be adjusted to have both <CR> and <LF>
-        assertEquals(subject.stringToHex(arrayWithCarriageReturnThenLineFeed), subject.stringToHex(subject.fixEndOfLineCharacters(arrayWithOnlyLineFeed)))
-        assertEquals(subject.stringToHex(arrayWithCarriageReturnThenLineFeed), subject.stringToHex(subject.fixEndOfLineCharacters(arrayWithOnlyCarriageReturn)))
+        assertEquals(subject.stringToHex(arrayWithCarriageReturnThenLineFeed), subject.stringToHex(subject.fixEndOfLineCharacters(arrayWithOnlyLineFeed, subject.EOL)))
+        assertEquals(subject.stringToHex(arrayWithCarriageReturnThenLineFeed), subject.stringToHex(subject.fixEndOfLineCharacters(arrayWithOnlyCarriageReturn, subject.EOL)))
 
         // Short arrays should be handled, too.
-        assertEquals(subject.stringToHex(shortArrayWithCarriageReturnThenLineFeed), subject.stringToHex(subject.fixEndOfLineCharacters(shortArrayWithCarriageReturn)))
-        assertEquals(subject.stringToHex(shortArrayWithCarriageReturnThenLineFeed), subject.stringToHex(subject.fixEndOfLineCharacters(shortArrayWithLineFeed)))
+        assertEquals(subject.stringToHex(shortArrayWithCarriageReturnThenLineFeed), subject.stringToHex(subject.fixEndOfLineCharacters(shortArrayWithCarriageReturn, subject.EOL)))
+        assertEquals(subject.stringToHex(shortArrayWithCarriageReturnThenLineFeed), subject.stringToHex(subject.fixEndOfLineCharacters(shortArrayWithLineFeed, subject.EOL)))
 
         // Test an example for a real packet
-        assertEquals(realPacketResult,subject.fixEndOfLineCharacters(realPacketTest))
+        assertEquals(realPacketResult,subject.fixEndOfLineCharacters(realPacketTest, subject.EOL))
     }
 
 

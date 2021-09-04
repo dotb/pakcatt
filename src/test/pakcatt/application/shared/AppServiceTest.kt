@@ -40,6 +40,26 @@ open class AppServiceTest: TestCase() {
         assertEquals("Welcome${stringUtils.EOL}You have 2 unread messages.${stringUtils.EOL}${stringUtils.EOL}menu> ", response.responseString())
     }
 
+    @Test
+    fun `test automatic EOL detection`() {
+        var request = testRequest("settings")
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Launching Settings${stringUtils.EOL}settings> ", response.responseString())
+
+        request = testRequest("list")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Your terminal EOL is set to CRLF${stringUtils.EOL}" +
+                "settings> ", response.responseString())
+
+        request = testRequest("list\n")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Your terminal EOL is set to LF${stringUtils.EOL}" +
+                "settings> ", response.responseString())
+    }
+
     protected fun testRequest(command: String = ""): AppRequest {
         return AppRequest("VK3LIT-1", "VK3LIT", "PAKCATT", command, "", "", true)
     }

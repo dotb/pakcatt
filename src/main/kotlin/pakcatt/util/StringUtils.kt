@@ -9,8 +9,15 @@ import kotlin.math.min
 @Component
 class StringUtils {
 
+    companion object {
+        const val CRLF = "\r\n"
+        const val LFCR = "\n\r"
+        const val CR = '\r'
+        const val LF = '\n'
+    }
+
     @Autowired
-    private var defaultEndOfLine: String = "\r\n"
+    private var defaultEndOfLine: String = CRLF
 
     val EOL: String = defaultEndOfLine
     private val dateFormatter = SimpleDateFormat("dd MMM HH:mm")
@@ -107,12 +114,10 @@ class StringUtils {
 
     /**
      * Parse an input array of bytes and fix any End Of Line (EOL)
-     * characters, replacing single instances of \r or \n
+     * characters, replacing single instances of CR or LF
      * with the configured standard EOL character sequence.
      */
-    fun fixEndOfLineCharacters(inputString: String): String {
-        val lineFeed = '\r'
-        val carriageReturn = '\n'
+    fun fixEndOfLineCharacters(inputString: String, newEOLString: String): String {
         var fixedString = StringBuilder()
 
         // Run through the remaining bytes and look for missing EOL characters
@@ -128,11 +133,11 @@ class StringUtils {
 
             // Change any instances of CR or LF with the configured EOL sequence
             when {
-                currentChar == lineFeed && previousChar != carriageReturn && nextChar != carriageReturn -> {
-                    fixedString.append(EOL)
+                currentChar == CR && previousChar != LF && nextChar != LF -> {
+                    fixedString.append(newEOLString)
                 }
-                currentChar == carriageReturn && previousChar != lineFeed && nextChar != lineFeed -> {
-                    fixedString.append(EOL)
+                currentChar == LF && previousChar != CR && nextChar != CR -> {
+                    fixedString.append(newEOLString)
                 }
                 else -> fixedString.append(currentChar)
             }
