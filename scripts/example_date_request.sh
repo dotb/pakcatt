@@ -14,6 +14,9 @@
 
 # This example responds to messages to 'MYCALL' sending static date
 
+# Here's an example JSON payload that's passed to the script:
+# {"remoteCallsign":"VK3LIT-7","remoteCallsignWithoutSSID":"VK3LIT","addressedToCallsign":"VK3LIT-1","message":"WIDE1-1","viaRepeaterOne":"WIDE2-1","viaRepeaterTwo":"date","canReceiveMessage":true,"location":null,"userContext":{"eolSequence":""}}
+
 MYCALL=`echo $1 | jq .addressedToCallsign | sed 's/"//g'`
 THEIR_CALL=`echo $1 | jq .remoteCallsign | sed 's/"//g'`
 MESSAGE=`echo $1 | jq .message | sed 's/"//g'`
