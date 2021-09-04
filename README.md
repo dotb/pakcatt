@@ -9,15 +9,19 @@ PakCatt is maintained by VK3LIT and VK2VRO, who also run an instance on 144.875M
 
 PakCatt is in its early days! Here are a few of the features it currently supports:
 
+- **A Bulletin board** accessible to multiple users over RF
+
+- **A Mailbox service** - you can send and receive mail personal messages
+  
 - **An extensible app framework** for developing digital services over packet
 
-- **A Maildrop service** - you can send and receive mail!
+- **A Scripting framework** for quick integration with other systems and scripts
 
 - **Beacon** - Beacon a custom message at a configured time interval 
 
-- **Log of seen stations** - check out the `last` command
+- **Log of seen stations** - let you know who's been active recently
   
-- **Serial Interface** to hardware TNCs
+- **A Serial Interface** to hardware TNCs
 
 - **KISS implementation** for raw communication with a TNC
 
@@ -47,6 +51,14 @@ By VK3LIT & VK2VRO
 You can also run the handy build.sh script, which will build and create a Docker image.
 ```bash
 $ ./build.sh
+```
+
+## Configuration
+The configuration options are kept in the application.yml file. Most of the defaults will work for you out-of-the box but at a minimum you'll need to configure your callsign, database connection and TNC connection.
+
+The application.yml configuration compiled into the app bundle will be used by default, but it be overridden by specifying a configuration path at startup like this:
+```
+java -jar /opt/pakcatt/pakcatt-0.1.jar --spring.config.location=/path/to/application.yml
 ```
 
 ## References
