@@ -47,15 +47,15 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
     private fun compilePostListResponse(postList: List<BulletinBoardPost>, totalPosts: Int, rangeOfIndexesToInclude: IntRange): String {
         val listResponse = StringBuilder()
         if (totalPosts > 0) {
-            listResponse.append(StringUtils.EOL)
+            listResponse.append(stringUtils.EOL)
             listResponse.append(format(FORMAT.BOLD))
             listResponse.append("No${tabSpace}Posted       By${tabSpace}${tabSpace}Size")
             listResponse.append(format(FORMAT.RESET))
-            listResponse.append(StringUtils.EOL)
+            listResponse.append(stringUtils.EOL)
             for ((index, post) in postList.withIndex()) {
                 if (rangeOfIndexesToInclude.contains(index)) {
                     val summary = "${stringUtils.shortenString(post.body, boardSummaryLength, true)}"
-                    listResponse.append(StringUtils.EOL)
+                    listResponse.append(stringUtils.EOL)
                     listResponse.append(format(FORMAT.BOLD))
                     listResponse.append(index)
                     listResponse.append(")")
@@ -67,18 +67,18 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
                     listResponse.append(post.body.length)
                     listResponse.append("B")
                     listResponse.append(format(FORMAT.RESET))
-                    listResponse.append(StringUtils.EOL)
+                    listResponse.append(stringUtils.EOL)
                     listResponse.append(summary)
-                    listResponse.append(StringUtils.EOL)
-                    listResponse.append(StringUtils.EOL)
+                    listResponse.append(stringUtils.EOL)
+                    listResponse.append(stringUtils.EOL)
                 }
             }
         }
-        listResponse.append(StringUtils.EOL)
+        listResponse.append(stringUtils.EOL)
         listResponse.append(totalPosts)
         listResponse.append(" posts in: ")
         listResponse.append(parentThread.topic)
-        listResponse.append(StringUtils.EOL)
+        listResponse.append(stringUtils.EOL)
         return listResponse.toString()
     }
 
@@ -89,7 +89,7 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
             post = bulletinBoardStore.getPost(postNumber, parentThread.threadNumber)
         }
         return if (null != post && post.threadNumber == parentThread.threadNumber) {
-            AppResponse.sendText("${StringUtils.EOL}${post.body}")
+            AppResponse.sendText("${stringUtils.EOL}${post.body}")
         } else {
             AppResponse.sendText("Post not found")
         }

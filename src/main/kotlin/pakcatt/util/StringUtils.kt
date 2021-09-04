@@ -1,5 +1,6 @@
 package pakcatt.util
 
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.text.SimpleDateFormat
 import java.util.*
@@ -8,11 +9,11 @@ import kotlin.math.min
 @Component
 class StringUtils {
 
-    private val dateFormatter = SimpleDateFormat("dd MMM HH:mm")
+    @Autowired
+    private var defaultEndOfLine: String = "\r\n"
 
-    companion object {
-        const val EOL = "\n\r"
-    }
+    val EOL: String = defaultEndOfLine
+    private val dateFormatter = SimpleDateFormat("dd MMM HH:mm")
 
     fun byteToHex(byte: Byte): String {
         return String.format("%02x", byte)
@@ -107,7 +108,7 @@ class StringUtils {
     /**
      * Parse an input array of bytes and fix any End Of Line (EOL)
      * characters, replacing single instances of \r or \n
-     * with both \n\r.
+     * with the configured standard EOL character sequence.
      */
     fun fixEndOfLineCharacters(inputString: String): String {
         val lineFeed = '\r'
@@ -125,16 +126,13 @@ class StringUtils {
                 else -> 0
             }
 
-            // Fix any single instances of CR or LF with both
+            // Change any instances of CR or LF with the configured EOL sequence
             when {
                 currentChar == lineFeed && previousChar != carriageReturn && nextChar != carriageReturn -> {
-                    fixedString.append(lineFeed)
-                    fixedString.append(carriageReturn)
-
+                    fixedString.append(EOL)
                 }
                 currentChar == carriageReturn && previousChar != lineFeed && nextChar != lineFeed -> {
-                    fixedString.append(lineFeed)
-                    fixedString.append(carriageReturn)
+                    fixedString.append(EOL)
                 }
                 else -> fixedString.append(currentChar)
             }

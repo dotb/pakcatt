@@ -51,7 +51,7 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
 
     // We've received data from a client, share it with listening apps and get a response for the client
     override fun getResponseForReceivedMessage(request: AppRequest): AppResponse {
-        // Sometimes a TNC will send only \r, we rewrite these to \n\r
+        // Sometimes a TNC will send only \r, we rewrite these to a standard EOL char or sequence
         var cleanedRequest = request
         cleanedRequest.message = stringUtils.fixEndOfLineCharacters(cleanedRequest.message)
         // Get this user's context
@@ -120,9 +120,9 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         val message = response.responseString()
 
         when (val prompt = app?.returnCommandPrompt()) {
-            "" -> response.updateResponseString("$message${StringUtils.EOL}")
-            null -> response.updateResponseString("$message${StringUtils.EOL}")
-            else -> response.updateResponseString("$message${StringUtils.EOL}$prompt ")
+            "" -> response.updateResponseString("$message${stringUtils.EOL}")
+            null -> response.updateResponseString("$message${stringUtils.EOL}")
+            else -> response.updateResponseString("$message${stringUtils.EOL}$prompt ")
         }
 
         return response

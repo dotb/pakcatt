@@ -117,20 +117,20 @@ abstract class SubApp {
 
     private fun helpResponse(): AppResponse {
         val stringBuilder = StringBuilder()
-        stringBuilder.append("\r\n")
+        stringBuilder.append(stringUtils.EOL)
         for (command in commands) {
             val myDescription = command.descriptionText()
             if (null != myDescription) {
                 stringBuilder.append(command.commandText())
                 stringBuilder.append("\t- ")
                 stringBuilder.append(myDescription)
-                stringBuilder.append("\r\n")
+                stringBuilder.append(stringUtils.EOL)
             }
         }
         stringBuilder.append("help")
         stringBuilder.append("\t- ")
         stringBuilder.append("Display this list of commands")
-        stringBuilder.append("\r\n")
+        stringBuilder.append(stringUtils.EOL)
         return AppResponse.sendText(stringBuilder.toString())
     }
 

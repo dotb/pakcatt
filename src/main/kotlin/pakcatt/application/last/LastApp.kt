@@ -47,7 +47,7 @@ class LastApp(private val lastEntryStore: LastEntryStore): RootApp() {
         val stringBuilder = StringBuilder()
         for (lastEntry in lastEntries) {
             stringBuilder.append("Last seen ${lastEntry.callsign} ${dateFormatter.format(lastEntry.lastSeen)}")
-            stringBuilder.append(StringUtils.EOL)
+            stringBuilder.append(stringUtils.EOL)
         }
         return stringBuilder.toString()
     }

@@ -40,11 +40,11 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         val messageCount = userMessages.size
 
         if (messageCount > 0) {
-            listResponse.append(StringUtils.EOL)
+            listResponse.append(stringUtils.EOL)
             listResponse.append(format(FORMAT.BOLD))
             listResponse.append("  No${tabSpace}Date          From${tabSpace}To${tabSpace}Subject")
             listResponse.append(format(FORMAT.RESET))
-            listResponse.append(StringUtils.EOL)
+            listResponse.append(stringUtils.EOL)
             for (message in userMessages) {
                 listResponse.append(when (message.isRead) {
                     true -> "  "
@@ -59,12 +59,12 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
                 listResponse.append(message.toCallsign)
                 listResponse.append(tabSpace)
                 listResponse.append(message.subject)
-                listResponse.append(StringUtils.EOL)
+                listResponse.append(stringUtils.EOL)
             }
         }
         listResponse.append(messageCount)
         listResponse.append(" messages")
-        listResponse.append(StringUtils.EOL)
+        listResponse.append(stringUtils.EOL)
         return AppResponse.sendText(listResponse.toString())
     }
 
@@ -81,7 +81,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
                 message.isRead = true
                 mailboxStore.updateMessage(message)
             }
-            AppResponse.sendText("${StringUtils.EOL}Subject: ${message.subject}${StringUtils.EOL}${message.body.toString()}")
+            AppResponse.sendText("${stringUtils.EOL}Subject: ${message.subject}${stringUtils.EOL}${message.body.toString()}")
         } else {
             AppResponse.sendText("No message found")
         }

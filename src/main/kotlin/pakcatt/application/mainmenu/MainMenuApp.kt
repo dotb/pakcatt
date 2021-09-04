@@ -33,7 +33,10 @@ class MainMenuApp(private val myCall: String,
 
     init {
         // Apps and functionality
-        registerCommand(Command("board") .reply("Launching Bulletin Board")    .openApp(BulletinBoardApp(bulletinBoardStore, boardPromptTopicLength, boardSummaryLength, boardPostListLength))  .description("Open the Bulletin Board"))
+        registerCommand(Command("board") .reply("Launching Bulletin Board")    .openApp(BulletinBoardApp(bulletinBoardStore,
+                                                                                                boardPromptTopicLength,
+                                                                                                boardSummaryLength,
+                                                                                                boardPostListLength))  .description("Open the Bulletin Board"))
         registerCommand(Command("mail") .reply("Launching Mail")    .openApp(MailboxApp(mailboxStore))  .description("Open your mailbox"))
         registerCommand(Command("last") .function { handleLast(it) }.description("last [callsign] - See when others were last seen"))
         registerCommand(Command("tell") .function { handleTell(it) } .description("tell <callsign> - Send a quick APRS message to someone."))
@@ -63,11 +66,11 @@ class MainMenuApp(private val myCall: String,
             val unreadMessages = mailboxApp.unreadMessageCount(request)
 
             stringBuilder.append(welcomeMessage)
-            stringBuilder.append(StringUtils.EOL)
+            stringBuilder.append(stringUtils.EOL)
             if (unreadMessages > 1) {
-                stringBuilder.append("You have $unreadMessages unread messages.${StringUtils.EOL}")
+                stringBuilder.append("You have $unreadMessages unread messages.${stringUtils.EOL}")
             } else if (unreadMessages > 0) {
-                stringBuilder.append("You have an unread message.${StringUtils.EOL}")
+                stringBuilder.append("You have an unread message.${stringUtils.EOL}")
             }
             AppResponse.sendText(stringBuilder.toString(), this)
         } else {
@@ -107,7 +110,7 @@ class MainMenuApp(private val myCall: String,
     private fun allTheStyles(): AppResponse {
         val returnString = StringBuilder()
         for (style in 1..8) {
-            returnString.append("$escapeChar[${style}m Style $style $escapeChar[0m\r\n")
+            returnString.append("$escapeChar[${style}m Style $style $escapeChar[0m${stringUtils.EOL}")
         }
         return AppResponse.sendText(returnString.toString())
     }

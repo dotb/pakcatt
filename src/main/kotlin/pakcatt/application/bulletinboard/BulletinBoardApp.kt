@@ -39,11 +39,11 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
         val threadCount = threadList.size
 
         if (threadCount > 0) {
-            listResponse.append(StringUtils.EOL)
+            listResponse.append(stringUtils.EOL)
             listResponse.append(format(FORMAT.BOLD))
             listResponse.append("  No  ${tabSpace}Updated     ${tabSpace}Topic")
             listResponse.append(format(FORMAT.RESET))
-            listResponse.append(StringUtils.EOL)
+            listResponse.append(stringUtils.EOL)
             for (thread in threadList) {
                 val topicSummary = "${stringUtils.shortenString(thread.topic, boardSummaryLength, true)}"
                 listResponse.append("  ")
@@ -53,12 +53,12 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
                 listResponse.append(stringUtils.formattedDate(thread.lastUpdatedDataTime))
                 listResponse.append(tabSpace)
                 listResponse.append(topicSummary)
-                listResponse.append(StringUtils.EOL)
+                listResponse.append(stringUtils.EOL)
             }
         }
         listResponse.append(threadCount)
         listResponse.append(" threads")
-        listResponse.append(StringUtils.EOL)
+        listResponse.append(stringUtils.EOL)
         return AppResponse.sendText(listResponse.toString())
     }
 

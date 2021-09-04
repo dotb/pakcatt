@@ -4,25 +4,28 @@ import org.springframework.data.domain.Example
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
+import pakcatt.util.StringUtils
 import java.util.*
 
 class MockedBulletinBoardPostRepository: BulletinBoardPostRepository {
+
+    private val stringUtils = StringUtils()
     override fun findByThreadNumber(threadNumber: Int): List<BulletinBoardPost> {
         return mutableListOf(
                         BulletinBoardPost("VK3LIT", Date(0), "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque" +
-                                "\n\rlaudantium, totam rem aperiam, eaque ipsa quae ab illo inventore" +
-                                "\n\rveritatis et quasi architecto beatae vitae dicta sunt explicabo." +
-                                "\n\rNemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia" +
-                                "\n\rconsequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est," +
-                                "\n\rqui dolorem ipsum quia dolor sit amet, consectetur,adipisci velit, sed quia non numquam eius" +
-                                "\n\rmodi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.", 1, 0),
+                                "${stringUtils.EOL}laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore" +
+                                "${stringUtils.EOL}veritatis et quasi architecto beatae vitae dicta sunt explicabo." +
+                                "${stringUtils.EOL}Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia" +
+                                "${stringUtils.EOL}consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est," +
+                                "${stringUtils.EOL}qui dolorem ipsum quia dolor sit amet, consectetur,adipisci velit, sed quia non numquam eius" +
+                                "${stringUtils.EOL}modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.", 1, 0),
                         BulletinBoardPost("VK2VRO", Date(1000000), "Sed ut perspiciatis" +
-                                "\n\runde omnis iste natus" +
-                                "\n\rerror sit voluptatem accusantium" +
-                                "\n\rdoloremque laudantium, totam rem aperiam," +
-                                "\n\reaque ipsa quae ab illo inventore veritatis et" +
-                                "\n\rquasi architecto beatae vitae dicta sunt explicabo." +
-                                "\n\rNemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.", 1, 1),
+                                "${stringUtils.EOL}unde omnis iste natus" +
+                                "${stringUtils.EOL}error sit voluptatem accusantium" +
+                                "${stringUtils.EOL}doloremque laudantium, totam rem aperiam," +
+                                "${stringUtils.EOL}eaque ipsa quae ab illo inventore veritatis et" +
+                                "${stringUtils.EOL}quasi architecto beatae vitae dicta sunt explicabo." +
+                                "${stringUtils.EOL}Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.", 1, 1),
                         BulletinBoardPost("PACKATT", Date(2000000), "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem.", 1, 2))
     }
 

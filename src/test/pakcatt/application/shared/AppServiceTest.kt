@@ -12,6 +12,7 @@ import pakcatt.application.mailbox.persistence.MockedMailMessageRepository
 import pakcatt.application.mainmenu.MainMenuApp
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.ResponseType
+import pakcatt.util.StringUtils
 
 open class AppServiceTest: TestCase() {
 
@@ -24,8 +25,8 @@ open class AppServiceTest: TestCase() {
                                     80,
                                     2)
 
+    protected val stringUtils = StringUtils()
     protected val appService = AppService(listOf(mainMenuApp))
-    protected val EOL = "\n\r"
     protected val escapeChar = 27.toChar()
     protected val startBold = "${escapeChar}[1m"
     protected val resetFormat = "${escapeChar}[0m"
@@ -36,7 +37,7 @@ open class AppServiceTest: TestCase() {
 
         val response = appService.getDecisionOnConnectionRequest(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
-        assertEquals("Welcome${EOL}You have 2 unread messages.${EOL}${EOL}menu> ", response.responseString())
+        assertEquals("Welcome${stringUtils.EOL}You have 2 unread messages.${stringUtils.EOL}${stringUtils.EOL}menu> ", response.responseString())
     }
 
     protected fun testRequest(command: String = ""): AppRequest {

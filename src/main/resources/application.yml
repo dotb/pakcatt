@@ -4,6 +4,7 @@ pakcatt:
     mycall: PAKCAT-1 # Your callsign-SSID. Connections to this callsign will be accepted.
     # The Welcome message seen by users when they connect
     welcomeMessage: Welcome to PakCatt! Type help to learn more :-)
+    defaultEndOfLine: "\n" # The default EOL sequence used to store content in the database
 
     # Beacon configuration
     beacon:

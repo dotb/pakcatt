@@ -14,6 +14,11 @@ class Configuration {
     }
 
     @Bean
+    fun defaultEndOfLine(): String {
+        return "\r\n"
+    }
+
+    @Bean
     fun beaconMessage(): String {
         return "Beacon message"
     }

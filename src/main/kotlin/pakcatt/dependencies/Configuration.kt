@@ -31,6 +31,13 @@ class Configuration {
         return welcomeMessage
     }
 
+    @Value("\${pakcatt.application.defaultEndOfLine}")
+    private lateinit var defaultEndOfLine: String
+    @Bean
+    fun defaultEndOfLine(): String {
+        return defaultEndOfLine
+    }
+
     @Value("\${pakcatt.application.board.summaryLength}")
     private lateinit var boardSummaryLength: String
     @Bean
