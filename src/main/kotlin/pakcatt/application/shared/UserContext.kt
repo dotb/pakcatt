@@ -3,7 +3,8 @@ package pakcatt.application.shared
 import pakcatt.util.StringUtils
 import java.util.*
 
-class UserContext(remoteCallsign: String, myCallsign: String) {
+class UserContext(val remoteCallsign: String,
+                  val myCallsign: String) {
 
     private var navigationStack = LinkedList<SubApp>()
     var eolSequence = StringUtils().EOL

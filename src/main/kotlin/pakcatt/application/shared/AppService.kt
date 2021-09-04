@@ -112,10 +112,11 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
 
     // Updated the user context with their preferred EOL characters, based on what they have sent us.
     private fun updateUserContextWithAutodetectedEOLSequence(requestString: String, userContext: UserContext) {
-        testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\r\n")
-        testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\n\r")
         testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\r")
         testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\n")
+        testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\r\n")
+        testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\n\r")
+
     }
 
     private fun testForEOLSequenceAndUpdateUserContext(requestString: String, userContext: UserContext, eolSequence: String) {

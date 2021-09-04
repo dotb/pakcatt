@@ -58,11 +58,11 @@ class BulletinBoardAppTest: AppServiceTest() {
         assertEquals("${stringUtils.EOL}" +
                 "${startBold}No\tPosted       By\t\tSize${resetFormat}${stringUtils.EOL}" +
                 "${stringUtils.EOL}" +
-                "${startBold}1)\t01 Jan 10:16  VK2VRO\t573B${resetFormat}${stringUtils.EOL}" +
+                "${startBold}1)\t01 Jan 10:16  VK2VRO\t567B${resetFormat}${stringUtils.EOL}" +
                 "Sed ut perspiciatis${stringUtils.EOL}" +
                 "unde omnis iste natus${stringUtils.EOL}" +
                 "error sit voluptatem accusantium${stringUtils.EOL}" +
-                "do...${stringUtils.EOL}${stringUtils.EOL}" +
+                "dolor...${stringUtils.EOL}${stringUtils.EOL}" +
                 "${stringUtils.EOL}" +
                 "${startBold}2)\t01 Jan 10:33  PACKATT\t567B${resetFormat}${stringUtils.EOL}" +
                 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${stringUtils.EOL}${stringUtils.EOL}" +

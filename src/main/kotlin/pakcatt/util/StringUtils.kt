@@ -12,12 +12,12 @@ class StringUtils {
     companion object {
         const val CRLF = "\r\n"
         const val LFCR = "\n\r"
-        const val CR = '\r'
-        const val LF = '\n'
+        const val CR = "\r"
+        const val LF = "\n"
     }
 
     @Autowired
-    private var defaultEndOfLine: String = CRLF
+    private var defaultEndOfLine: String = LF
 
     val EOL: String = defaultEndOfLine
     private val dateFormatter = SimpleDateFormat("dd MMM HH:mm")
@@ -114,34 +114,19 @@ class StringUtils {
 
     /**
      * Parse an input array of bytes and fix any End Of Line (EOL)
-     * characters, replacing single instances of CR or LF
-     * with the configured standard EOL character sequence.
+     * characters, replacing them with a specified EOL sequence.
      */
     fun fixEndOfLineCharacters(inputString: String, newEOLString: String): String {
-        var fixedString = StringBuilder()
+        var fixedString = inputString
 
-        // Run through the remaining bytes and look for missing EOL characters
-        for ((index, currentChar) in inputString.withIndex()) {
-            val previousChar = when {
-                index - 1 >= 0 -> inputString[index - 1]
-                else -> 0
-            }
-            val nextChar = when {
-                index + 1 < inputString.length -> inputString[index + 1]
-                else -> 0
-            }
-
-            // Change any instances of CR or LF with the configured EOL sequence
-            when {
-                currentChar == CR && previousChar != LF && nextChar != LF -> {
-                    fixedString.append(newEOLString)
-                }
-                currentChar == LF && previousChar != CR && nextChar != CR -> {
-                    fixedString.append(newEOLString)
-                }
-                else -> fixedString.append(currentChar)
-            }
-        }
+        // Swap CRLF with LF
+        fixedString = fixedString.replace("${CR}${LF}", LF)
+        // Swap LFCR with LF
+        fixedString = fixedString.replace("${LF}${CR}", LF)
+        // Swap CR with LF
+        fixedString = fixedString.replace(CR, LF)
+        // All EOL sqeuences should be reduced to LF, now swap it with the designated new EOL string
+        fixedString = fixedString.replace(LF, newEOLString)
 
         return fixedString.toString()
     }
