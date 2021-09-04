@@ -23,7 +23,7 @@ class BulletinBoardAppTest: AppServiceTest() {
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${EOL}" +
-                "  No  \tUpdated     \tTopic${EOL}" +
+                "${startBold}  No  \tUpdated     \tTopic${resetFormat}${EOL}" +
                 "  2  \t01 Jan 10:00\tThis is topic 2${EOL}" +
                 "  3  \t01 Jan 10:00\tThis is topic 3${EOL}" +
                 "  5  \t01 Jan 10:00\tThis is topic 5${EOL}" +

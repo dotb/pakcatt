@@ -36,7 +36,7 @@ open class AppServiceTest: TestCase() {
 
         val response = appService.getDecisionOnConnectionRequest(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
-        assertEquals("Welcome${EOL}${EOL}menu> ", response.responseString())
+        assertEquals("Welcome${EOL}You have 2 unread messages.${EOL}${EOL}menu> ", response.responseString())
     }
 
     protected fun testRequest(command: String = ""): AppRequest {

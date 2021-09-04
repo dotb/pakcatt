@@ -4,6 +4,7 @@ import pakcatt.application.bulletinboard.edit.AddThreadApp
 import pakcatt.application.bulletinboard.edit.ReadThreadApp
 import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
 import pakcatt.application.bulletinboard.persistence.BulletinBoardThread
+import pakcatt.application.shared.FORMAT
 import pakcatt.application.shared.NavigateBack
 import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.command.Command
@@ -39,7 +40,10 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
 
         if (threadCount > 0) {
             listResponse.append(StringUtils.EOL)
-            listResponse.append("  No  ${tabSpace}Updated     ${tabSpace}Topic${StringUtils.EOL}")
+            listResponse.append(format(FORMAT.BOLD))
+            listResponse.append("  No  ${tabSpace}Updated     ${tabSpace}Topic")
+            listResponse.append(format(FORMAT.RESET))
+            listResponse.append(StringUtils.EOL)
             for (thread in threadList) {
                 val topicSummary = "${stringUtils.shortenString(thread.topic, boardSummaryLength, true)}"
                 listResponse.append("  ")
