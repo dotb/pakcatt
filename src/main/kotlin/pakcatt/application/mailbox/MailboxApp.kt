@@ -41,9 +41,9 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
         if (messageCount > 0) {
             listResponse.append(stringUtils.EOL)
-            listResponse.append(format(FORMAT.BOLD))
+            listResponse.append(textFormat.format(FORMAT.BOLD))
             listResponse.append("  No${tabSpace}Date          From${tabSpace}To${tabSpace}Subject")
-            listResponse.append(format(FORMAT.RESET))
+            listResponse.append(textFormat.format(FORMAT.RESET))
             listResponse.append(stringUtils.EOL)
             for (message in userMessages) {
                 listResponse.append(when (message.isRead) {

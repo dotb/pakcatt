@@ -40,9 +40,9 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
 
         if (threadCount > 0) {
             listResponse.append(stringUtils.EOL)
-            listResponse.append(format(FORMAT.BOLD))
+            listResponse.append(textFormat.format(FORMAT.BOLD))
             listResponse.append("  No  ${tabSpace}Updated     ${tabSpace}Topic")
-            listResponse.append(format(FORMAT.RESET))
+            listResponse.append(textFormat.format(FORMAT.RESET))
             listResponse.append(stringUtils.EOL)
             for (thread in threadList) {
                 val topicSummary = "${stringUtils.shortenString(thread.topic, boardSummaryLength, true)}"

@@ -48,15 +48,15 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
         val listResponse = StringBuilder()
         if (totalPosts > 0) {
             listResponse.append(stringUtils.EOL)
-            listResponse.append(format(FORMAT.BOLD))
+            listResponse.append(textFormat.format(FORMAT.BOLD))
             listResponse.append("No${tabSpace}Posted       By${tabSpace}${tabSpace}Size")
-            listResponse.append(format(FORMAT.RESET))
+            listResponse.append(textFormat.format(FORMAT.RESET))
             listResponse.append(stringUtils.EOL)
             for ((index, post) in postList.withIndex()) {
                 if (rangeOfIndexesToInclude.contains(index)) {
                     val summary = "${stringUtils.shortenString(post.body, boardSummaryLength, true)}"
                     listResponse.append(stringUtils.EOL)
-                    listResponse.append(format(FORMAT.BOLD))
+                    listResponse.append(textFormat.format(FORMAT.BOLD))
                     listResponse.append(index)
                     listResponse.append(")")
                     listResponse.append(tabSpace)
@@ -66,7 +66,7 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
                     listResponse.append(tabSpace)
                     listResponse.append(post.body.length)
                     listResponse.append("B")
-                    listResponse.append(format(FORMAT.RESET))
+                    listResponse.append(textFormat.format(FORMAT.RESET))
                     listResponse.append(stringUtils.EOL)
                     listResponse.append(summary)
                     listResponse.append(stringUtils.EOL)

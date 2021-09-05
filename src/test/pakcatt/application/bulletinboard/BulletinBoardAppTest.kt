@@ -118,8 +118,8 @@ class BulletinBoardAppTest: AppServiceTest() {
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${stringUtils.EOL}Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque" +
                 "${stringUtils.EOL}laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore" +
-                "${stringUtils.EOL}veritatis et quasi architecto beatae vitae dicta sunt explicabo." +
-                "${stringUtils.EOL}Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia" +
+                "${stringUtils.EOL}veritatis et $startBold@VK3LIT$resetFormat architecto beatae vitae dicta sunt explicabo." +
+                "${stringUtils.EOL}Nemo enim ipsam voluptatem quia @VK2VRO sit aspernatur aut odit aut fugit, sed quia" +
                 "${stringUtils.EOL}consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est," +
                 "${stringUtils.EOL}qui dolorem ipsum quia dolor sit amet, consectetur,adipisci velit, sed quia non numquam eius" +
                 "${stringUtils.EOL}modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem." +

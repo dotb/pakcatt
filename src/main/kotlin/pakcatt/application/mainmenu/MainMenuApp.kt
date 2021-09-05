@@ -52,7 +52,7 @@ class MainMenuApp(private val myCall: String,
         registerCommand(Command("beep") .reply("beep! $beepChar").description("Send a beep instruction to your terminal"))
 
         // Terminal tests
-        registerCommand(Command("bold") .reply("$escapeChar[1mThis should be BOLD and$escapeChar[0m this should not be bold.").description("Test the bold control character on your terminal"))
+        registerCommand(Command("bold") .reply("${textFormat.escapeChar}[1mThis should be BOLD and${textFormat.escapeChar}[0m this should not be bold.").description("Test the bold control character on your terminal"))
         registerCommand(Command("styles").function { allTheStyles() }.description("Test the styles supported by your terminal"))
         registerCommand(Command("nop")  .ackOnly().description("I'll do nothing, just acknowledge your request"))
         registerCommand(Command("ignore").ignore().description("I'll receive your command but won't acknowledge it."))
@@ -114,13 +114,22 @@ class MainMenuApp(private val myCall: String,
     private fun allTheStyles(): AppResponse {
         val returnString = StringBuilder()
         for (style in FORMAT.values()) {
-            returnString.append("$escapeChar[${style.ansiCode}m Style $style $escapeChar[0m${stringUtils.EOL}")
+            returnString.append(textFormat.format(style))
+            returnString.append("Style")
+            returnString.append(textFormat.format(FORMAT.RESET))
+            returnString.append(stringUtils.EOL)
         }
         for (colour in COLOUR.values()) {
-            returnString.append("$escapeChar[3${colour.ansiCode}m Foreground Colour $colour $escapeChar[39m${stringUtils.EOL}")
+            returnString.append(textFormat.fgColour(colour))
+            returnString.append("Foreground Colour")
+            returnString.append(textFormat.fgColour(COLOUR.DEFAULT))
+            returnString.append(stringUtils.EOL)
         }
         for (colour in COLOUR.values()) {
-            returnString.append("$escapeChar[4${colour.ansiCode}m Background Colour $colour $escapeChar[49m${stringUtils.EOL}")
+            returnString.append(textFormat.bgColour(colour))
+            returnString.append("Background Colour")
+            returnString.append(textFormat.bgColour(COLOUR.DEFAULT))
+            returnString.append(stringUtils.EOL)
         }
 
         return AppResponse.sendText(returnString.toString())
