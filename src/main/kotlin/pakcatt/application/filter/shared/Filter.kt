@@ -1,4 +1,4 @@
-package pakcatt.filter.shared
+package pakcatt.application.filter.shared
 
 import pakcatt.util.StringUtils
 

@@ -3,8 +3,8 @@ package pakcatt.application.shared
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import pakcatt.application.shared.model.*
-import pakcatt.filter.shared.InputFilter
-import pakcatt.filter.shared.OutputFilter
+import pakcatt.application.filter.shared.InputFilter
+import pakcatt.application.filter.shared.OutputFilter
 import pakcatt.util.StringUtils
 
 interface AppInterface {

@@ -12,9 +12,9 @@ import pakcatt.application.mailbox.persistence.MockedMailMessageRepository
 import pakcatt.application.mainmenu.MainMenuApp
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.ResponseType
-import pakcatt.filter.EOLInputFilter
-import pakcatt.filter.EOLOutputFilter
-import pakcatt.filter.MentionOutputFilter
+import pakcatt.application.filter.EOLInputFilter
+import pakcatt.application.filter.EOLOutputFilter
+import pakcatt.application.filter.MentionOutputFilter
 import pakcatt.util.StringUtils
 
 open class AppServiceTest: TestCase() {

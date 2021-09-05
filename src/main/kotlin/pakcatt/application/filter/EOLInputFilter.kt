@@ -1,9 +1,9 @@
-package pakcatt.filter
+package pakcatt.application.filter
 
 import org.springframework.stereotype.Component
 import pakcatt.application.shared.UserContext
 import pakcatt.application.shared.model.AppRequest
-import pakcatt.filter.shared.InputFilter
+import pakcatt.application.filter.shared.InputFilter
 
 /**
  * This filter does two things

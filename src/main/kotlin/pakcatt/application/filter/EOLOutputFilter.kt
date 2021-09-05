@@ -1,9 +1,9 @@
-package pakcatt.filter
+package pakcatt.application.filter
 
 import org.springframework.stereotype.Component
 import pakcatt.application.shared.UserContext
 import pakcatt.application.shared.model.AppResponse
-import pakcatt.filter.shared.OutputFilter
+import pakcatt.application.filter.shared.OutputFilter
 
 /**
  * This filter uses the remote station preferences to customise the
