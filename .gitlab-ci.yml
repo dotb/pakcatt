@@ -5,7 +5,7 @@ stages:
 
 build-maven:
         stage: build
-        script: mvn clean install
+        script: /usr/bin/mvn clean install
         artifacts:
             paths:
                 - target/*.jar
@@ -16,13 +16,13 @@ build-maven:
 deploy-packatt:
         stage: deploy
         script:
-          - rm /opt/pakcatt/pakcatt-0.1.jar
-          - cp ./target/pakcatt-0.1.jar /opt/pakcatt/
+          - /usr/bin/rm /opt/pakcatt/pakcatt-0.1.jar
+          - /usr/bin/cp ./target/pakcatt-0.1.jar /opt/pakcatt/
         only:
                 - main
 
 run-packatt:
         stage: restart
-        script: service pakcatt restart
+        script: /usr/sbin/service pakcatt restart
         only:
                 - main
