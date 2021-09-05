@@ -12,6 +12,9 @@ import pakcatt.application.mailbox.persistence.MockedMailMessageRepository
 import pakcatt.application.mainmenu.MainMenuApp
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.ResponseType
+import pakcatt.filter.EOLInputFilter
+import pakcatt.filter.EOLOutputFilter
+import pakcatt.filter.MentionOutputFilter
 import pakcatt.util.StringUtils
 
 open class AppServiceTest: TestCase() {
@@ -26,7 +29,9 @@ open class AppServiceTest: TestCase() {
                                     2)
 
     protected val stringUtils = StringUtils()
-    protected val appService = AppService(listOf(mainMenuApp))
+    protected val appService = AppService(listOf(mainMenuApp),
+    listOf(EOLInputFilter()),
+    listOf(EOLOutputFilter(), MentionOutputFilter()))
     protected val escapeChar = 27.toChar()
     protected val startBold = "${escapeChar}[1m"
     protected val resetFormat = "${escapeChar}[0m"

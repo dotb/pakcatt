@@ -3,6 +3,8 @@ package pakcatt.application.shared
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import pakcatt.application.shared.model.*
+import pakcatt.filter.shared.InputFilter
+import pakcatt.filter.shared.OutputFilter
 import pakcatt.util.StringUtils
 
 interface AppInterface {
@@ -13,7 +15,9 @@ interface AppInterface {
 }
 
 @Service
-class AppService(val rootApplications: List<RootApp>): AppInterface {
+class AppService(private val rootApplications: List<RootApp>,
+                 private val inputFilters: List<InputFilter>,
+                 private val outputFilters: List<OutputFilter>): AppInterface {
 
     private val logger = LoggerFactory.getLogger(AppService::class.java)
     private val stringUtils = StringUtils()
@@ -23,15 +27,40 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
     override fun getDecisionOnConnectionRequest(request: AppRequest): AppResponse {
         // Ensure any previous connection is closed, and open a new one
         closeConnection(request.remoteCallsign, request.addressedToCallsign)
-        val userContext = contextForConversation(request.remoteCallsign, request.addressedToCallsign)
+        prepareRequest(request)
         // Find an app who is willing to connect
-        val connectionResponse = findAppWillingToAcceptConnection(request)
-        // Update the app focus state in the user context if required.
-        updateAppFocus(connectionResponse.nextApp(), userContext)
-        addPromptToResponse(userContext.engagedApplication(), connectionResponse)
-        // Customise the EOL characters based on user configuration
-        translateEOLForUser(connectionResponse, userContext)
-        return connectionResponse
+        val response = findAppWillingToAcceptConnection(request)
+        prepareResponse(response, request.userContext)
+        return response
+    }
+
+    // We've received data from a client, share it with listening apps and get a response for the client
+    override fun getResponseForReceivedMessage(request: AppRequest): AppResponse {
+        prepareRequest(request)
+        // Get the interaction response from the app
+        val response = getResponseFromApplication(request)
+        prepareResponse(response, request.userContext)
+        return response
+    }
+
+    private fun prepareRequest(request: AppRequest) {
+        // Get this user's context
+        val userContext = getContextForConversation(request)
+        // Filter the request on input to clean up the request
+        filterRequestOnInput(request)
+        // Re-write incoming EOL sequences to a configured standard
+        var cleanedRequest = request
+        cleanedRequest.message = stringUtils.fixEndOfLineCharacters(cleanedRequest.message, stringUtils.EOL)
+        // Get the interaction response from the app
+    }
+
+    private fun prepareResponse(response: AppResponse, userContext: UserContext?) {
+        // Update any focus state in the user context if required, returned by the selected app.
+        updateAppFocus(response.nextApp(), userContext)
+        // Return any response with an included command prompt string
+        addPromptToResponse(userContext?.engagedApplication(), response)
+        // Clean and customise the response before sending it to the remote party
+        filterResponseOnOutput(response, userContext)
     }
 
     private fun findAppWillingToAcceptConnection(request: AppRequest): AppResponse {
@@ -50,27 +79,6 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         return finalConnectionDecision
     }
 
-    // We've received data from a client, share it with listening apps and get a response for the client
-    override fun getResponseForReceivedMessage(request: AppRequest): AppResponse {
-        // Get this user's context
-        val userContext = contextForConversation(request.remoteCallsign, request.addressedToCallsign)
-        request.userContext = userContext
-        // Try autodetect the incoming EOL sequence
-        updateUserContextWithAutodetectedEOLSequence(request.message, userContext)
-        // Re-write incoming EOL sequences to a configured standard
-        var cleanedRequest = request
-        cleanedRequest.message = stringUtils.fixEndOfLineCharacters(cleanedRequest.message, stringUtils.EOL)
-        // Get the interaction response from the app
-        val interactionResponse = getResponseForReceivedMessage(cleanedRequest, userContext)
-        // Update any focus state in the user context if required, returned by the selected app.
-        updateAppFocus(interactionResponse.nextApp(), userContext)
-        // Return any response with an included command prompt string
-        addPromptToResponse(userContext.engagedApplication(), interactionResponse)
-        // Customise the EOL characters based on user configuration
-        translateEOLForUser(interactionResponse, userContext)
-        return interactionResponse
-    }
-
     override fun getAdhocResponses(forDeliveryType: DeliveryType): List<AdhocMessage> {
         val allAdhocResponses = ArrayList<AdhocMessage>()
         for (app in rootApplications) {
@@ -79,10 +87,11 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         return allAdhocResponses
     }
 
-    private fun getResponseForReceivedMessage(request: AppRequest, userContext: UserContext): AppResponse  {
+    private fun getResponseFromApplication(request: AppRequest): AppResponse  {
         // Start with a default response to ignored the incoming request
         var finalInteractionResponse = AppResponse.ignore()
 
+        val userContext = request.userContext
         // Share the request with app registered root level apps for processing
         for (app in rootApplications) {
             val interactionResponse = app.handleReceivedMessage(request)
@@ -94,7 +103,7 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         }
 
         // Check if this user is engaged with a specific app. This app response will take priority
-        val app = userContext.engagedApplication()
+        val app = userContext?.engagedApplication()
         if (null != app) {
             // Direct requests to the app this user is engaged with
             finalInteractionResponse = app.handleReceivedMessage(request)
@@ -103,41 +112,31 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         return finalInteractionResponse
     }
 
+    private fun filterRequestOnInput(request: AppRequest) {
+        for (inputFilter in inputFilters) {
+            inputFilter.applyFilter(request)
+        }
+    }
+
+    private fun filterResponseOnOutput(response: AppResponse, userContext: UserContext?) {
+        for (outputFilter in outputFilters) {
+            outputFilter.applyFilter(response, userContext)
+        }
+    }
+
     override fun closeConnection(remoteCallsign: String, myCallsign: String) {
         val key = contextKey(remoteCallsign, myCallsign)
         currentUsers.remove(key)
     }
 
     /* Methods that handle the user context objects */
-
-    // Updated the user context with their preferred EOL characters, based on what they have sent us.
-    private fun updateUserContextWithAutodetectedEOLSequence(requestString: String, userContext: UserContext) {
-        testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\r")
-        testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\n")
-        testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\r\n")
-        testForEOLSequenceAndUpdateUserContext(requestString, userContext, "\n\r")
-
-    }
-
-    private fun testForEOLSequenceAndUpdateUserContext(requestString: String, userContext: UserContext, eolSequence: String) {
-        if (requestString.contains(eolSequence)) {
-            userContext.eolSequence = eolSequence
-        }
-    }
-
-    // Customise EOL characters to that responses are well formatted for a different types of remote terminal
-    private fun translateEOLForUser(interactionResponse: AppResponse, userContext: UserContext) {
-        val adjustedResponseString = stringUtils.fixEndOfLineCharacters(interactionResponse.responseString(), userContext.eolSequence)
-        interactionResponse.updateResponseString(adjustedResponseString)
-    }
-
     // Update the app focus state in the user context if required.
-    private fun updateAppFocus(nextApp: SubApp?, userContext: UserContext) {
-        if (null != nextApp && nextApp is NavigateBack) {
+    private fun updateAppFocus(nextApp: SubApp?, userContext: UserContext?) {
+        if (null != nextApp && null != userContext && nextApp is NavigateBack) {
             for (i in 1..nextApp.steps) {
                 userContext.navigateBack()
             }
-        } else if (null != nextApp) {
+        } else if (null != nextApp && null != userContext) {
             nextApp.setParentRootApp(userContext.rootApplication())
             userContext.navigateToApp(nextApp)
         }
@@ -154,16 +153,20 @@ class AppService(val rootApplications: List<RootApp>): AppInterface {
         }
     }
 
-    private fun contextForConversation(remoteCallsign: String, myCallsign: String): UserContext {
+    private fun getContextForConversation(request: AppRequest): UserContext {
+        val remoteCallsign = request.remoteCallsign
+        val myCallsign = request.addressedToCallsign
         val key = contextKey(remoteCallsign, myCallsign)
-        val context = currentUsers[key]
-        return if (null != context) {
-            context
+        val existingContext = currentUsers[key]
+        val returnedContext = if (null != existingContext) {
+            existingContext
         } else {
-            val context = UserContext(remoteCallsign, myCallsign)
-            currentUsers[key] = context
-            context
+            val newContext = UserContext(remoteCallsign, myCallsign)
+            currentUsers[key] = newContext
+            newContext
         }
+        request.userContext = returnedContext
+        return returnedContext
     }
 
     private fun contextKey(fromCallsign: String, myCallsign: String): String {
