@@ -1,10 +1,11 @@
 stages:
         - build
-        - run
+        - deploy
+        - restart
 
 build-maven:
         stage: build
-        script: ./build.sh
+        script: mvn clean install
         artifacts:
             paths:
                 - target/*.jar
@@ -12,8 +13,16 @@ build-maven:
         only:
                 - main
 
+deploy-packatt:
+        stage: deploy
+        script:
+          - rm /opt/pakcatt/pakcatt-0.1.jar
+          - cp ./target/pakcatt-0.1.jar /opt/pakcatt/
+        only:
+                - main
+
 run-packatt:
-        stage: run
-        script: java -jar ./target/pakcatt-0.1.jar --spring.config.location=/opt/pakcatt/application.yml
+        stage: restart
+        script: service pakcatt restart
         only:
                 - main
