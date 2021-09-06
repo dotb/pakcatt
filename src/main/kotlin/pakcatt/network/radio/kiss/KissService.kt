@@ -3,6 +3,7 @@ package pakcatt.network.radio.kiss
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import pakcatt.network.radio.kiss.model.ControlField
 import pakcatt.network.radio.kiss.model.KissFrame
 import pakcatt.network.radio.kiss.model.KissFrameStandard
 import pakcatt.network.radio.kiss.queue.DeliveryQueue
@@ -52,10 +53,7 @@ class KissService(val tncConnection: TNC,
     private fun onStartup() {
         if (sendStartupShutdownMessage) {
             logger.debug("Sending on frequency broadcast")
-            val frame = KissFrameStandard()
-            frame.setSourceCallsign(myCall)
-            frame.setDestCallsign("CQ")
-            frame.setPayloadMessage(startupMessage)
+            val frame = newBroadcastFrame(startupMessage)
             transmitFrame(frame)
         }
     }
@@ -68,12 +66,18 @@ class KissService(val tncConnection: TNC,
     private fun onShutdown() {
         if (sendStartupShutdownMessage) {
             logger.debug("Sending QRT broadcast")
-            val frame = KissFrameStandard()
-            frame.setSourceCallsign(myCall)
-            frame.setDestCallsign("CQ")
-            frame.setPayloadMessage(shutdownMessage)
+            val frame = newBroadcastFrame(shutdownMessage)
             transmitFrame(frame)
         }
+    }
+
+    private fun newBroadcastFrame(message: String): KissFrame {
+        val frame = KissFrameStandard()
+        frame.setControlField(ControlField.U_UNNUMBERED_INFORMATION)
+        frame.setSourceCallsign(myCall)
+        frame.setDestCallsign("CQ")
+        frame.setPayloadMessage(message)
+        return frame
     }
 
     private fun transmitFrame(frame: KissFrame) {
