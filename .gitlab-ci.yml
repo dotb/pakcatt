@@ -18,7 +18,8 @@ deploy-packatt:
         script:
           - /usr/bin/rm /opt/pakcatt/pakcatt-0.1.jar
           - /usr/bin/cp ./target/pakcatt-0.1.jar /opt/pakcatt/
-          - /usr/bin/chmod 750 /opt/pakcatt/pakcatt-0.1.jar
+          - /usr/bin/chmod 755 /opt/pakcatt/pakcatt-0.1.jar
+          - /usr/bin/chown :ham /opt/pakcatt/pakcatt-0.1.jar
         only:
           - main
 
