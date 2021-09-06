@@ -7,22 +7,23 @@ build-maven:
         stage: build
         script: /usr/bin/mvn clean install
         artifacts:
-            paths:
-                - target/*.jar
-            expire_in: 1 day
+          paths:
+            - target/*.jar
+          expire_in: 1 day
         only:
-                - main
+          - main
 
 deploy-packatt:
         stage: deploy
         script:
           - /usr/bin/rm /opt/pakcatt/pakcatt-0.1.jar
           - /usr/bin/cp ./target/pakcatt-0.1.jar /opt/pakcatt/
+          - /usr/bin/chmod 750 /opt/pakcatt/pakcatt-0.1.jar
         only:
-                - main
+          - main
 
 run-packatt:
         stage: restart
-        script: /usr/sbin/service pakcatt restart
+        script: /usr/bin/sudo /usr/sbin/service pakcatt restart
         only:
-                - main
+          - main
