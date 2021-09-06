@@ -12,6 +12,13 @@ pakcatt:
       interval_minutes: 0 # An interval of 0 disables beaconing.
       destination: CQ # The destination address for beacon messages. This is typically 'CQ'
 
+    # Startup and shutdown messages
+    # These messages are broadcast on air when Pakcatt starts up, and just before it shuts down
+    startstop:
+      send.startup.shutdown.messages: false
+      startup.message: PAKCAT-1 back on frequency. Connect to PAKCAT-1 to try it out.
+      shutdown.message: PAKCAT-1 going QRT for a software update. Be back soon.
+
     # Bulletin Board
     board:
       summaryLength: 10 # The length of topic and message summary test in listings

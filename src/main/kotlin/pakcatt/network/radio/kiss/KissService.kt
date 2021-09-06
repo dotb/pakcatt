@@ -10,12 +10,17 @@ import pakcatt.network.radio.protocol.shared.ProtocolService
 import pakcatt.network.radio.tnc.TNC
 import pakcatt.util.ByteUtils
 import pakcatt.util.StringUtils
+import javax.annotation.PreDestroy
 
 @Service
 class KissService(val tncConnection: TNC,
                   val protocolServices: List<ProtocolService>,
                   val stringUtils: StringUtils,
-                  val byteUtils: ByteUtils) {
+                  val byteUtils: ByteUtils,
+                  val myCall: String,
+                  val sendStartupShutdownMessage: Boolean,
+                  val startupMessage: String,
+                  val shutdownMessage: String) {
 
     private val logger = LoggerFactory.getLogger(KissService::class.java)
     private var incomingFrame = ByteArray(1024)
@@ -26,6 +31,7 @@ class KissService(val tncConnection: TNC,
             handleNewByte(it)
         }
         tncConnection.connect()
+        onStartup()
     }
 
     @Scheduled(fixedDelay = 500)
@@ -35,6 +41,37 @@ class KissService(val tncConnection: TNC,
             protocolService.queueFramesForDelivery(framesForDelivery)
         }
         for (frame in framesForDelivery.allFrames()) {
+            transmitFrame(frame)
+        }
+    }
+
+    /**
+     * This method is called when the PakCatt service is started, and
+     * can send a broadcase to announce it's on frequency, if configured.
+     */
+    private fun onStartup() {
+        if (sendStartupShutdownMessage) {
+            logger.debug("Sending on frequency broadcast")
+            val frame = KissFrameStandard()
+            frame.setSourceCallsign(myCall)
+            frame.setDestCallsign("CQ")
+            frame.setPayloadMessage(startupMessage)
+            transmitFrame(frame)
+        }
+    }
+
+    /**
+     * This method is called when the PakCatt service is shutdown, and
+     * can send a QRT broadcast if configured
+     */
+    @PreDestroy
+    private fun onShutdown() {
+        if (sendStartupShutdownMessage) {
+            logger.debug("Sending QRT broadcast")
+            val frame = KissFrameStandard()
+            frame.setSourceCallsign(myCall)
+            frame.setDestCallsign("CQ")
+            frame.setPayloadMessage(shutdownMessage)
             transmitFrame(frame)
         }
     }

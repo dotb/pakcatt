@@ -85,6 +85,27 @@ class Configuration {
         return beaconDestination
     }
 
+    @Value("\${pakcatt.application.startstop.send.startup.shutdown.messages}")
+    private lateinit var sendStartupShutdownMessage: String
+    @Bean
+    fun sendStartupShutdownMessage(): Boolean {
+        return sendStartupShutdownMessage.toBoolean()
+    }
+
+    @Value("\${pakcatt.application.startstop.startup.message}")
+    private lateinit var startupMessage: String
+    @Bean
+    fun startupMessage(): String {
+        return startupMessage
+    }
+
+    @Value("\${pakcatt.application.startstop.shutdown.message}")
+    private lateinit var shutdownMessage: String
+    @Bean
+    fun shutdownMessage(): String {
+        return shutdownMessage
+    }
+
     @Autowired
     private lateinit var scriptableConfig: ScriptableConfig
 
