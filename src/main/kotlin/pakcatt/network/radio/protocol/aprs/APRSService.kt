@@ -28,10 +28,10 @@ class APRSService(private val appInterface: AppInterface,
                     ControlField.U_UNNUMBERED_INFORMATION_P).contains(controlField)
     }
 
-    override fun handleFrame(incomingKissFrame: KissFrame) {
-        logger.trace("APRS Service: Handling frame: {}", incomingKissFrame)
+    override fun handleFrame(incomingFrame: KissFrame) {
+        logger.trace("APRS Service: Handling frame: {}", incomingFrame)
         val untypedAPRSFrame = APRSFrame()
-        untypedAPRSFrame.populateFromKissFrame(incomingKissFrame)
+        untypedAPRSFrame.populateFromKissFrame(incomingFrame)
         logger.trace("Untyped APRS Frame: {}", untypedAPRSFrame.toString())
         val typedAPRSFrame = getTypedAPRSFrame(untypedAPRSFrame)
         logger.debug("Typed APRS Frame: {}", typedAPRSFrame.toString())

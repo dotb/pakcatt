@@ -6,7 +6,7 @@ import pakcatt.network.radio.protocol.aprs.model.APRSFrame
 import pakcatt.network.radio.protocol.aprs.model.APRSQueue
 import pakcatt.util.StringUtils
 
-open abstract class APRSHandler(val myCall: String,
+abstract class APRSHandler(val myCall: String,
                                 val aprsQueue: APRSQueue,
                                 val appInterface: AppInterface,
                                 val stringUtils: StringUtils) {

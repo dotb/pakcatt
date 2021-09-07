@@ -85,13 +85,13 @@ class PacketService(private var appService: AppInterface,
 
     private fun connectionHandlerForConversation(remoteCallsign: String, myCallsign: String): ConnectionHandler {
         val key = connectionHandlerKey(remoteCallsign, myCallsign)
-        val connectionHandler = connectionHandlers[key]
-        return if (null != connectionHandler) {
-            connectionHandler
+        val existingConnectionHandler = connectionHandlers[key]
+        return if (null != existingConnectionHandler) {
+            existingConnectionHandler
         } else {
-            val connectionHandler = ConnectionHandler(remoteCallsign, myCallsign, this, frameSizeMax, framesPerOver, maxDeliveryAttempts, deliveryRetryTimeSeconds)
-            connectionHandlers[key] = connectionHandler
-            connectionHandler
+            val newConnectionHandler = ConnectionHandler(remoteCallsign, myCallsign, this, frameSizeMax, framesPerOver, maxDeliveryAttempts, deliveryRetryTimeSeconds)
+            connectionHandlers[key] = newConnectionHandler
+            newConnectionHandler
         }
     }
 
