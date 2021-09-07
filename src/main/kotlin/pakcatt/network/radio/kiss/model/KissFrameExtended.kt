@@ -61,11 +61,5 @@ open class KissFrameExtended: KissFrame() {
         val shiftedSequence = byteUtils.shiftBitsLeft(sequenceNumberByte, 1)
         this.controlFieldHigh = byteUtils.setBits(controlFieldHigh, shiftedSequence)
     }
-
-    private fun setSendSequenceNumberBits(sendSeq: Int) {
-        val sequenceNumberByte = byteUtils.intToByte(sendSeq)
-        val shiftedSequence = byteUtils.shiftBitsLeft(sequenceNumberByte, 1)
-        this.controlFieldLow = byteUtils.setBits(controlFieldLow, shiftedSequence)
-    }
-
+    
 }

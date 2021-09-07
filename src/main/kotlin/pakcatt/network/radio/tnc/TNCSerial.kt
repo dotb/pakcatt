@@ -73,7 +73,7 @@ class TNCSerial(private val serialPortPath: String,
 
     private fun serialHasInputWaiting(): Boolean {
         val myInputStream = inputStream
-        return if (null != myInputStream) myInputStream.available() > 0 else false
+        return null != myInputStream && myInputStream.available() > 0
     }
 
 }

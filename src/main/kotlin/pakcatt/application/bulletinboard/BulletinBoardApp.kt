@@ -19,7 +19,7 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
                        private val defaultPostListLength: Int): SubApp() {
 
     init {
-        registerCommand(Command("list") .function { listThreads(it) }  .description("List the threads"))
+        registerCommand(Command("list") .function { listThreads() }  .description("List the threads"))
         registerCommand(Command("open") .function { openThread(it) }   .description("Open a thread"))
         registerCommand(Command("post") .function { postNewThread(it) }   .description("Post a new thread"))
         registerCommand(Command("quit") .reply("Bye").openApp(NavigateBack(1)).description("Return to the main menu"))
@@ -33,7 +33,7 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
         return handleRequestWithRegisteredCommand(request)
     }
 
-    private fun listThreads(request: AppRequest): AppResponse {
+    private fun listThreads(): AppResponse {
         val threadList = bulletinBoardStore.getThreads()
         val listResponse = StringBuilder()
         val threadCount = threadList.size

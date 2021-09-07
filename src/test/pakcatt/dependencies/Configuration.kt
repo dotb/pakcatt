@@ -1,5 +1,6 @@
 package pakcatt.dependencies
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -31,6 +32,21 @@ class Configuration {
     @Bean
     fun beaconDestination(): String {
         return "CQ"
+    }
+
+    @Bean
+    fun sendStartupShutdownMessage(): Boolean {
+        return true
+    }
+
+    @Bean
+    fun startupMessage(): String {
+        return "Startup message - hello!"
+    }
+
+    @Bean
+    fun shutdownMessage(): String {
+        return "Shutdown message - bye bye."
     }
 
     @Bean

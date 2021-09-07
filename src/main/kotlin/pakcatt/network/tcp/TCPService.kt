@@ -22,7 +22,7 @@ class TCPService {
     @Bean
     fun commandServerFlow(): IntegrationFlow? {
         return IntegrationFlows.from(Tcp.inboundGateway(serverConnectionFactory()))
-            .handle { payload: String, handlers ->
+            .handle { payload: String, _ ->
                 logger.debug("TCP Input {}", payload)
             }
             .get()

@@ -6,6 +6,26 @@ import java.time.format.DateTimeFormatter
 
 class APRSStatusFrame: APRSFrame() {
 
+    // This data structure maps APRS heading character to numeric heading values
+    private val headingMap = mapOf(Pair('0', 0), Pair('1',10), Pair('2', 20), Pair('3', 30),
+                                   Pair('4', 40), Pair('5',50), Pair('6', 60), Pair('7', 70),
+                                   Pair('8', 80), Pair('9',90), Pair('A', 100), Pair('B', 110),
+                                   Pair('C', 120), Pair('D',130), Pair('E', 140), Pair('F', 150),
+                                   Pair('G', 160), Pair('H',170), Pair('I', 180), Pair('J', 190),
+                                   Pair('K', 200), Pair('L',210), Pair('M', 220), Pair('N', 230),
+                                   Pair('O', 240), Pair('P',250), Pair('Q', 260), Pair('R', 270),
+                                   Pair('S', 280), Pair('T',290), Pair('U', 300), Pair('V', 310),
+                                   Pair('W', 320), Pair('X',330), Pair('Y', 440), Pair('Z', 350))
+
+    // This data structure maps APRS ERP characters to numeric values in watts
+    private val erpMap = mapOf(Pair('0', 0), Pair('1', 10), Pair('2', 40), Pair('3', 90),
+                               Pair('4', 160), Pair('5', 250), Pair('6', 360), Pair('7', 490),
+                               Pair('8', 640), Pair('9', 810), Pair(':', 1000), Pair(';', 1210),
+                               Pair('<', 1440), Pair('=', 1690), Pair('?', 2250), Pair('@', 2560),
+                               Pair('A', 2890), Pair('B', 2340), Pair('C', 3610), Pair('D', 4000),
+                               Pair('E', 4410), Pair('F', 4840), Pair('G', 5290), Pair('H', 5760),
+                               Pair('I', 6250), Pair('J', 6760), Pair('K', 7290))
+
     /**
      * Parses the information field and returns any status text,
      * without other parameters such as date, beam heading and maidenhead locator.
@@ -154,31 +174,11 @@ class APRSStatusFrame: APRSFrame() {
     }
 
     private fun resolveHeadingChar(headingChar: Char): Int {
-        return when (headingChar.toUpperCase()) {
-            '0' -> 0 '1' -> 10 '2' -> 20 '3' -> 30
-            '4' -> 40 '5' -> 50 '6' -> 60 '7' -> 70
-            '8' -> 80 '9' -> 90 'A' -> 100 'B' -> 110
-            'C' -> 120 'D' -> 130 'E' -> 140 'F' -> 150
-            'G' -> 160 'H' -> 170 'I' -> 180 'J' -> 190
-            'K' -> 200 'L' -> 210 'M' -> 220 'N' -> 230
-            'O' -> 240 'P' -> 250 'Q' -> 260 'R' -> 270
-            'S' -> 280 'T' -> 290 'U' -> 300 'V' -> 310
-            'W' -> 320 'X' -> 330 'Y' -> 440 'Z' -> 350
-            else -> -1
-        }
+        return headingMap[headingChar]?: -1
     }
 
     private fun resolveERPChar(erpChar: Char): Int {
-        return when (erpChar.toUpperCase()) {
-            '0' -> 0 '1' -> 10 '2' -> 40 '3' -> 90
-            '4' -> 160 '5' -> 250 '6' -> 360 '7' -> 490
-            '8' -> 640 '9' -> 810 ':' -> 1000 ';' -> 1210
-            '<' -> 1440 '=' -> 1690 '?' -> 2250 '@' -> 2560
-            'A' -> 2890 'B' -> 3240 'C' -> 3610 'D' -> 4000
-            'E' -> 4410 'F' -> 4840 'G' -> 5290 'H' -> 5760
-            'I' -> 6250 'J' -> 6760 'K' -> 7290
-            else -> -1
-        }
+        return erpMap[erpChar]?: -1
     }
 
 }

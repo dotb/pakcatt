@@ -45,7 +45,7 @@ class AppService(private val rootApplications: List<RootApp>,
 
     private fun prepareRequest(request: AppRequest) {
         // Get this user's context
-        val userContext = getContextForConversation(request)
+        setUserContextOnRequest(request)
         // Filter the request on input to clean up the request
         filterRequestOnInput(request)
         // Re-write incoming EOL sequences to a configured standard
@@ -153,7 +153,7 @@ class AppService(private val rootApplications: List<RootApp>,
         }
     }
 
-    private fun getContextForConversation(request: AppRequest): UserContext {
+    private fun setUserContextOnRequest(request: AppRequest): UserContext {
         val remoteCallsign = request.remoteCallsign
         val myCallsign = request.addressedToCallsign
         val key = contextKey(remoteCallsign, myCallsign)

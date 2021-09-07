@@ -14,6 +14,5 @@ import org.springframework.scheduling.annotation.EnableScheduling
 open class PakCatt
 
 fun main(args: Array<String>) {
-    val logger = LoggerFactory.getLogger(PakCatt::class.java)
     runApplication<PakCatt>(*args)
 }
