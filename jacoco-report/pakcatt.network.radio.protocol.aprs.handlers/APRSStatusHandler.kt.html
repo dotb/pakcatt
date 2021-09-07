@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>APRSStatusHandler.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.network.radio.protocol.aprs.handlers</a> &gt; <span class="el_source">APRSStatusHandler.kt</span></div><h1>APRSStatusHandler.kt</h1><pre class="source lang-java linenums">package pakcatt.network.radio.protocol.aprs.handlers
+
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
+import pakcatt.application.shared.AppInterface
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.ResponseType
+import pakcatt.network.radio.protocol.aprs.model.*
+import pakcatt.util.StringUtils
+
+@Component
+<span class="fc" id="L12">class APRSStatusHandler(myCall: String,</span>
+                        aprsQueue: APRSQueue,
+                        appInterface: AppInterface,
+<span class="fc" id="L15">                        stringUtils: StringUtils): APRSHandler(myCall, aprsQueue, appInterface, stringUtils) {</span>
+
+<span class="fc" id="L17">    private val logger = LoggerFactory.getLogger(APRSStatusHandler::class.java)</span>
+
+    override fun isAbleToSupport(aprsDataType: APRSDataType): Boolean {
+<span class="pc bpc" id="L20" title="1 of 2 branches missed.">        return aprsDataType == APRSDataType.STATUS</span>
+    }
+
+    override fun handleAPRSFrame(aprsFrame: APRSFrame) {
+<span class="nc bnc" id="L24" title="All 2 branches missed.">        val aprsStatusFrame = aprsFrame as? APRSStatusFrame</span>
+<span class="nc bnc" id="L25" title="All 2 branches missed.">        if (null != aprsStatusFrame) {</span>
+            // Find an app that will handle this message
+<span class="nc" id="L27">            val appRequest = AppRequest(aprsStatusFrame.sourceCallsign(),</span>
+<span class="nc" id="L28">                                        stringUtils.formatCallsignRemoveSSID(aprsStatusFrame.sourceCallsign()),</span>
+<span class="nc" id="L29">                                        aprsStatusFrame.destCallsign(),</span>
+<span class="nc" id="L30">                                        aprsStatusFrame.statusText())</span>
+<span class="nc" id="L31">            val appResponse = appInterface.getResponseForReceivedMessage(appRequest)</span>
+
+            // Send a response message if required
+<span class="nc bnc" id="L34" title="All 2 branches missed.">            if (appResponse.responseType == ResponseType.ACK_WITH_TEXT) {</span>
+<span class="nc" id="L35">                aprsQueue.queueAPRSMessageForDelivery(myCall, aprsStatusFrame.sourceCallsign(), appResponse.responseString())</span>
+            }
+        } else {
+<span class="nc" id="L38">            logger.trace(&quot;APRS status frame was not typed correctly: {}&quot;, aprsFrame)</span>
+        }
+<span class="nc" id="L40">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

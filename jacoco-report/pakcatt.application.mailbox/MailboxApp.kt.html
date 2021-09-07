@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MailboxApp.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.application.mailbox</a> &gt; <span class="el_source">MailboxApp.kt</span></div><h1>MailboxApp.kt</h1><pre class="source lang-java linenums">package pakcatt.application.mailbox
+
+import pakcatt.application.mailbox.edit.EditSubjectApp
+import pakcatt.application.mailbox.persistence.MailMessage
+import pakcatt.application.mailbox.persistence.MailboxStore
+import pakcatt.application.shared.*
+import pakcatt.application.shared.command.Command
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.AppResponse
+import pakcatt.util.StringUtils
+import java.lang.StringBuilder
+import java.text.SimpleDateFormat
+
+<span class="fc" id="L14">class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {</span>
+
+    init {
+<span class="fc" id="L17">        registerCommand(Command(&quot;list&quot;) .function { listMessages(it) }  .description(&quot;List the messages available to you&quot;))</span>
+<span class="pc" id="L18">        registerCommand(Command(&quot;send&quot;) .function { sendMessage(it) }   .description(&quot;Send a message, passing the destination callsign as an argument&quot;))</span>
+<span class="pc" id="L19">        registerCommand(Command(&quot;read&quot;) .function { readMessage(it) }   .description(&quot;Read a single message, passing the message number as an argument&quot;))</span>
+<span class="pc" id="L20">        registerCommand(Command(&quot;del&quot;)  .function { deleteMessage(it) } .description(&quot;Delete a message, passing the message number as an argument&quot;))</span>
+<span class="fc" id="L21">        registerCommand(Command(&quot;quit&quot;) .reply(&quot;Bye&quot;).openApp(NavigateBack(1)).description(&quot;Leave the mail app and return to the main menu&quot;))</span>
+    }
+
+    override fun returnCommandPrompt(): String {
+<span class="fc" id="L25">        return &quot;mail&gt;&quot;</span>
+    }
+
+    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+<span class="fc" id="L29">        return handleRequestWithRegisteredCommand(request)</span>
+    }
+
+    fun unreadMessageCount(request: AppRequest): Int {
+<span class="fc" id="L33">        val formattedCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)</span>
+<span class="fc" id="L34">        return mailboxStore.getUnreadMessagesTo(formattedCallsign).size</span>
+    }
+
+    private fun listMessages(request: AppRequest): AppResponse {
+<span class="fc" id="L38">        val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign)</span>
+<span class="fc" id="L39">        val listResponse = StringBuilder()</span>
+<span class="fc" id="L40">        val messageCount = userMessages.size</span>
+
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">        if (messageCount &gt; 0) {</span>
+<span class="fc" id="L43">            listResponse.append(stringUtils.EOL)</span>
+<span class="fc" id="L44">            listResponse.append(textFormat.format(FORMAT.BOLD))</span>
+<span class="fc" id="L45">            listResponse.append(&quot;  No${tabSpace}Date          From${tabSpace}To${tabSpace}Subject&quot;)</span>
+<span class="fc" id="L46">            listResponse.append(textFormat.format(FORMAT.RESET))</span>
+<span class="fc" id="L47">            listResponse.append(stringUtils.EOL)</span>
+<span class="fc bfc" id="L48" title="All 2 branches covered.">            for (message in userMessages) {</span>
+<span class="fc" id="L49">                listResponse.append(when (message.isRead) {</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">                    true -&gt; &quot;  &quot;</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">                    false -&gt; &quot;* &quot;</span>
+                })
+<span class="fc" id="L53">                listResponse.append(message.messageNumber)</span>
+<span class="fc" id="L54">                listResponse.append(tabSpace)</span>
+<span class="fc" id="L55">                listResponse.append(stringUtils.formattedDate(message.dateTime))</span>
+<span class="fc" id="L56">                listResponse.append(&quot;  &quot;)</span>
+<span class="fc" id="L57">                listResponse.append(message.fromCallsign)</span>
+<span class="fc" id="L58">                listResponse.append(tabSpace)</span>
+<span class="fc" id="L59">                listResponse.append(message.toCallsign)</span>
+<span class="fc" id="L60">                listResponse.append(tabSpace)</span>
+<span class="fc" id="L61">                listResponse.append(message.subject)</span>
+<span class="fc" id="L62">                listResponse.append(stringUtils.EOL)</span>
+            }
+        }
+<span class="fc" id="L65">        listResponse.append(messageCount)</span>
+<span class="fc" id="L66">        listResponse.append(&quot; messages&quot;)</span>
+<span class="fc" id="L67">        listResponse.append(stringUtils.EOL)</span>
+<span class="fc" id="L68">        return AppResponse.sendText(listResponse.toString())</span>
+    }
+
+    private fun readMessage(request: AppRequest): AppResponse {
+<span class="nc" id="L72">        val userCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)</span>
+<span class="nc" id="L73">        var message: MailMessage? = null</span>
+<span class="nc" id="L74">        val messageNumber = parseIntArgument(request.message)</span>
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        if (null != messageNumber) {</span>
+<span class="nc" id="L76">            message = mailboxStore.getMessage(userCallsign, messageNumber)</span>
+        }
+<span class="nc bnc" id="L78" title="All 2 branches missed.">        return if (null != message) {</span>
+            // Mark this message as read if it's being accessed by the recipient
+<span class="nc bnc" id="L80" title="All 2 branches missed.">            if (userCallsign == message.toCallsign) {</span>
+<span class="nc" id="L81">                message.isRead = true</span>
+<span class="nc" id="L82">                mailboxStore.updateMessage(message)</span>
+            }
+<span class="nc" id="L84">            AppResponse.sendText(&quot;${stringUtils.EOL}Subject: ${message.subject}${stringUtils.EOL}${message.body.toString()}&quot;)</span>
+        } else {
+<span class="nc" id="L86">            AppResponse.sendText(&quot;No message found&quot;)</span>
+        }
+    }
+
+    private fun sendMessage(request: AppRequest): AppResponse {
+<span class="nc" id="L91">        val arg = parseStringArgument(request.message, &quot;&quot;)</span>
+<span class="nc" id="L92">        val fromCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)</span>
+<span class="nc" id="L93">        val toCallsign = stringUtils.formatCallsignRemoveSSID(arg)</span>
+<span class="nc" id="L94">        return AppResponse.sendText(&quot;&quot;, EditSubjectApp(MailMessage(fromCallsign, toCallsign), mailboxStore))</span>
+    }
+
+    private fun deleteMessage(request: AppRequest): AppResponse {
+<span class="nc" id="L98">        var message: MailMessage? = null</span>
+<span class="nc" id="L99">        val userCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)</span>
+<span class="nc" id="L100">        val messageNumber = parseIntArgument(request.message)</span>
+<span class="nc bnc" id="L101" title="All 2 branches missed.">        if (null != messageNumber) {</span>
+<span class="nc" id="L102">            message = mailboxStore.deleteMessage(userCallsign, messageNumber)</span>
+        }
+<span class="nc bnc" id="L104" title="All 2 branches missed.">        return when (message) {</span>
+<span class="nc" id="L105">            null -&gt; AppResponse.sendText(&quot;No message found&quot;)</span>
+<span class="nc" id="L106">            else -&gt; return AppResponse.sendText(&quot;Deleted $messageNumber ${message.subject}&quot;)</span>
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

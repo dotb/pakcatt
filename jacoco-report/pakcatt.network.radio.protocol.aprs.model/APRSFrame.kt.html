@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>APRSFrame.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.network.radio.protocol.aprs.model</a> &gt; <span class="el_source">APRSFrame.kt</span></div><h1>APRSFrame.kt</h1><pre class="source lang-java linenums">package pakcatt.network.radio.protocol.aprs.model
+
+import pakcatt.network.radio.kiss.model.ControlField
+import pakcatt.network.radio.kiss.model.KissFrame
+import pakcatt.network.radio.kiss.model.KissFrameStandard
+
+<span class="fc" id="L7">enum class APRSDataType(val id: Int) {</span>
+    // MIC-E
+<span class="fc" id="L9">    MIC_E(0x1C), // FS</span>
+<span class="fc" id="L10">    MIC_E_OLD(0x1D), // GS</span>
+<span class="fc" id="L11">    MIC_E_DATA(0x60), // `</span>
+<span class="fc" id="L12">    MIC_E_DATA_OLD(0x27), // '</span>
+
+    // Location
+<span class="fc" id="L15">    LOC_NO_TIME_NO_MESSAGE(0x21), // !</span>
+<span class="fc" id="L16">    LOC_NO_TIME_WITH_MESSAGE(0x3D), // =</span>
+<span class="fc" id="L17">    LOC_WITH_TIME_NO_MESSAGE(0x2F), // /</span>
+<span class="fc" id="L18">    LOC_WITH_TIME_WITH_MESSAGE(0x40), // @</span>
+<span class="fc" id="L19">    SHELTER_WITH_TIME(0x2B), // +</span>
+<span class="fc" id="L20">    RAW_GPS(0x24), // $</span>
+<span class="fc" id="L21">    MAP_FEATURE(0x26), // &amp;</span>
+
+    // Weather
+<span class="fc" id="L24">    WEATHER_SPACE(0x2E), // .</span>
+<span class="fc" id="L25">    WEATHER_NO_LOC(0x5F), // _</span>
+<span class="fc" id="L26">    WEATHER_PEET_BROS_1(0x23), // #</span>
+<span class="fc" id="L27">    WEATHER_PEET_BROS_2(0x2A), // *</span>
+
+    // Message
+<span class="fc" id="L30">    MESSAGE(0x3A), // :</span>
+
+    // Other
+<span class="fc" id="L33">    AGRELO_DFJR(0x25), // %</span>
+<span class="fc" id="L34">    ITEM(0x29), // )</span>
+<span class="fc" id="L35">    OBJECT(0x3B), // ;</span>
+<span class="fc" id="L36">    STATION_CAPABILITIES(0x2C), // &lt;</span>
+<span class="fc" id="L37">    STATUS(0x3E), // &gt;</span>
+<span class="fc" id="L38">    QUERY(0x3F), // ?</span>
+<span class="fc" id="L39">    TELEMETRY(0x54), // T</span>
+<span class="fc" id="L40">    MAIDENHEAD_BEACON(0x5B), // [</span>
+<span class="fc" id="L41">    USER_DEFINED_APRS(0x7B), // {</span>
+<span class="fc" id="L42">    THIRD_PARTY_TRAFFIC(0x7D), // }</span>
+<span class="fc" id="L43">    TEST(0x2C), // ,</span>
+<span class="fc" id="L44">    UNKNOWN(0x00)</span>
+}
+
+<span class="fc" id="L47">open class APRSFrame: KissFrameStandard() {</span>
+
+<span class="fc" id="L49">    protected var aprsDataType: APRSDataType = APRSDataType.UNKNOWN</span>
+
+    init {
+        // Configure the AX.25 frame parameters for APRS
+<span class="fc" id="L53">        setControlField(ControlField.U_UNNUMBERED_INFORMATION)</span>
+        // Version identifier goes into teh destination callsign
+<span class="fc" id="L55">        setDestCallsign(&quot;PAKCAT-0&quot;)</span>
+    }
+
+
+    open fun populateFromKissFrame(kissFrame: KissFrame): APRSFrame {
+<span class="fc" id="L60">        return populateFromFrameData(kissFrame.packetData())</span>
+    }
+
+    override fun populateFromFrameData(frameByteData: ByteArray): APRSFrame {
+<span class="fc" id="L64">        super.populateFromFrameData(frameByteData)</span>
+<span class="pc bpc" id="L65" title="3 of 6 branches missed.">        if (payloadData.isNotEmpty()) {</span>
+<span class="fc" id="L66">            setDataType(payloadData[0])</span>
+        }
+<span class="fc" id="L68">        return this</span>
+    }
+
+    override fun toString(): String {
+<span class="fc" id="L72">        val stringBuilder = StringBuilder()</span>
+
+<span class="fc" id="L74">        stringBuilder.append(&quot;Data Type: $aprsDataType &quot;)</span>
+<span class="fc" id="L75">        stringBuilder.append(&quot;From: ${sourceCallsign()} &quot;)</span>
+<span class="pc bpc" id="L76" title="3 of 6 branches missed.">        if (repeaterCallsignOne.isNotEmpty()) {</span>
+<span class="fc" id="L77">            stringBuilder.append(&quot;Via1: ${repeaterCallsignOne()} &quot;)</span>
+        }
+
+<span class="pc bpc" id="L80" title="3 of 6 branches missed.">        if (repeaterCallsignTwo.isNotEmpty()) {</span>
+<span class="fc" id="L81">            stringBuilder.append(&quot;Via2: ${repeaterCallsignTwo()} &quot;)</span>
+        }
+<span class="pc bpc" id="L83" title="3 of 6 branches missed.">        if (payloadData.isNotEmpty()) {</span>
+<span class="fc" id="L84">            stringBuilder.append(&quot;Payload: ${payloadDataString()}&quot;)</span>
+        }
+<span class="fc" id="L86">        return stringBuilder.toString()</span>
+    }
+
+    fun aprsDataType(): APRSDataType {
+<span class="fc" id="L90">        return aprsDataType</span>
+    }
+
+    private fun setDataType(requestedAPRSDataType: Byte) {
+<span class="fc" id="L94">        this.aprsDataType = APRSDataType.UNKNOWN // Start with an unknown type</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        for (aprsDataTypeOption in APRSDataType.values()) {</span>
+<span class="fc" id="L96">            val dataTypeIntValue = byteUtils.byteToInt(requestedAPRSDataType)</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">            if (aprsDataTypeOption.id == dataTypeIntValue) {</span>
+<span class="fc" id="L98">                this.aprsDataType = aprsDataTypeOption</span>
+            }
+        }
+<span class="fc" id="L101">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

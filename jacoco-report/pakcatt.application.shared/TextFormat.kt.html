@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TextFormat.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.application.shared</a> &gt; <span class="el_source">TextFormat.kt</span></div><h1>TextFormat.kt</h1><pre class="source lang-java linenums">package pakcatt.application.shared
+
+<span class="fc" id="L3">enum class FORMAT(val ansiCode: Int) {</span>
+<span class="fc" id="L4">    RESET(0),</span>
+<span class="fc" id="L5">    BOLD(1),</span>
+<span class="fc" id="L6">    DIM(2),</span>
+<span class="fc" id="L7">    STANDOUT(3),</span>
+<span class="fc" id="L8">    UNDERLINE(4),</span>
+<span class="fc" id="L9">    BLINK(5),</span>
+<span class="fc" id="L10">    INVERT(7),</span>
+<span class="fc" id="L11">    HIDDEN(8)</span>
+}
+
+<span class="nc" id="L14">enum class COLOUR(val ansiCode: Int) {</span>
+<span class="nc" id="L15">    BLACK(0),</span>
+<span class="nc" id="L16">    RED(1),</span>
+<span class="nc" id="L17">    GREEN(2),</span>
+<span class="nc" id="L18">    YELLOW(3),</span>
+<span class="nc" id="L19">    BLUE(4),</span>
+<span class="nc" id="L20">    MAGENTA(5),</span>
+<span class="nc" id="L21">    CYAN(6),</span>
+<span class="nc" id="L22">    WHITE(7),</span>
+<span class="nc" id="L23">    DEFAULT(9)</span>
+}
+
+<span class="fc" id="L26">open class TextFormat {</span>
+
+<span class="fc" id="L28">    val escapeChar = 27.toChar()</span>
+
+    fun format(formatCode: FORMAT): String {
+<span class="fc" id="L31">        return &quot;$escapeChar[${formatCode.ansiCode}m&quot;</span>
+    }
+
+    fun fgColour(colourCode: COLOUR): String {
+<span class="nc" id="L35">        return &quot;$escapeChar[3${colourCode.ansiCode}m&quot;</span>
+    }
+
+    fun bgColour(colourCode: COLOUR): String {
+<span class="nc" id="L39">        return &quot;$escapeChar[4${colourCode.ansiCode}m&quot;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

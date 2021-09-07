@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EditSubjectApp.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.application.mailbox.edit</a> &gt; <span class="el_source">EditSubjectApp.kt</span></div><h1>EditSubjectApp.kt</h1><pre class="source lang-java linenums">package pakcatt.application.mailbox.edit
+
+import pakcatt.application.mailbox.persistence.MailMessage
+import pakcatt.application.mailbox.persistence.MailboxStore
+import pakcatt.application.shared.SubApp
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.AppResponse
+
+<span class="nc" id="L9">class EditSubjectApp(private val mailMessage: MailMessage, private val mailboxStore: MailboxStore): SubApp() {</span>
+
+    override fun returnCommandPrompt(): String {
+<span class="nc" id="L12">        return &quot;Subject:&quot;</span>
+    }
+
+    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+<span class="nc" id="L16">        mailMessage.subject = stringUtils.removeEOLChars(request.message)</span>
+<span class="nc" id="L17">        return AppResponse.sendText(&quot;Compose your message and finish with . on a line of it's own.&quot;, EditBodyApp(mailMessage, mailboxStore))</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>LastApp.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.application.last</a> &gt; <span class="el_source">LastApp.kt</span></div><h1>LastApp.kt</h1><pre class="source lang-java linenums">package pakcatt.application.last
+
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Component
+import pakcatt.application.last.persistence.LastEntryStore
+import pakcatt.application.shared.RootApp
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.AppResponse
+import pakcatt.util.StringUtils
+import java.text.SimpleDateFormat
+import java.util.*
+
+/**
+ * Keeps a record of the last time a callsign is seen on the system,
+ * and allows users to query the record.
+ */
+@Component
+@Profile(&quot;production&quot;)
+<span class="fc" id="L19">class LastApp(private val lastEntryStore: LastEntryStore): RootApp() {</span>
+
+<span class="fc" id="L21">    private val dateFormatter = SimpleDateFormat(&quot;EEEE, dd MMMM yyyy, HH:mm&quot;)</span>
+
+    override fun returnCommandPrompt(): String {
+<span class="nc" id="L24">        return &quot;&quot;</span>
+    }
+
+    override fun decisionOnConnectionRequest(request: AppRequest): AppResponse {
+<span class="nc" id="L28">        updateCallsignEntry(request.remoteCallsign)</span>
+<span class="nc" id="L29">        return AppResponse.ignore()</span>
+    }
+
+    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+<span class="nc" id="L33">        updateCallsignEntry(request.remoteCallsign)</span>
+<span class="nc" id="L34">        return AppResponse.ignore()</span>
+    }
+
+    fun lastEntryFor(callsign: String): String {
+<span class="nc" id="L38">        val formattedCallsign = stringUtils.formatCallsignRemoveSSID(callsign)</span>
+<span class="nc bnc" id="L39" title="All 2 branches missed.">        return when (val lastEntry = lastEntryStore.getLastEntry(formattedCallsign)) {</span>
+<span class="nc" id="L40">            null -&gt; &quot;Haven't seen $formattedCallsign&quot;</span>
+<span class="nc" id="L41">            else -&gt; &quot;Last seen ${lastEntry.callsign} ${dateFormatter.format(lastEntry.lastSeen)}&quot;</span>
+        }
+    }
+
+    fun lastEntries(): String {
+<span class="nc" id="L46">        val lastEntries = lastEntryStore.getLastEntries()</span>
+<span class="nc" id="L47">        val stringBuilder = StringBuilder()</span>
+<span class="nc bnc" id="L48" title="All 2 branches missed.">        for (lastEntry in lastEntries) {</span>
+<span class="nc" id="L49">            stringBuilder.append(&quot;Last seen ${lastEntry.callsign} ${dateFormatter.format(lastEntry.lastSeen)}&quot;)</span>
+<span class="nc" id="L50">            stringBuilder.append(stringUtils.EOL)</span>
+        }
+<span class="nc" id="L52">        return stringBuilder.toString()</span>
+    }
+
+    private fun updateCallsignEntry(callsign: String) {
+<span class="nc" id="L56">        val formattedCallsign = stringUtils.formatCallsignRemoveSSID(callsign)</span>
+<span class="nc" id="L57">        lastEntryStore.updateLastEntryFor(formattedCallsign, Date())</span>
+<span class="nc" id="L58">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AppService.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.application.shared</a> &gt; <span class="el_source">AppService.kt</span></div><h1>AppService.kt</h1><pre class="source lang-java linenums">package pakcatt.application.shared
+
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import pakcatt.application.shared.model.*
+import pakcatt.application.filter.shared.InputFilter
+import pakcatt.application.filter.shared.OutputFilter
+import pakcatt.util.StringUtils
+
+interface AppInterface {
+    fun getDecisionOnConnectionRequest(request: AppRequest): AppResponse
+    fun getResponseForReceivedMessage(request: AppRequest): AppResponse
+    fun getAdhocResponses(forDeliveryType: DeliveryType): List&lt;AdhocMessage&gt;
+    fun closeConnection(remoteCallsign: String, myCallsign: String)
+}
+
+@Service
+<span class="fc" id="L18">class AppService(private val rootApplications: List&lt;RootApp&gt;,</span>
+                 private val inputFilters: List&lt;InputFilter&gt;,
+                 private val outputFilters: List&lt;OutputFilter&gt;): AppInterface {
+
+<span class="fc" id="L22">    private val logger = LoggerFactory.getLogger(AppService::class.java)</span>
+<span class="fc" id="L23">    private val stringUtils = StringUtils()</span>
+<span class="fc" id="L24">    private var currentUsers = HashMap&lt;String, UserContext&gt;()</span>
+
+    /* AppInterface methods delegated from the LinkService */
+    override fun getDecisionOnConnectionRequest(request: AppRequest): AppResponse {
+        // Ensure any previous connection is closed, and open a new one
+<span class="fc" id="L29">        closeConnection(request.remoteCallsign, request.addressedToCallsign)</span>
+<span class="fc" id="L30">        prepareRequest(request)</span>
+        // Find an app who is willing to connect
+<span class="fc" id="L32">        val response = findAppWillingToAcceptConnection(request)</span>
+<span class="fc" id="L33">        prepareResponse(response, request.userContext)</span>
+<span class="fc" id="L34">        return response</span>
+    }
+
+    // We've received data from a client, share it with listening apps and get a response for the client
+    override fun getResponseForReceivedMessage(request: AppRequest): AppResponse {
+<span class="fc" id="L39">        prepareRequest(request)</span>
+        // Get the interaction response from the app
+<span class="fc" id="L41">        val response = getResponseFromApplication(request)</span>
+<span class="fc" id="L42">        prepareResponse(response, request.userContext)</span>
+<span class="fc" id="L43">        return response</span>
+    }
+
+    private fun prepareRequest(request: AppRequest) {
+        // Get this user's context
+<span class="fc" id="L48">        setUserContextOnRequest(request)</span>
+        // Filter the request on input to clean up the request
+<span class="fc" id="L50">        filterRequestOnInput(request)</span>
+        // Re-write incoming EOL sequences to a configured standard
+<span class="fc" id="L52">        var cleanedRequest = request</span>
+<span class="fc" id="L53">        cleanedRequest.message = stringUtils.fixEndOfLineCharacters(cleanedRequest.message, stringUtils.EOL)</span>
+        // Get the interaction response from the app
+<span class="fc" id="L55">    }</span>
+
+    private fun prepareResponse(response: AppResponse, userContext: UserContext?) {
+        // Update any focus state in the user context if required, returned by the selected app.
+<span class="fc" id="L59">        updateAppFocus(response.nextApp(), userContext)</span>
+        // Return any response with an included command prompt string
+<span class="pc bpc" id="L61" title="1 of 2 branches missed.">        addPromptToResponse(userContext?.engagedApplication(), response)</span>
+        // Clean and customise the response before sending it to the remote party
+<span class="fc" id="L63">        filterResponseOnOutput(response, userContext)</span>
+<span class="fc" id="L64">    }</span>
+
+    private fun findAppWillingToAcceptConnection(request: AppRequest): AppResponse {
+        // Start with the default decision to ignore this connect request
+<span class="fc" id="L68">        var finalConnectionDecision = AppResponse.ignore()</span>
+
+        // Find a root application who wants to accept the connection
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        for (app in rootApplications) {</span>
+<span class="fc" id="L72">            val connectionDecision = app.decisionOnConnectionRequest(request)</span>
+<span class="pc bpc" id="L73" title="1 of 4 branches missed.">            when (connectionDecision.responseType) {</span>
+<span class="fc" id="L74">                ResponseType.ACK_WITH_TEXT -&gt; finalConnectionDecision = connectionDecision</span>
+<span class="fc" id="L75">                ResponseType.ACK_ONLY -&gt; finalConnectionDecision = connectionDecision</span>
+<span class="fc" id="L76">                ResponseType.IGNORE -&gt; logger.trace(&quot;App isn't interested in this connection.&quot;)</span>
+            }
+        }
+<span class="fc" id="L79">        return finalConnectionDecision</span>
+    }
+
+    override fun getAdhocResponses(forDeliveryType: DeliveryType): List&lt;AdhocMessage&gt; {
+<span class="fc" id="L83">        val allAdhocResponses = ArrayList&lt;AdhocMessage&gt;()</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">        for (app in rootApplications) {</span>
+<span class="fc" id="L85">            allAdhocResponses.addAll(app.flushAdhocResponses(forDeliveryType))</span>
+        }
+<span class="fc" id="L87">        return allAdhocResponses</span>
+    }
+
+    private fun getResponseFromApplication(request: AppRequest): AppResponse  {
+        // Start with a default response to ignored the incoming request
+<span class="fc" id="L92">        var finalInteractionResponse = AppResponse.ignore()</span>
+
+<span class="fc" id="L94">        val userContext = request.userContext</span>
+        // Share the request with app registered root level apps for processing
+<span class="fc bfc" id="L96" title="All 2 branches covered.">        for (app in rootApplications) {</span>
+<span class="fc" id="L97">            val interactionResponse = app.handleReceivedMessage(request)</span>
+<span class="pc bpc" id="L98" title="1 of 4 branches missed.">            when (interactionResponse.responseType) {</span>
+<span class="fc" id="L99">                ResponseType.ACK_WITH_TEXT -&gt; finalInteractionResponse = interactionResponse</span>
+<span class="fc" id="L100">                ResponseType.ACK_ONLY -&gt; finalInteractionResponse = interactionResponse</span>
+<span class="fc" id="L101">                ResponseType.IGNORE -&gt; logger.trace(&quot;App isn't interested in responding {}&quot;, app)</span>
+            }
+        }
+
+        // Check if this user is engaged with a specific app. This app response will take priority
+<span class="pc bpc" id="L106" title="1 of 2 branches missed.">        val app = userContext?.engagedApplication()</span>
+<span class="fc bfc" id="L107" title="All 2 branches covered.">        if (null != app) {</span>
+            // Direct requests to the app this user is engaged with
+<span class="fc" id="L109">            finalInteractionResponse = app.handleReceivedMessage(request)</span>
+        }
+
+<span class="fc" id="L112">        return finalInteractionResponse</span>
+    }
+
+    private fun filterRequestOnInput(request: AppRequest) {
+<span class="fc bfc" id="L116" title="All 2 branches covered.">        for (inputFilter in inputFilters) {</span>
+<span class="fc" id="L117">            inputFilter.applyFilter(request)</span>
+        }
+<span class="fc" id="L119">    }</span>
+
+    private fun filterResponseOnOutput(response: AppResponse, userContext: UserContext?) {
+<span class="fc bfc" id="L122" title="All 2 branches covered.">        for (outputFilter in outputFilters) {</span>
+<span class="fc" id="L123">            outputFilter.applyFilter(response, userContext)</span>
+        }
+<span class="fc" id="L125">    }</span>
+
+    override fun closeConnection(remoteCallsign: String, myCallsign: String) {
+<span class="fc" id="L128">        val key = contextKey(remoteCallsign, myCallsign)</span>
+<span class="fc" id="L129">        currentUsers.remove(key)</span>
+<span class="fc" id="L130">    }</span>
+
+    /* Methods that handle the user context objects */
+    // Update the app focus state in the user context if required.
+    private fun updateAppFocus(nextApp: SubApp?, userContext: UserContext?) {
+<span class="pc bpc" id="L135" title="2 of 6 branches missed.">        if (null != nextApp &amp;&amp; null != userContext &amp;&amp; nextApp is NavigateBack) {</span>
+<span class="nc bnc" id="L136" title="All 4 branches missed.">            for (i in 1..nextApp.steps) {</span>
+<span class="nc" id="L137">                userContext.navigateBack()</span>
+            }
+<span class="pc bpc" id="L139" title="1 of 4 branches missed.">        } else if (null != nextApp &amp;&amp; null != userContext) {</span>
+<span class="fc" id="L140">            nextApp.setParentRootApp(userContext.rootApplication())</span>
+<span class="fc" id="L141">            userContext.navigateToApp(nextApp)</span>
+        }
+<span class="fc" id="L143">    }</span>
+
+    // Rewrite the prompt string into the textual response
+    private fun addPromptToResponse(app: SubApp?, response: AppResponse) {
+<span class="fc" id="L147">        val message = response.responseString()</span>
+
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        when (val prompt = app?.returnCommandPrompt()) {</span>
+<span class="pc bpc" id="L150" title="1 of 4 branches missed.">            &quot;&quot; -&gt; response.updateResponseString(&quot;$message${stringUtils.EOL}&quot;)</span>
+<span class="fc" id="L151">            null -&gt; response.updateResponseString(&quot;$message${stringUtils.EOL}&quot;)</span>
+<span class="fc" id="L152">            else -&gt; response.updateResponseString(&quot;$message${stringUtils.EOL}$prompt &quot;)</span>
+        }
+<span class="fc" id="L154">    }</span>
+
+    private fun setUserContextOnRequest(request: AppRequest): UserContext {
+<span class="fc" id="L157">        val remoteCallsign = request.remoteCallsign</span>
+<span class="fc" id="L158">        val myCallsign = request.addressedToCallsign</span>
+<span class="fc" id="L159">        val key = contextKey(remoteCallsign, myCallsign)</span>
+<span class="fc" id="L160">        val existingContext = currentUsers[key]</span>
+<span class="fc bfc" id="L161" title="All 2 branches covered.">        val returnedContext = if (null != existingContext) {</span>
+<span class="fc" id="L162">            existingContext</span>
+        } else {
+<span class="fc" id="L164">            val newContext = UserContext(remoteCallsign, myCallsign)</span>
+<span class="fc" id="L165">            currentUsers[key] = newContext</span>
+<span class="fc" id="L166">            newContext</span>
+        }
+<span class="fc" id="L168">        request.userContext = returnedContext</span>
+<span class="fc" id="L169">        return returnedContext</span>
+    }
+
+    private fun contextKey(fromCallsign: String, myCallsign: String): String {
+<span class="fc" id="L173">        return &quot;$fromCallsign $myCallsign&quot;</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

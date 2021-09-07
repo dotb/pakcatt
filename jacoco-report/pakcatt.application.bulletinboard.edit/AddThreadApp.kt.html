@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AddThreadApp.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.application.bulletinboard.edit</a> &gt; <span class="el_source">AddThreadApp.kt</span></div><h1>AddThreadApp.kt</h1><pre class="source lang-java linenums">package pakcatt.application.bulletinboard.edit
+
+import pakcatt.application.bulletinboard.persistence.BulletinBoardPost
+import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
+import pakcatt.application.bulletinboard.persistence.BulletinBoardThread
+import pakcatt.application.shared.SubApp
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.AppResponse
+
+<span class="nc" id="L10">class AddThreadApp(private val newThread: BulletinBoardThread,</span>
+<span class="nc" id="L11">                   private val bulletinBoardStore: BulletinBoardStore): SubApp() {</span>
+
+    override fun returnCommandPrompt(): String {
+<span class="nc" id="L14">        return &quot;Topic:&quot;</span>
+    }
+
+    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+<span class="nc" id="L18">        val topic = stringUtils.removeEOLChars(request.message)</span>
+<span class="nc" id="L19">        newThread.topic = topic</span>
+<span class="nc" id="L20">        return AppResponse.sendText(&quot;Compose the first post and finish with . on a line of it's own.&quot;, AddPostApp(newThread,</span>
+<span class="nc" id="L21">                                                                                                                BulletinBoardPost(newThread.fromCallsign),</span>
+<span class="nc" id="L22">                                                                                                                bulletinBoardStore))</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

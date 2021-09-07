@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>APRSService.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.network.radio.protocol.aprs</a> &gt; <span class="el_source">APRSService.kt</span></div><h1>APRSService.kt</h1><pre class="source lang-java linenums">package pakcatt.network.radio.protocol.aprs
+
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import pakcatt.application.shared.AppInterface
+import pakcatt.network.radio.kiss.model.ControlField
+import pakcatt.network.radio.kiss.model.KissFrame
+import pakcatt.network.radio.kiss.model.ProtocolID
+import pakcatt.network.radio.kiss.queue.DeliveryQueue
+import pakcatt.application.shared.model.DeliveryType
+import pakcatt.network.radio.protocol.aprs.handlers.APRSHandler
+import pakcatt.network.radio.protocol.aprs.model.*
+import pakcatt.network.radio.protocol.shared.ProtocolService
+import pakcatt.util.StringUtils
+
+@Service
+<span class="fc" id="L17">class APRSService(private val appInterface: AppInterface,</span>
+                  private val aprsQueue: APRSQueue,
+<span class="fc" id="L19">                  private val aprsFrameHandlers: List&lt;APRSHandler&gt;): ProtocolService() {</span>
+
+<span class="fc" id="L21">    private val logger = LoggerFactory.getLogger(APRSService::class.java)</span>
+<span class="fc" id="L22">    private val stringUtils = StringUtils()</span>
+
+    // APRS only uses the Unnumbered INFORMATION frames of AX.25, and must all have a protocol type of NO_LAYER_3
+    override fun supportedProtocol(protocolId: Int, controlField: ControlField): Boolean {
+        return protocolId == ProtocolID.NO_LAYER_3.id
+<span class="fc" id="L27">                &amp;&amp; listOf(ControlField.U_UNNUMBERED_INFORMATION,</span>
+<span class="fc bfc" id="L28" title="All 4 branches covered.">                    ControlField.U_UNNUMBERED_INFORMATION_P).contains(controlField)</span>
+    }
+
+    override fun handleFrame(incomingFrame: KissFrame) {
+<span class="fc" id="L32">        logger.trace(&quot;APRS Service: Handling frame: {}&quot;, incomingFrame)</span>
+<span class="fc" id="L33">        val untypedAPRSFrame = APRSFrame()</span>
+<span class="fc" id="L34">        untypedAPRSFrame.populateFromKissFrame(incomingFrame)</span>
+<span class="fc" id="L35">        logger.trace(&quot;Untyped APRS Frame: {}&quot;, untypedAPRSFrame.toString())</span>
+<span class="fc" id="L36">        val typedAPRSFrame = getTypedAPRSFrame(untypedAPRSFrame)</span>
+<span class="fc" id="L37">        logger.debug(&quot;Typed APRS Frame: {}&quot;, typedAPRSFrame.toString())</span>
+<span class="fc" id="L38">        handleTypedAPRSFrame(typedAPRSFrame)</span>
+<span class="fc" id="L39">    }</span>
+
+    override fun queueFramesForDelivery(deliveryQueue: DeliveryQueue) {
+        // Queue any adhoc frames requested by apps, for delivery
+<span class="pc bpc" id="L43" title="1 of 2 branches missed.">        for (adhocDelivery in appInterface.getAdhocResponses(DeliveryType.APRS_FIRE_AND_FORGET)) {</span>
+<span class="nc bnc" id="L44" title="All 2 branches missed.">            if (adhocDelivery.deliveryType == DeliveryType.APRS_FIRE_AND_FORGET) {</span>
+<span class="nc" id="L45">                aprsQueue.queueAPRSMessageForDelivery(adhocDelivery.myCallsign, adhocDelivery.remoteCallsign, adhocDelivery.message)</span>
+            }
+        }
+
+        // Queue any local frames for delivery
+<span class="fc" id="L50">        val framesForDelivery = aprsQueue.flushQueue()</span>
+<span class="pc bpc" id="L51" title="1 of 2 branches missed.">        for (frame in framesForDelivery) {</span>
+<span class="nc" id="L52">            deliveryQueue.addFrame(frame)</span>
+        }
+<span class="fc" id="L54">    }</span>
+
+    private fun handleTypedAPRSFrame(typedAPRSFrame: APRSFrame) {
+        // Find a handler for this frame
+<span class="fc" id="L58">        var frameWasHandled = false</span>
+<span class="fc bfc" id="L59" title="All 2 branches covered.">        for (aprsFrameHandler in aprsFrameHandlers) {</span>
+<span class="fc bfc" id="L60" title="All 2 branches covered.">            if (aprsFrameHandler.isAbleToSupport(typedAPRSFrame.aprsDataType())) {</span>
+<span class="fc" id="L61">                aprsFrameHandler.handleAPRSFrame(typedAPRSFrame)</span>
+<span class="fc" id="L62">                frameWasHandled = true</span>
+            }
+        }
+
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">        if (!frameWasHandled) {</span>
+<span class="nc" id="L67">            logger.trace(&quot;PakCatt does not yet support frame type: {}&quot;, typedAPRSFrame)</span>
+<span class="nc" id="L68">            logger.trace(&quot;APRS frame data:\t {}&quot;, stringUtils.byteArrayToHex(typedAPRSFrame.packetData()))</span>
+        }
+<span class="fc" id="L70">    }</span>
+
+    private fun getTypedAPRSFrame(untypedAPRSFrame: APRSFrame): APRSFrame {
+<span class="pc bpc" id="L73" title="6 of 7 branches missed.">        return when (untypedAPRSFrame.aprsDataType()) {</span>
+<span class="fc" id="L74">            APRSDataType.MESSAGE -&gt; APRSMessageFrame().populateFromKissFrame(untypedAPRSFrame)</span>
+<span class="nc" id="L75">            APRSDataType.MIC_E -&gt; APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)</span>
+<span class="nc" id="L76">            APRSDataType.MIC_E_OLD -&gt; APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)</span>
+<span class="nc" id="L77">            APRSDataType.MIC_E_DATA -&gt; APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)</span>
+<span class="nc" id="L78">            APRSDataType.MIC_E_DATA_OLD -&gt; APRSMicEDataFrame().populateFromKissFrame(untypedAPRSFrame)</span>
+<span class="nc" id="L79">            APRSDataType.STATUS -&gt; APRSStatusFrame().populateFromKissFrame(untypedAPRSFrame)</span>
+            else -&gt; {
+<span class="nc" id="L81">                logger.error(&quot;PakCatt does not yet understand {}&quot;, untypedAPRSFrame)</span>
+<span class="nc" id="L82">                logger.error(&quot;APRS frame data:\t {}&quot;, stringUtils.byteArrayToHex(untypedAPRSFrame.packetData()))</span>
+<span class="nc" id="L83">                untypedAPRSFrame</span>
+            }
+        }
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

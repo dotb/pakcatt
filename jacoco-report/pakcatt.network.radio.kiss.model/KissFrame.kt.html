@@ -1,0 +1,467 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KissFrame.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.network.radio.kiss.model</a> &gt; <span class="el_source">KissFrame.kt</span></div><h1>KissFrame.kt</h1><pre class="source lang-java linenums">package pakcatt.network.radio.kiss.model
+
+import pakcatt.util.ByteUtils
+import pakcatt.util.StringUtils
+
+/*
+# KISS and embedded AX.25 frames contain these fields #
+Frame End (FEND)   1 byte (0xc0) (KISS)
+Port &amp; Command     1 byte
+                    - port is first nibble (0x00 - 0x09) (KISS)
+                    - command is second nibble (0x00 - 0x06, 0xFF) (KISS)
+
+## AX.25 Data component ##
+### Addressing ###
+Dest Callsign      6 bytes (Callsign using 7 bit uppercase chars) (AX.25)
+Dest SSID          1 byte (CRRSSID0 C=Command, R=Reserved, SSID=SSID, 0=Extension bit that is always 0) (AX.25)
+Source Callsign    6 bytes (Callsign using 7 bit uppercase chars) (AX.25)
+Source SSID        1 byte (CRRSSID1 C=Command, R=Reserved, SSID=SSID, 0=Extension bit) (AX.25)
+                    - The last octet of the address field has an extension bit set:
+                    - 0 = more address data to follow or,
+                    - 1 = no more address data to follow) (AX.25)
+
+### Optional Repeater addressing ###
+The repeater section can be repeated (pun intended) to include up to two repeaters.
+Although the documentation seems to indicate it could include more repeaters, but this
+is being phased out, and I've not seen it in the wild.
+Repeater Callsign  6 bytes (Callsign using 7 bit uppercase chars) (AX.25)
+Repeater SSID      1 byte (HRRSSID1 H=Repeated yes/no, R=Reserved, SSID=SSID, 1=Extension bit) (AX.25)
+                    - H = 1 Has been repeated
+                    - H = 0 has not been repeated
+                    - The repeater extension bit is always 1 = no more address data to follow) (AX.25)
+
+
+Control field      1 byte (AX.25)
+                    - I or Information frame - RRRPSSS0 (0  = I)
+                    - S or Supervisory frame - RRRPFF01 (01 = S)
+                    - U or Unnumbered frame  - MMMPMM11 (11 = U)
+                        Where
+                        - RRR = Receive sequence number - senders next expected receive number
+                        - P   = Poll/Final bit
+                        - SSS = Send sequence number - senders current send number, for this frame
+                        - FF = Supervisory function bits
+
+Protocol ID        1 byte (always 0xf0 - no layer 3 protocol) (AX.25). Only used in I and UI frames.
+Information Field  1-256 bytes (payload data) (AX.25)
+
+Frame End (FEND)   1 byte (0xc0) (KISS)
+ */
+
+<span class="fc" id="L50">enum class ProtocolID(val id: Int) {</span>
+<span class="fc" id="L51">    NO_LAYER_3(0xF0)</span>
+}
+
+<span class="fc" id="L54">enum class ControlField(val mask: Int, val bitPattern: Int) {</span>
+<span class="fc" id="L55">    INFORMATION_8(0x11, 0x00),</span>
+<span class="fc" id="L56">    INFORMATION_8_P(0x11,0x10),</span>
+<span class="fc" id="L57">    INFORMATION_128(0x0101,0x0000),</span>
+<span class="fc" id="L58">    INFORMATION_128_P(0x0101,0x0100),</span>
+
+<span class="fc" id="L60">    S_8_RECEIVE_READY(0x1F,0x01), S_8_RECEIVE_NOT_READY(0x1F,0x05), S_8_REJECT(0x1F,0x09), S_8_SELECTIVE_REJECT(0x1F,0x0D),</span>
+<span class="fc" id="L61">    S_8_RECEIVE_READY_P(0x1F,0x11), S_8_RECEIVE_NOT_READY_P(0x1F,0x15), S_8_REJECT_P(0x1F,0x019), S_8_SELECTIVE_REJECT_P(0x1F,0x1D),</span>
+<span class="fc" id="L62">    S_128_RECEIVE_READY(0x01FF,0x0001), S_128_RECEIVE_NOT_READY(0x01FF,0x0005), S_128_REJECT(0x01FF,0x0009), S_128_SELECTIVE_REJECT(0x01FF,0x000D),</span>
+<span class="fc" id="L63">    S_128_RECEIVE_READY_P(0x01FF,0x0101), S_128_RECEIVE_NOT_READY_P(0x01FF,0x0105), S_128_REJECT_P(0x01FF,0x0109), S_128_SELECTIVE_REJECT_P(0x01FF,0x010D),</span>
+
+<span class="fc" id="L65">    U_SET_ASYNC_BALANCED_MODE_EXTENDED(0xFF,0x6F), U_SET_ASYNC_BALANCED_MODE(0xFF,0x2F), U_DISCONNECT(0xFF,0x43), U_DISCONNECT_MODE(0xFF,0x0F), U_UNNUMBERED_ACKNOWLEDGE(0xFF,0x63), U_REJECT(0xFF,0x87), U_UNNUMBERED_INFORMATION(0xFF,0x03), U_EXCHANGE_IDENTIFICATION(0xFF,0xAF), U_TEST(0xFF,0xE3),</span>
+<span class="fc" id="L66">    U_SET_ASYNC_BALANCED_MODE_EXTENDED_P(0xFF,0x7F), U_SET_ASYNC_BALANCED_MODE_P(0xFF,0x3F), U_DISCONNECT_P(0xFF,0x53), U_DISCONNECT_MODE_P(0xFF,0x1F), U_UNNUMBERED_ACKNOWLEDGE_P(0xFF,0x73), U_REJECT_P(0xFF,0x97), U_UNNUMBERED_INFORMATION_P(0xFF,0x13), U_EXCHANGE_IDENTIFICATION_P(0xFF,0xBF), U_TEST_P(0xFF,0xF3),</span>
+<span class="fc" id="L67">    UNKNOWN_Field(0xFF,0xFF)</span>
+}
+
+<span class="fc" id="L70">abstract class KissFrame() {</span>
+
+<span class="fc" id="L72">    protected val byteUtils = ByteUtils()</span>
+<span class="fc" id="L73">    protected val stringUtils = StringUtils()</span>
+<span class="pc" id="L74">    protected var portAndCommand: Byte = byteUtils.intToByte(0x00)</span>
+<span class="pc" id="L75">    protected var destCallsign: ByteArray = ByteArray(0)</span>
+<span class="pc" id="L76">    protected var destSSID: Byte = byteUtils.intToByte(0x00)</span>
+<span class="pc" id="L77">    protected var sourceCallsign: ByteArray = ByteArray(0)</span>
+<span class="pc" id="L78">    protected var sourceSSID: Byte = byteUtils.intToByte(0x00)</span>
+<span class="pc" id="L79">    protected var repeaterCallsignOne: ByteArray = ByteArray(0)</span>
+<span class="pc" id="L80">    protected var repeaterSSIDOne: Byte = byteUtils.intToByte(0x00)</span>
+<span class="pc" id="L81">    protected var repeaterCallsignTwo: ByteArray = ByteArray(0)</span>
+<span class="pc" id="L82">    protected var repeaterSSIDTwo: Byte = byteUtils.intToByte(0x00)</span>
+<span class="pc" id="L83">    protected var protocolID: Byte = byteUtils.intToByte(0x00)</span>
+<span class="fc" id="L84">    protected var payloadData: ByteArray = ByteArray(0)</span>
+<span class="fc" id="L85">    var lastDeliveryAttemptTimeStamp: Long = 0</span>
+<span class="fc" id="L86">    var deliveryAttempts = 0</span>
+
+    companion object {
+        const val FRAME_END = -64
+        const val SIZE_MIN = 15
+        const val SIZE_HEADERS = 18
+    }
+
+    open fun populateFromFrameData(frameByteData: ByteArray): KissFrame {
+        // Set defaults for optional fields
+<span class="fc" id="L96">        this.repeaterCallsignOne = ByteArray(0)</span>
+<span class="fc" id="L97">        this.repeaterCallsignTwo = ByteArray(0)</span>
+<span class="fc" id="L98">        this.repeaterSSIDOne = byteUtils.intToByte(0x00)</span>
+<span class="fc" id="L99">        this.repeaterSSIDTwo = byteUtils.intToByte(0x00)</span>
+<span class="fc" id="L100">        this.protocolID = byteUtils.intToByte(0x00)</span>
+<span class="fc" id="L101">        this.payloadData = ByteArray(0)</span>
+
+        // Mandatory fields
+<span class="fc" id="L104">        var nextIndex = 0</span>
+<span class="fc" id="L105">        this.portAndCommand = frameByteData[nextIndex]</span>
+<span class="fc" id="L106">        nextIndex++</span>
+<span class="fc" id="L107">        this.destCallsign = frameByteData.copyOfRange(nextIndex, nextIndex + 6)</span>
+<span class="fc" id="L108">        nextIndex += 6</span>
+<span class="fc" id="L109">        this.destSSID = frameByteData[nextIndex]</span>
+<span class="fc" id="L110">        nextIndex++</span>
+<span class="fc" id="L111">        this.sourceCallsign = frameByteData.copyOfRange(nextIndex, nextIndex + 6)</span>
+<span class="fc" id="L112">        nextIndex += 6</span>
+<span class="fc" id="L113">        this.sourceSSID = frameByteData[nextIndex]</span>
+<span class="fc" id="L114">        nextIndex++</span>
+
+        // Is there repeater information to decode?
+        // Last bit in sourceSSID set to 0 - yes, 1 - no
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (byteUtils.maskByte(sourceSSID, 0x01) == byteUtils.intToByte(0x00)) {</span>
+            // At least one repeater address is expected
+<span class="fc" id="L120">            this.repeaterCallsignOne = frameByteData.copyOfRange(nextIndex, nextIndex + 6)</span>
+<span class="fc" id="L121">            nextIndex += 6</span>
+<span class="fc" id="L122">            this.repeaterSSIDOne = frameByteData[nextIndex]</span>
+<span class="fc" id="L123">            nextIndex++</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">            if (byteUtils.maskByte(repeaterSSIDOne, 0x01) == byteUtils.intToByte(0x00)) {</span>
+<span class="fc" id="L125">                this.repeaterCallsignTwo = frameByteData.copyOfRange(nextIndex, nextIndex + 6)</span>
+<span class="fc" id="L126">                nextIndex += 6</span>
+<span class="fc" id="L127">                this.repeaterSSIDTwo = frameByteData[nextIndex]</span>
+<span class="fc" id="L128">                nextIndex++</span>
+            }
+        }
+
+        // Call to the standard or extended frame classes to handle the control field
+<span class="fc" id="L133">        nextIndex = setControlFieldFromFrameData(frameByteData, nextIndex)</span>
+
+        // The protocol ID is optional
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (frameByteData.size &gt; nextIndex) {</span>
+<span class="fc" id="L137">            this.protocolID = frameByteData[nextIndex]</span>
+<span class="fc" id="L138">            nextIndex++</span>
+        }
+
+        // Information / payload data is optional
+<span class="fc bfc" id="L142" title="All 2 branches covered.">        if (frameByteData.size &gt; nextIndex) {</span>
+<span class="fc" id="L143">            this.payloadData = frameByteData.copyOfRange(nextIndex, frameByteData.size)</span>
+        }
+<span class="fc" id="L145">        return this</span>
+    }
+
+    open fun packetData(): ByteArray {
+<span class="fc" id="L149">        val controlField = controlBits()</span>
+
+<span class="fc" id="L151">        var packetSize = controlField.size + destCallsign.size + sourceCallsign.size +</span>
+<span class="fc" id="L152">                repeaterCallsignOne.size + repeaterCallsignTwo.size + payloadData.size</span>
+
+        // Add space any repeater SSIDs
+<span class="fc bfc" id="L155" title="All 6 branches covered.">        if (repeaterCallsignOne.isNotEmpty()) {</span>
+<span class="fc" id="L156">            packetSize++</span>
+        }
+<span class="fc bfc" id="L158" title="All 6 branches covered.">        if (repeaterCallsignTwo.isNotEmpty()) {</span>
+<span class="fc" id="L159">            packetSize++</span>
+        }
+
+        // Section 3.4. PID Field. The PID field is only sent on I and UI Frames
+<span class="fc" id="L163">        packetSize += if (arrayOf(</span>
+<span class="fc" id="L164">                ControlField.INFORMATION_8,</span>
+<span class="fc" id="L165">                ControlField.INFORMATION_8_P,</span>
+<span class="fc" id="L166">                ControlField.INFORMATION_128,</span>
+<span class="fc" id="L167">                ControlField.INFORMATION_128_P,</span>
+<span class="fc" id="L168">                ControlField.U_UNNUMBERED_INFORMATION,</span>
+<span class="fc" id="L169">                ControlField.U_UNNUMBERED_INFORMATION_P)</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">                .contains(calculateControlFrame())) {</span>
+<span class="fc" id="L171">            4</span>
+        } else {
+<span class="fc" id="L173">            3</span>
+        }
+
+<span class="fc" id="L176">        var nextIndex = 0</span>
+<span class="fc" id="L177">        var kissPacket = ByteArray(packetSize)</span>
+<span class="fc" id="L178">        nextIndex = byteUtils.insertIntoByteArray(portAndCommand, kissPacket, nextIndex)</span>
+<span class="fc" id="L179">        nextIndex = byteUtils.insertIntoByteArray(destCallsign, kissPacket, nextIndex)</span>
+<span class="fc" id="L180">        nextIndex = byteUtils.insertIntoByteArray(destSSID, kissPacket, nextIndex)</span>
+<span class="fc" id="L181">        nextIndex = byteUtils.insertIntoByteArray(sourceCallsign, kissPacket, nextIndex)</span>
+<span class="fc" id="L182">        nextIndex = byteUtils.insertIntoByteArray(sourceSSID, kissPacket, nextIndex)</span>
+<span class="fc" id="L183">        nextIndex = byteUtils.insertIntoByteArray(repeaterCallsignOne, kissPacket, nextIndex)</span>
+<span class="fc bfc" id="L184" title="All 6 branches covered.">        if (repeaterCallsignOne.isNotEmpty()) {</span>
+<span class="fc" id="L185">            nextIndex = byteUtils.insertIntoByteArray(repeaterSSIDOne, kissPacket, nextIndex)</span>
+        }
+<span class="fc" id="L187">        nextIndex = byteUtils.insertIntoByteArray(repeaterCallsignTwo, kissPacket, nextIndex)</span>
+<span class="fc bfc" id="L188" title="All 6 branches covered.">        if (repeaterCallsignTwo.isNotEmpty()) {</span>
+<span class="fc" id="L189">            nextIndex = byteUtils.insertIntoByteArray(repeaterSSIDTwo, kissPacket, nextIndex)</span>
+        }
+<span class="fc" id="L191">        nextIndex = byteUtils.insertIntoByteArray(controlField, kissPacket, nextIndex)</span>
+<span class="fc" id="L192">        nextIndex = byteUtils.insertIntoByteArray(protocolID, kissPacket, nextIndex) // Optional</span>
+<span class="fc" id="L193">        byteUtils.insertIntoByteArray(payloadData, kissPacket, nextIndex) // Optional</span>
+<span class="fc" id="L194">        return kissPacket</span>
+    }
+
+    fun setDestCallsign(destCallsign: String) {
+<span class="fc" id="L198">        val parsedCallsign = parseStringCallsign(destCallsign)</span>
+<span class="fc" id="L199">        this.destCallsign = parsedCallsign.first</span>
+<span class="fc" id="L200">        this.destSSID = parsedCallsign.second</span>
+<span class="fc" id="L201">    }</span>
+
+    fun setSourceCallsign(sourceCallsign: String) {
+        // Set the source callsign ending in 1 to denote there is no repeater address
+<span class="fc" id="L205">        val uppercaseCallsign = sourceCallsign.toUpperCase()</span>
+<span class="fc" id="L206">        val parsedCallsign = parseStringCallsign(uppercaseCallsign)</span>
+<span class="fc" id="L207">        this.sourceCallsign = parsedCallsign.first</span>
+<span class="fc" id="L208">        this.sourceSSID = byteUtils.setBits(parsedCallsign.second, 0x01)</span>
+<span class="fc" id="L209">    }</span>
+
+    fun setControlField(controlType: ControlField, receiveSeq: Int = 0, sendSeq: Int = 0) {
+<span class="fc" id="L212">        setControlFrame(controlType, receiveSeq, sendSeq)</span>
+<span class="fc" id="L213">        setCommandBits(controlType)</span>
+<span class="fc" id="L214">    }</span>
+
+    fun setReceiveSequenceNumberIfRequired(receiveSeq: Int) {
+<span class="fc bfc" id="L217" title="All 2 branches covered.">        if (requiresReceiveSequenceNumber()) {</span>
+<span class="fc" id="L218">            setControlField(controlField(), receiveSeq, sendSequenceNumber())</span>
+        }
+<span class="fc" id="L220">    }</span>
+
+    fun setSendSequenceNumber(sendSeq: Int) {
+<span class="fc" id="L223">        setControlField(controlField(), receiveSequenceNumber(), sendSeq)</span>
+<span class="fc" id="L224">    }</span>
+
+    fun setPayloadMessage(message: String) {
+<span class="fc" id="L227">        payloadData = stringUtils.convertStringToBytes(message)</span>
+<span class="fc" id="L228">    }</span>
+
+    fun sourceCallsign(): String {
+<span class="fc" id="L231">        return constructCallsign(sourceCallsign, sourceSSID)</span>
+    }
+
+    fun destCallsign(): String {
+<span class="fc" id="L235">        return constructCallsign(destCallsign, destSSID)</span>
+    }
+
+    fun repeaterCallsignOne(): String {
+<span class="fc" id="L239">        return constructCallsign(repeaterCallsignOne, repeaterSSIDOne)</span>
+    }
+
+    fun repeaterCallsignTwo(): String {
+<span class="fc" id="L243">        return constructCallsign(repeaterCallsignTwo, repeaterSSIDTwo)</span>
+    }
+
+    fun protocolID(): Byte {
+<span class="fc" id="L247">        return protocolID</span>
+    }
+
+    fun payloadData(): ByteArray {
+<span class="fc" id="L251">        return payloadData</span>
+    }
+
+    fun payloadDataString(): String {
+<span class="fc" id="L255">        return stringUtils.convertBytesToString(payloadData)</span>
+    }
+
+    fun controlField(): ControlField {
+<span class="fc" id="L259">        return calculateControlFrame()</span>
+    }
+
+    fun receiveSequenceNumber(): Int {
+<span class="fc" id="L263">        return calculateReceiveSequenceNumber()</span>
+    }
+
+    fun sendSequenceNumber(): Int {
+<span class="fc" id="L267">        return calculateSendSequenceNumber()</span>
+    }
+
+    fun controlTypeString(): String {
+<span class="fc" id="L271">        return calculateControlFrame().toString()</span>
+    }
+
+    /**
+     * Returns true if this frame needs to be acknowledged
+     * be the node receiving it. I.e. It's send sequence number
+     * needs to be acknowledged.
+     */
+    fun requiresSendSequenceNumber(): Boolean {
+<span class="fc" id="L280">        return arrayListOf(</span>
+<span class="fc" id="L281">            ControlField.INFORMATION_8,</span>
+<span class="fc" id="L282">            ControlField.INFORMATION_8_P,</span>
+<span class="fc" id="L283">            ControlField.INFORMATION_128,</span>
+<span class="fc" id="L284">            ControlField.INFORMATION_128_P</span>
+<span class="fc" id="L285">            ).contains(controlField())</span>
+    }
+
+    fun requiresReceiveSequenceNumber(): Boolean {
+<span class="fc" id="L289">        return listOf(</span>
+<span class="fc" id="L290">            ControlField.INFORMATION_8, ControlField.INFORMATION_8_P,</span>
+<span class="fc" id="L291">            ControlField.INFORMATION_128, ControlField.INFORMATION_128_P,</span>
+<span class="fc" id="L292">            ControlField.S_8_RECEIVE_READY, ControlField.S_8_RECEIVE_READY_P,</span>
+<span class="fc" id="L293">            ControlField.S_8_RECEIVE_NOT_READY, ControlField.S_8_RECEIVE_NOT_READY_P,</span>
+<span class="fc" id="L294">            ControlField.S_8_REJECT, ControlField.S_8_REJECT_P,</span>
+<span class="fc" id="L295">            ControlField.S_8_SELECTIVE_REJECT, ControlField.S_8_SELECTIVE_REJECT_P,</span>
+<span class="fc" id="L296">            ControlField.S_128_RECEIVE_NOT_READY, ControlField.S_128_RECEIVE_READY_P,</span>
+<span class="fc" id="L297">            ControlField.S_128_RECEIVE_READY, ControlField.S_128_RECEIVE_READY_P,</span>
+<span class="fc" id="L298">            ControlField.S_128_REJECT, ControlField.S_128_REJECT_P,</span>
+<span class="fc" id="L299">            ControlField.S_128_SELECTIVE_REJECT, ControlField.S_128_SELECTIVE_REJECT_P</span>
+<span class="fc" id="L300">        ).contains(controlField())</span>
+    }
+
+    override fun toString(): String {
+<span class="fc" id="L304">        val stringBuilder = StringBuilder()</span>
+
+<span class="fc" id="L306">        if (listOf(</span>
+<span class="fc" id="L307">                ControlField.S_8_RECEIVE_READY,</span>
+<span class="fc" id="L308">                ControlField.S_8_RECEIVE_READY_P,</span>
+<span class="fc" id="L309">                ControlField.S_8_RECEIVE_NOT_READY,</span>
+<span class="fc" id="L310">                ControlField.S_8_RECEIVE_NOT_READY_P,</span>
+<span class="fc" id="L311">                ControlField.S_8_REJECT,</span>
+<span class="fc" id="L312">                ControlField.S_8_REJECT_P,</span>
+<span class="fc" id="L313">                ControlField.S_8_SELECTIVE_REJECT,</span>
+<span class="fc" id="L314">                ControlField.S_8_SELECTIVE_REJECT_P,</span>
+<span class="fc" id="L315">                ControlField.S_128_RECEIVE_READY,</span>
+<span class="fc" id="L316">                ControlField.S_128_RECEIVE_READY_P,</span>
+<span class="fc" id="L317">                ControlField.S_128_RECEIVE_NOT_READY,</span>
+<span class="fc" id="L318">                ControlField.S_128_RECEIVE_NOT_READY_P,</span>
+<span class="fc" id="L319">                ControlField.S_128_REJECT,</span>
+<span class="fc" id="L320">                ControlField.S_128_REJECT_P,</span>
+<span class="fc" id="L321">                ControlField.S_128_SELECTIVE_REJECT,</span>
+<span class="fc" id="L322">                ControlField.S_128_SELECTIVE_REJECT_P</span>
+<span class="fc bfc" id="L323" title="All 2 branches covered.">            ).contains(calculateControlFrame())) {</span>
+<span class="fc" id="L324">            stringBuilder.append(&quot;Receive Seq: ${receiveSequenceNumber()} &quot;)</span>
+        }
+
+<span class="fc" id="L327">        if (listOf(</span>
+<span class="fc" id="L328">                ControlField.INFORMATION_8, ControlField.INFORMATION_8_P,</span>
+<span class="fc" id="L329">                ControlField.INFORMATION_128, ControlField.INFORMATION_128_P</span>
+<span class="fc bfc" id="L330" title="All 2 branches covered.">            ).contains(calculateControlFrame())) {</span>
+<span class="fc" id="L331">            stringBuilder.append(&quot;Receive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()} Delivery Attempt: $deliveryAttempts protocolID: ${stringUtils.byteToHex(protocolID())} &quot;)</span>
+        }
+
+<span class="fc" id="L334">        stringBuilder.append(&quot;From: ${sourceCallsign()} to: ${destCallsign()} controlType: &quot;)</span>
+
+<span class="fc bfc" id="L336" title="All 6 branches covered.">        if (repeaterCallsignOne.isNotEmpty()) {</span>
+<span class="fc" id="L337">            stringBuilder.append(&quot;Via1: ${repeaterCallsignOne()} &quot;)</span>
+        }
+
+<span class="fc bfc" id="L340" title="All 6 branches covered.">        if (repeaterCallsignTwo.isNotEmpty()) {</span>
+<span class="fc" id="L341">            stringBuilder.append(&quot;Via2: ${repeaterCallsignTwo()} &quot;)</span>
+        }
+
+<span class="fc" id="L344">        stringBuilder.append(&quot;controlType: ${controlTypeString()} &quot;)</span>
+
+<span class="fc bfc" id="L346" title="All 6 branches covered.">        if (payloadData.isNotEmpty()) {</span>
+<span class="fc" id="L347">            stringBuilder.append(&quot;Payload: ${payloadDataString()}&quot;)</span>
+        }
+
+<span class="fc" id="L350">        return stringBuilder.toString()</span>
+    }
+
+    private fun constructCallsign(callsignByteArray: ByteArray, callsignSSID: Byte): String {
+<span class="fc bfc" id="L354" title="All 6 branches covered.">        return if (callsignByteArray.isNotEmpty()) {</span>
+<span class="fc" id="L355">            val shiftedCallsign = byteUtils.shiftBitsRight(callsignByteArray, 1)</span>
+<span class="fc" id="L356">            val callsignString = stringUtils.convertBytesToString(shiftedCallsign)</span>
+<span class="fc" id="L357">            val trimmedCallsign = stringUtils.removeWhitespace(callsignString)</span>
+<span class="fc" id="L358">            val ssid = ssidFromSSIDByte(callsignSSID)</span>
+<span class="fc" id="L359">            &quot;${trimmedCallsign}-${ssid}&quot;</span>
+        } else {
+<span class="fc" id="L361">            &quot;&quot;</span>
+        }
+    }
+
+    private fun ssidFromSSIDByte(ssidByte: Byte): Int {
+<span class="fc" id="L366">        val shiftedByte = byteUtils.shiftBitsRight(ssidByte, 1)</span>
+<span class="fc" id="L367">        return byteUtils.maskInt(shiftedByte.toInt(), 0x0F)</span>
+    }
+
+    private fun parseStringCallsign(callsign: String): Pair&lt;ByteArray, Byte&gt; {
+        // Assume a default SSID of -0
+<span class="fc" id="L372">        var callString = callsign</span>
+<span class="fc" id="L373">        var ssid = 0</span>
+
+        // Check if the callsign contains an SSID
+<span class="fc bfc" id="L376" title="All 2 branches covered.">        if (callsign.contains(&quot;-&quot;)) {</span>
+<span class="fc" id="L377">            callString = callsign.split(&quot;-&quot;)[0]</span>
+<span class="fc" id="L378">            val ssidString =  callsign.split(&quot;-&quot;)[1]</span>
+<span class="fc" id="L379">            ssid = ssidString.toInt()</span>
+        }
+
+        // Pad out the callsign and format the call and ssid bits for AX.25
+<span class="fc" id="L383">        callString = stringUtils.padWithSpaces(callString, 6)</span>
+<span class="fc" id="L384">        val callsignBytes = stringUtils.convertStringToBytes(callString)</span>
+<span class="fc" id="L385">        val ssidByte = ssid.toByte()</span>
+<span class="fc" id="L386">        val shiftedSSID = byteUtils.shiftBitsLeft(ssidByte, 1)</span>
+<span class="fc" id="L387">        val maskedSSID = byteUtils.maskByte(shiftedSSID, 0x1E)</span>
+<span class="fc" id="L388">        val setbitsSSID = byteUtils.setBits(maskedSSID, 0x60) // Set the reserved bits to 1</span>
+<span class="fc" id="L389">        return Pair(byteUtils.shiftBitsLeft(callsignBytes, 1), setbitsSSID)</span>
+    }
+
+    /**
+     * Section 6.1.2 - Command/Response Procedure
+     * The control bit in the SSID bytes are set as either 1 or 0
+     * to denote a command or a response packet. Below we set either
+     * one of these bits to 1, assuming the other remains 0.
+     */
+    private fun setCommandBits(controlType: ControlField) {
+<span class="pc bpc" id="L399" title="14 of 19 branches missed.">        destSSID = when (controlType) {</span>
+<span class="fc" id="L400">            ControlField.INFORMATION_8 -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="fc" id="L401">            ControlField.INFORMATION_8_P -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L402">            ControlField.INFORMATION_128 -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L403">            ControlField.INFORMATION_128_P -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L404">            ControlField.U_SET_ASYNC_BALANCED_MODE -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L405">            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L406">            ControlField.U_DISCONNECT -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L407">            ControlField.U_DISCONNECT_MODE -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="fc" id="L408">            ControlField.U_UNNUMBERED_INFORMATION -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L409">            ControlField.U_EXCHANGE_IDENTIFICATION -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L410">            ControlField.U_TEST -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="fc" id="L411">            ControlField.U_SET_ASYNC_BALANCED_MODE_P -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L412">            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L413">            ControlField.U_DISCONNECT_P -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L414">            ControlField.U_DISCONNECT_MODE_P -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L415">            ControlField.U_UNNUMBERED_INFORMATION_P -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L416">            ControlField.U_EXCHANGE_IDENTIFICATION_P -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="nc" id="L417">            ControlField.U_TEST_P -&gt; byteUtils.setBits(destSSID, 0x80)</span>
+<span class="fc" id="L418">            else -&gt; destSSID</span>
+        }
+
+<span class="pc bpc" id="L421" title="17 of 21 branches missed.">        sourceSSID = when (controlType) {</span>
+<span class="fc" id="L422">            ControlField.S_8_RECEIVE_READY -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L423">            ControlField.S_8_RECEIVE_NOT_READY -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L424">            ControlField.S_8_REJECT -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L425">            ControlField.S_8_SELECTIVE_REJECT -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="fc" id="L426">            ControlField.S_8_RECEIVE_READY_P -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L427">            ControlField.S_8_RECEIVE_NOT_READY_P -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L428">            ControlField.S_8_REJECT_P -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L429">            ControlField.S_8_SELECTIVE_REJECT_P -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L430">            ControlField.S_128_RECEIVE_READY -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L431">            ControlField.S_128_RECEIVE_NOT_READY -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L432">            ControlField.S_128_REJECT -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L433">            ControlField.S_128_SELECTIVE_REJECT -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L434">            ControlField.S_128_RECEIVE_READY_P -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L435">            ControlField.S_128_RECEIVE_NOT_READY_P -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L436">            ControlField.S_128_REJECT_P -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L437">            ControlField.S_128_SELECTIVE_REJECT_P -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L438">            ControlField.U_UNNUMBERED_ACKNOWLEDGE -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L439">            ControlField.U_REJECT -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="fc" id="L440">            ControlField.U_UNNUMBERED_ACKNOWLEDGE_P -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="nc" id="L441">            ControlField.U_REJECT_P -&gt; byteUtils.setBits(sourceSSID, 0x80)</span>
+<span class="fc" id="L442">            else -&gt; sourceSSID</span>
+        }
+<span class="fc" id="L444">    }</span>
+
+    /**
+     * 4.3. Control-Field Coding for Commands and Responses
+     * The following Control Field methods are implemented by a child class
+     * so that both 1 and 2 byte Control Field parameters
+     * can be handled to support Extended mode.
+     */
+    abstract fun controlBits(): ByteArray
+
+    abstract fun pollFinalBit(): Boolean
+
+    protected abstract fun setControlFieldFromFrameData(frameByteData: ByteArray, nextIndex: Int): Int
+
+    protected abstract fun setControlFrame(controlType: ControlField, receiveSeq: Int, sendSeq: Int)
+
+    protected abstract fun calculateControlFrame(): ControlField
+
+    protected abstract fun calculateReceiveSequenceNumber(): Int
+
+    protected abstract fun calculateSendSequenceNumber(): Int
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KissFrameStandard.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.network.radio.kiss.model</a> &gt; <span class="el_source">KissFrameStandard.kt</span></div><h1>KissFrameStandard.kt</h1><pre class="source lang-java linenums">package pakcatt.network.radio.kiss.model
+
+<span class="fc" id="L3">open class KissFrameStandard: KissFrame() {</span>
+
+<span class="fc" id="L5">    private var controlField: Byte = byteUtils.intToByte(0x00)</span>
+
+    override fun setControlFieldFromFrameData(frameByteData: ByteArray, nextIndex: Int): Int {
+<span class="fc" id="L8">        controlField = frameByteData[nextIndex]</span>
+<span class="fc" id="L9">        return nextIndex + 1</span>
+    }
+
+    override fun controlBits(): ByteArray {
+<span class="fc" id="L13">        return byteArrayOf(controlField)</span>
+    }
+
+    override fun pollFinalBit(): Boolean {
+<span class="nc" id="L17">        return byteUtils.compareMaskedByte(controlField,0x10, 0x10)</span>
+    }
+
+    override fun calculateControlFrame(): ControlField {
+<span class="pc bpc" id="L21" title="1 of 2 branches missed.">        for (controlType in ControlField.values()) {</span>
+<span class="fc bfc" id="L22" title="All 2 branches covered.">            if (byteUtils.compareMaskedByte(controlField, controlType.mask, controlType.bitPattern)) {</span>
+<span class="fc" id="L23">                return controlType</span>
+            }
+        }
+<span class="nc" id="L26">        return ControlField.UNKNOWN_Field</span>
+    }
+
+    override fun setControlFrame(controlType: ControlField, receiveSeq: Int, sendSeq: Int) {
+        /* Ensure the controlField starts at 0 so that residual bits don't remain and break
+         * the control type, send or receive sequence number bits. */
+<span class="fc" id="L32">        controlField = byteUtils.intToByte(0x00)</span>
+        // Set the control type bits first
+<span class="fc" id="L34">        controlField = byteUtils.setBits(controlField, controlType.bitPattern)</span>
+        // Then set the send and receive sequence bits. No change is made if they are 0.
+<span class="fc" id="L36">        setSendSequenceNumberBits(sendSeq)</span>
+<span class="fc" id="L37">        setReceiveSequenceNumberBits(receiveSeq)</span>
+        // Lastly, set the protocol ID if required
+<span class="fc" id="L39">        setProtocolIdBasedOnControlType(controlType)</span>
+<span class="fc" id="L40">    }</span>
+
+    override fun calculateReceiveSequenceNumber(): Int {
+<span class="fc" id="L43">        val shiftedControlField = byteUtils.shiftBitsRight(controlField, 5)</span>
+<span class="fc" id="L44">        return byteUtils.byteToInt(shiftedControlField)</span>
+    }
+
+    override fun calculateSendSequenceNumber(): Int {
+<span class="fc" id="L48">        val shiftedControlField = byteUtils.shiftBitsRight(controlField, 1)</span>
+<span class="fc" id="L49">        val maskedControlField = byteUtils.maskByte(shiftedControlField, 0x07)</span>
+<span class="fc" id="L50">        return byteUtils.byteToInt(maskedControlField)</span>
+    }
+
+    private fun setReceiveSequenceNumberBits(receiveSeq: Int) {
+<span class="fc" id="L54">        val sequenceNumberByte = byteUtils.intToByte(receiveSeq)</span>
+<span class="fc" id="L55">        val shiftedSequence = byteUtils.shiftBitsLeft(sequenceNumberByte, 5)</span>
+<span class="fc" id="L56">        this.controlField = byteUtils.setBits(controlField, shiftedSequence)</span>
+<span class="fc" id="L57">    }</span>
+
+    private fun setSendSequenceNumberBits(sendSeq: Int) {
+<span class="fc" id="L60">        val sequenceNumberByte = byteUtils.intToByte(sendSeq)</span>
+<span class="fc" id="L61">        val shiftedSequence = byteUtils.shiftBitsLeft(sequenceNumberByte, 1)</span>
+<span class="fc" id="L62">        this.controlField = byteUtils.setBits(controlField, shiftedSequence)</span>
+<span class="fc" id="L63">    }</span>
+
+    /**
+     * If this frame contains content, we should set the protocolID to 0xF0 - no layer 3
+     */
+    private fun setProtocolIdBasedOnControlType(controlType: ControlField) {
+<span class="fc" id="L69">        if (listOf(ControlField.INFORMATION_8, ControlField.INFORMATION_8_P,</span>
+<span class="fc" id="L70">                ControlField.INFORMATION_128, ControlField.INFORMATION_128_P,</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">                ControlField.U_UNNUMBERED_INFORMATION, ControlField.U_UNNUMBERED_INFORMATION_P).contains(controlType)) {</span>
+<span class="fc" id="L72">            this.protocolID = byteUtils.intToByte(0xF0)</span>
+        }
+<span class="fc" id="L74">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>APRSStatusFrame.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.network.radio.protocol.aprs.model</a> &gt; <span class="el_source">APRSStatusFrame.kt</span></div><h1>APRSStatusFrame.kt</h1><pre class="source lang-java linenums">package pakcatt.network.radio.protocol.aprs.model
+
+import java.lang.StringBuilder
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+<span class="fc" id="L7">class APRSStatusFrame: APRSFrame() {</span>
+
+    // This data structure maps APRS heading character to numeric heading values
+<span class="fc" id="L10">    private val headingMap = mapOf(Pair('0', 0), Pair('1',10), Pair('2', 20), Pair('3', 30),</span>
+<span class="fc" id="L11">                                   Pair('4', 40), Pair('5',50), Pair('6', 60), Pair('7', 70),</span>
+<span class="fc" id="L12">                                   Pair('8', 80), Pair('9',90), Pair('A', 100), Pair('B', 110),</span>
+<span class="fc" id="L13">                                   Pair('C', 120), Pair('D',130), Pair('E', 140), Pair('F', 150),</span>
+<span class="fc" id="L14">                                   Pair('G', 160), Pair('H',170), Pair('I', 180), Pair('J', 190),</span>
+<span class="fc" id="L15">                                   Pair('K', 200), Pair('L',210), Pair('M', 220), Pair('N', 230),</span>
+<span class="fc" id="L16">                                   Pair('O', 240), Pair('P',250), Pair('Q', 260), Pair('R', 270),</span>
+<span class="fc" id="L17">                                   Pair('S', 280), Pair('T',290), Pair('U', 300), Pair('V', 310),</span>
+<span class="fc" id="L18">                                   Pair('W', 320), Pair('X',330), Pair('Y', 440), Pair('Z', 350))</span>
+
+    // This data structure maps APRS ERP characters to numeric values in watts
+<span class="fc" id="L21">    private val erpMap = mapOf(Pair('0', 0), Pair('1', 10), Pair('2', 40), Pair('3', 90),</span>
+<span class="fc" id="L22">                               Pair('4', 160), Pair('5', 250), Pair('6', 360), Pair('7', 490),</span>
+<span class="fc" id="L23">                               Pair('8', 640), Pair('9', 810), Pair(':', 1000), Pair(';', 1210),</span>
+<span class="fc" id="L24">                               Pair('&lt;', 1440), Pair('=', 1690), Pair('?', 2250), Pair('@', 2560),</span>
+<span class="fc" id="L25">                               Pair('A', 2890), Pair('B', 2340), Pair('C', 3610), Pair('D', 4000),</span>
+<span class="fc" id="L26">                               Pair('E', 4410), Pair('F', 4840), Pair('G', 5290), Pair('H', 5760),</span>
+<span class="fc" id="L27">                               Pair('I', 6250), Pair('J', 6760), Pair('K', 7290))</span>
+
+    /**
+     * Parses the information field and returns any status text,
+     * without other parameters such as date, beam heading and maidenhead locator.
+     */
+    fun statusText(): String {
+<span class="fc" id="L34">        var payloadString = stringUtils.removeEOLChars(payloadDataString())</span>
+<span class="pc bpc" id="L35" title="2 of 4 branches missed.">        return if (payloadString.length &gt;= 2 &amp;&amp; payloadString[0] == '&gt;') {</span>
+            // We might need to remove other parameters from the status text
+<span class="fc" id="L37">            val dateTimeStamp = dateTimeStamp()</span>
+<span class="fc" id="L38">            val beamHeadingAndERP = beamHeadingAndERP()</span>
+<span class="fc" id="L39">            val maidenhead = maidenheadGridLocator()</span>
+
+            // Start by stripping off the '&gt;' character
+<span class="pc bpc" id="L42" title="1 of 2 branches missed.">            payloadString = payloadString.substring(1, payloadString.length)</span>
+
+            // Striping out any date or maidenhead fields
+<span class="fc bfc" id="L45" title="All 2 branches covered.">            if (null != dateTimeStamp) { // cut out the date field</span>
+<span class="pc bpc" id="L46" title="1 of 2 branches missed.">                payloadString = payloadString.substring(7, payloadString.length)</span>
+<span class="fc bfc" id="L47" title="All 4 branches covered.">            } else if (null != maidenhead &amp;&amp; payloadString.length &gt; maidenhead.length + 2) { // cut out the maidenhead field and following space</span>
+<span class="pc bpc" id="L48" title="1 of 2 branches missed.">                payloadString = payloadString.substring(maidenhead.length + 3, payloadString.length)</span>
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            } else if (null != maidenhead) { // cut out just the maidenhead field</span>
+<span class="pc bpc" id="L50" title="1 of 2 branches missed.">                payloadString = payloadString.substring(maidenhead.length + 2, payloadString.length)</span>
+            }
+
+            // Lastly, remove any heading and EPR fields
+<span class="fc bfc" id="L54" title="All 2 branches covered.">            if (null != beamHeadingAndERP) { // cut out the beam heading and ERP field</span>
+<span class="pc bpc" id="L55" title="1 of 2 branches missed.">                payloadString = payloadString.substring(0, payloadString.length - 3)</span>
+            }
+
+<span class="fc" id="L58">            payloadString</span>
+        } else {
+<span class="nc" id="L60">         &quot;&quot;</span>
+        }
+    }
+
+    /**
+     * The datetime format in a status frame is &gt;ddHHMMz where
+     * &gt; = start character in the information field
+     * dd = day of month
+     * HH = hour in 24 hours
+     * MM = minute
+     * We convert this format into a full datetimestamp so that
+     * it's consistent and easily usable by higher layers of the application.
+     *
+     * Returns: an instance of LocalDateTime
+     */
+    fun dateTimeStamp(): LocalDateTime? {
+<span class="fc" id="L76">        var payloadString = stringUtils.removeEOLChars(payloadDataString())</span>
+<span class="pc bpc" id="L77" title="1 of 6 branches missed.">        return if (payloadString.length &gt;= 8 &amp;&amp; payloadString[0] == '&gt;' &amp;&amp; payloadString[7] == 'z') {</span>
+            // The year and month is missing, so we have to assume it's the current year and month
+<span class="fc" id="L79">            val dateTimeNow = LocalDateTime.now()</span>
+<span class="pc bpc" id="L80" title="1 of 2 branches missed.">            val aprsDateTimeString = payloadString.substring(1, 7)</span>
+<span class="fc" id="L81">            val completedDateTimeString = &quot;${dateTimeNow.year}-${dateTimeNow.monthValue}-$aprsDateTimeString&quot;</span>
+<span class="fc" id="L82">            var dateTimeFormatter = DateTimeFormatter.ofPattern(&quot;yyyy-M-ddHmm&quot;)</span>
+<span class="fc" id="L83">            LocalDateTime.parse(completedDateTimeString, dateTimeFormatter)</span>
+        } else {
+<span class="fc" id="L85">            null</span>
+        }
+    }
+
+    /**
+     * The location specified as a maidenhead grid locator code
+     */
+    fun maidenheadGridLocator(): String? {
+<span class="fc" id="L93">        var payloadString = stringUtils.removeEOLChars(payloadDataString())</span>
+<span class="pc bpc" id="L94" title="1 of 4 branches missed.">        return if (payloadString.length == 7 &amp;&amp; payloadString[0] == '&gt;') { // '&gt;' plus 4 char maidenhead and 2 char symbol</span>
+<span class="pc bpc" id="L95" title="1 of 2 branches missed.">            payloadString.substring(1, 5)</span>
+<span class="pc bpc" id="L96" title="3 of 4 branches missed.">        } else if (payloadString.length == 9 &amp;&amp; payloadString[0] == '&gt;') { // '&gt;' plus 6 char maidenhead and 2 char symbol</span>
+<span class="nc bnc" id="L97" title="All 2 branches missed.">            payloadString.substring(1, 7)</span>
+<span class="pc bpc" id="L98" title="2 of 6 branches missed.">        } else if (payloadString.length &gt;= 8 &amp;&amp; payloadString[0] == '&gt;' &amp;&amp; payloadString[7] == ' ') { // '&gt;' plus 4 char maidenhead, 2 char symbol and text</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">            payloadString.substring(1, 5)</span>
+<span class="pc bpc" id="L100" title="2 of 6 branches missed.">        } else if (payloadString.length &gt;= 10 &amp;&amp; payloadString[0] == '&gt;' &amp;&amp; payloadString[9] == ' ') { // '&gt;' plus 6 char maidenhead, 2 char symbol and text</span>
+<span class="pc bpc" id="L101" title="1 of 2 branches missed.">            payloadString.substring(1, 7)</span>
+        } else {
+<span class="fc" id="L103">            null</span>
+        }
+    }
+
+    /**
+     * The heading in degrees, and Effective Radiating Power (ERP)
+     */
+    fun beamHeadingAndERP(): HeadingAndERP? {
+<span class="fc" id="L111">        var payloadString = stringUtils.removeEOLChars(payloadDataString())</span>
+<span class="pc bpc" id="L112" title="1 of 4 branches missed.">        return if (payloadString.length &gt;= 3 &amp;&amp; payloadString[payloadString.length - 3] == '^') {</span>
+<span class="fc" id="L113">            val headingChar = payloadString[payloadString.length - 2]</span>
+<span class="fc" id="L114">            val erpChar = payloadString[payloadString.length - 1]</span>
+<span class="fc" id="L115">            val heading = resolveHeadingChar(headingChar)</span>
+<span class="fc" id="L116">            val erp = resolveERPChar(erpChar)</span>
+<span class="fc" id="L117">            HeadingAndERP(heading, erp)</span>
+        } else {
+<span class="fc" id="L119">            null</span>
+        }
+    }
+
+    /**
+     * The symbol code that, in part, represents the selected icon
+     */
+    fun symbolCode(): String? {
+<span class="fc" id="L127">        val maidenheadGridLocator = maidenheadGridLocator()</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">        return if (null != maidenheadGridLocator) {</span>
+<span class="fc" id="L129">            stringUtils.convertByteToString(payloadData[maidenheadGridLocator.length + 1])</span>
+        } else {
+<span class="fc" id="L131">            null</span>
+        }
+    }
+
+    /**
+     * The table id that, in part, represents the selected icon
+     */
+    fun symbolTableId(): String? {
+<span class="fc" id="L139">        val maidenheadGridLocator = maidenheadGridLocator()</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">        return if (null != maidenheadGridLocator) {</span>
+<span class="fc" id="L141">            stringUtils.convertByteToString(payloadData[maidenheadGridLocator.length + 2])</span>
+        } else {
+<span class="fc" id="L143">            null</span>
+        }
+    }
+
+    override fun toString(): String {
+<span class="nc" id="L148">        val stringBuilder = StringBuilder()</span>
+<span class="nc" id="L149">        val headingAndERP = beamHeadingAndERP()</span>
+<span class="nc" id="L150">        val location = maidenheadGridLocator()</span>
+<span class="nc" id="L151">        stringBuilder.append(&quot;Data Type: $aprsDataType &quot;)</span>
+<span class="nc" id="L152">        stringBuilder.append(&quot;From: ${sourceCallsign()} &quot;)</span>
+<span class="nc bnc" id="L153" title="All 6 branches missed.">        if (repeaterCallsignOne.isNotEmpty()) {</span>
+<span class="nc" id="L154">            stringBuilder.append(&quot;Via1: ${repeaterCallsignOne()} &quot;)</span>
+        }
+
+<span class="nc bnc" id="L157" title="All 6 branches missed.">        if (repeaterCallsignTwo.isNotEmpty()) {</span>
+<span class="nc" id="L158">            stringBuilder.append(&quot;Via2: ${repeaterCallsignTwo()} &quot;)</span>
+        }
+<span class="nc" id="L160">        stringBuilder.append(&quot;Timestamp: ${dateTimeStamp()} &quot;)</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">        if (null != location) {</span>
+<span class="nc" id="L162">            stringBuilder.append(&quot;Grid: ${maidenheadGridLocator()} &quot;)</span>
+<span class="nc" id="L163">            stringBuilder.append(&quot;Symbol: ${symbolCode()}${symbolTableId()} &quot;)</span>
+        }
+<span class="nc bnc" id="L165" title="All 2 branches missed.">        if (null != headingAndERP) {</span>
+<span class="nc" id="L166">            stringBuilder.append(&quot;Heading: ${headingAndERP.heading} &quot;)</span>
+<span class="nc" id="L167">            stringBuilder.append(&quot;ERP: ${headingAndERP.erp} &quot;)</span>
+        }
+<span class="nc" id="L169">        stringBuilder.append(&quot;Status: ${statusText()}&quot;)</span>
+<span class="nc bnc" id="L170" title="All 6 branches missed.">        if (payloadData.isNotEmpty()) {</span>
+<span class="nc" id="L171">            stringBuilder.append(&quot; Payload: ${payloadDataString()}&quot;)</span>
+        }
+<span class="nc" id="L173">        return stringBuilder.toString()</span>
+    }
+
+    private fun resolveHeadingChar(headingChar: Char): Int {
+<span class="pc bpc" id="L177" title="1 of 2 branches missed.">        return headingMap[headingChar]?: -1</span>
+    }
+
+    private fun resolveERPChar(erpChar: Char): Int {
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">        return erpMap[erpChar]?: -1</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

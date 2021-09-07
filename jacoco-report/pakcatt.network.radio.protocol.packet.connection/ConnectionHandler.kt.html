@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ConnectionHandler.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.network.radio.protocol.packet.connection</a> &gt; <span class="el_source">ConnectionHandler.kt</span></div><h1>ConnectionHandler.kt</h1><pre class="source lang-java linenums">package pakcatt.network.radio.protocol.packet.connection
+
+import org.slf4j.LoggerFactory
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.ResponseType
+import pakcatt.network.radio.kiss.model.ControlField
+import pakcatt.network.radio.kiss.model.KissFrame
+import pakcatt.network.radio.kiss.model.KissFrameExtended
+import pakcatt.network.radio.kiss.model.KissFrameStandard
+import pakcatt.network.radio.kiss.queue.DeliveryQueue
+import pakcatt.network.radio.protocol.packet.LinkInterface
+import pakcatt.util.StringUtils
+import kotlin.collections.ArrayList
+
+enum class ControlMode {
+    MODULO_8, MODULO_128
+}
+
+enum class ConnectionStatus {
+    CONNECTED, DISCONNECTED
+}
+
+<span class="fc" id="L23">class ConnectionHandler(private val remoteCallsign: String,</span>
+                        private val myCallsign: String,
+                        private val linkInterface: LinkInterface,
+                        private val frameSizeMax: Int,
+                        framesPerOver: Int,
+                        maxDeliveryAttempts: Int,
+                        deliveryRetryTimeSeconds: Int) {
+
+<span class="fc" id="L31">    private val logger = LoggerFactory.getLogger(ConnectionHandler::class.java)</span>
+<span class="fc" id="L32">    private val stringUtils = StringUtils()</span>
+<span class="fc" id="L33">    private var controlMode = ControlMode.MODULO_8</span>
+    private var nextQueuedControlFrame: KissFrame? = null
+<span class="fc" id="L35">    private var unnumberedQueue = ArrayList&lt;KissFrame&gt;()</span>
+<span class="fc" id="L36">    private var sequencedQueue = SequencedQueue(framesPerOver, maxDeliveryAttempts, deliveryRetryTimeSeconds)</span>
+<span class="fc" id="L37">    private var connectionStatus = ConnectionStatus.DISCONNECTED</span>
+
+    /* The receive state variable contains the sequence number of the next expected received I frame.
+     * This variable is updated upon the reception of an error-free I frame whose send sequence number
+     * equals the present received state variable value. */
+    private var nextExpectedSendSequenceNumberFromPeer = 0
+
+    fun handleIncomingFrame(incomingFrame: KissFrame) {
+        when {
+<span class="fc bfc" id="L46" title="All 2 branches covered.">            incomingFrame.controlField() == ControlField.U_SET_ASYNC_BALANCED_MODE_P -&gt; {</span>
+<span class="fc" id="L47">                handleConnectionRequest(incomingFrame)</span>
+            }
+<span class="fc bfc" id="L49" title="All 2 branches covered.">            connectionStatus == ConnectionStatus.CONNECTED -&gt; {</span>
+<span class="pc bpc" id="L50" title="6 of 9 branches missed.">                when (incomingFrame.controlField()) {</span>
+<span class="fc" id="L51">                    ControlField.INFORMATION_8 -&gt; handleNumberedInformationFrame(incomingFrame) // Application info frame</span>
+<span class="nc" id="L52">                    ControlField.INFORMATION_8_P -&gt; handleNumberedInformationFrame(incomingFrame) // Application info frame</span>
+<span class="fc" id="L53">                    ControlField.S_8_RECEIVE_READY -&gt; handleIncomingAcknowledgement(incomingFrame)</span>
+<span class="nc" id="L54">                    ControlField.S_8_RECEIVE_READY_P -&gt; handleIncomingAcknowledgement(incomingFrame)</span>
+<span class="nc" id="L55">                    ControlField.S_8_REJECT -&gt; handleIncomingAcknowledgement(incomingFrame)</span>
+<span class="nc" id="L56">                    ControlField.S_8_REJECT_P -&gt; handleIncomingAcknowledgement(incomingFrame)</span>
+<span class="fc" id="L57">                    ControlField.U_DISCONNECT_P -&gt; handleDisconnectRequest() // Disconnect request</span>
+<span class="nc" id="L58">                    ControlField.U_REJECT -&gt; resetConnection() // FRMR is unrecoverable. We reset the connection.</span>
+<span class="nc" id="L59">                    else -&gt; ignoreFrame(incomingFrame)</span>
+<span class="nc" id="L60">                }</span>
+            }
+            else -&gt; {
+<span class="fc" id="L63">                logger.trace(&quot;Not connected:\t {}&quot;, incomingFrame)</span>
+            }
+        }
+<span class="fc" id="L66">    }</span>
+
+    fun deliverQueuedControlFrame(deliveryQueue: DeliveryQueue): Int {
+<span class="fc" id="L69">        val controlFrame = nextQueuedControlFrame</span>
+<span class="fc bfc" id="L70" title="All 2 branches covered.">        return if (null != controlFrame) {</span>
+<span class="fc" id="L71">            controlFrame.setReceiveSequenceNumberIfRequired(nextExpectedSendSequenceNumberFromPeer)</span>
+<span class="fc" id="L72">            deliveryQueue.addFrame(controlFrame)</span>
+<span class="fc" id="L73">            nextQueuedControlFrame = null</span>
+<span class="fc" id="L74">            1</span>
+        } else {
+<span class="fc" id="L76">            0</span>
+        }
+    }
+
+    fun deliverContentFrames(deliveryQueue: DeliveryQueue): Int {
+<span class="fc" id="L81">        var deliveryCount = 0</span>
+
+        // Deliver unnumbered frames that do not require an ACK
+<span class="fc" id="L84">        val unnumberedFramesForDelivery = unnumberedQueue</span>
+<span class="fc" id="L85">        unnumberedQueue = ArrayList() // Reset the unnumberedQueue</span>
+<span class="fc bfc" id="L86" title="All 2 branches covered.">        for (frame in unnumberedFramesForDelivery) {</span>
+<span class="fc" id="L87">            frame.setReceiveSequenceNumberIfRequired(nextExpectedSendSequenceNumberFromPeer)</span>
+<span class="fc" id="L88">            deliveryQueue.addFrame(frame)</span>
+<span class="fc" id="L89">            deliveryCount++</span>
+        }
+
+        // Deliver numbered frames that do require an ACK
+<span class="fc" id="L93">        val numberedFramesForDelivery = sequencedQueue.getSequencedFramesForDelivery()</span>
+<span class="fc bfc" id="L94" title="All 4 branches covered.">        if (numberedFramesForDelivery.isNotEmpty()) {</span>
+<span class="fc bfc" id="L95" title="All 2 branches covered.">            for ((index, frame) in numberedFramesForDelivery.withIndex()) {</span>
+
+                // If this is the last frame to be delivered in this over, set the P flag.
+<span class="fc bfc" id="L98" title="All 4 branches covered.">                if (index &gt;= numberedFramesForDelivery.size - 1 &amp;&amp; !sequencedQueue.isAtEndOfMessageDelivery()) {</span>
+<span class="fc" id="L99">                    frame.setControlField(ControlField.INFORMATION_8_P, nextExpectedSendSequenceNumberFromPeer, frame.sendSequenceNumber())</span>
+                } else {
+<span class="fc" id="L101">                    frame.setControlField(ControlField.INFORMATION_8, nextExpectedSendSequenceNumberFromPeer, frame.sendSequenceNumber())</span>
+                }
+
+<span class="fc" id="L104">                deliveryQueue.addFrame(frame)</span>
+<span class="fc" id="L105">                deliveryCount++</span>
+            }
+
+            // If we're at the end of a message, transmit READY_RECEIVE_P
+<span class="fc bfc" id="L109" title="All 2 branches covered.">            if (sequencedQueue.isAtEndOfMessageDelivery()) {</span>
+<span class="fc" id="L110">                val frame = newResponseFrame(ControlField.S_8_RECEIVE_READY_P, false)</span>
+<span class="fc" id="L111">                frame.setReceiveSequenceNumberIfRequired(nextExpectedSendSequenceNumberFromPeer)</span>
+<span class="fc" id="L112">                deliveryQueue.addFrame(frame)</span>
+<span class="fc" id="L113">                deliveryCount++</span>
+            }
+        }
+<span class="fc" id="L116">        return deliveryCount</span>
+    }
+
+    fun queueMessageForDelivery(controlField: ControlField, message: String) {
+<span class="fc" id="L120">        val payloadChunks = chunkUpPayload(message)</span>
+<span class="fc bfc" id="L121" title="All 2 branches covered.">        for (payloadChunk in payloadChunks) {</span>
+<span class="fc" id="L122">            val contentFrame = newResponseFrame(controlField, false)</span>
+<span class="fc" id="L123">            contentFrame.setPayloadMessage(payloadChunk)</span>
+<span class="fc bfc" id="L124" title="All 2 branches covered.">            if (contentFrame.requiresSendSequenceNumber()) {</span>
+<span class="fc" id="L125">                sequencedQueue.addFrameForSequencedTransmission(contentFrame)</span>
+            } else {
+<span class="fc" id="L127">                unnumberedQueue.add(contentFrame)</span>
+            }
+        }
+<span class="fc" id="L130">    }</span>
+
+    private fun queueFrameForControl(frame: KissFrame) {
+<span class="fc" id="L133">        nextQueuedControlFrame = frame</span>
+<span class="fc" id="L134">    }</span>
+
+    private fun handleNumberedInformationFrame(incomingFrame: KissFrame) {
+        // Check that we expected this frame, and haven't missed any or mixed up the order
+<span class="pc bpc" id="L138" title="1 of 2 branches missed.">        if (incomingFrame.sendSequenceNumber() == nextExpectedSendSequenceNumberFromPeer) {</span>
+<span class="fc" id="L139">            incrementReceiveSequenceNumber()</span>
+<span class="fc" id="L140">            handleIncomingAcknowledgement(incomingFrame)</span>
+
+            // Share the payload with any listening applications to process
+<span class="fc" id="L143">            val  appResponse = linkInterface.getResponseForReceivedMessage(AppRequest(incomingFrame.sourceCallsign(),</span>
+<span class="fc" id="L144">                                                                            stringUtils.formatCallsignRemoveSSID(incomingFrame.sourceCallsign()),</span>
+<span class="fc" id="L145">                                                                            incomingFrame.destCallsign(),</span>
+<span class="fc" id="L146">                                                                            incomingFrame.payloadDataString()))</span>
+<span class="pc bpc" id="L147" title="2 of 4 branches missed.">            when (appResponse.responseType) {</span>
+<span class="fc" id="L148">                ResponseType.ACK_WITH_TEXT -&gt; queueMessageForDelivery(ControlField.INFORMATION_8, appResponse.responseString())</span>
+<span class="fc" id="L149">                ResponseType.ACK_ONLY -&gt; sendAcknowlegeAndReadyForReceive()</span>
+<span class="nc" id="L150">                ResponseType.IGNORE -&gt; logger.trace(&quot;Apps ignored frame: ${incomingFrame.toString()}&quot;)</span>
+<span class="nc" id="L151">            }</span>
+        } else {
+<span class="nc" id="L153">            rejectUnsequencedFrame(incomingFrame)</span>
+        }
+<span class="fc" id="L155">    }</span>
+
+    private fun handleConnectionRequest(incomingFrame: KissFrame) {
+        // Gather a connection decision from applications
+<span class="fc" id="L159">        val appResponse = linkInterface.getDecisionOnConnectionRequest(AppRequest(incomingFrame.sourceCallsign(),</span>
+<span class="fc" id="L160">                                                                        stringUtils.formatCallsignRemoveSSID(incomingFrame.sourceCallsign()),</span>
+<span class="fc" id="L161">                                                                        incomingFrame.destCallsign(),</span>
+<span class="fc" id="L162">                                                                        incomingFrame.payloadDataString()))</span>
+<span class="pc bpc" id="L163" title="3 of 4 branches missed.">        when (appResponse.responseType) {</span>
+<span class="fc" id="L164">            ResponseType.ACK_ONLY -&gt; acceptIncomingConnection()</span>
+<span class="nc" id="L165">            ResponseType.ACK_WITH_TEXT -&gt; acceptIncomingConnectionWithMessage(appResponse.responseString())</span>
+<span class="nc" id="L166">            ResponseType.IGNORE -&gt; logger.trace(&quot;Ignored connection request from: $remoteCallsign to :$myCallsign&quot;)</span>
+        }
+<span class="fc" id="L168">    }</span>
+
+    private fun acceptIncomingConnection() {
+<span class="fc" id="L171">        logger.info(&quot;Accepting connection from remote party: $remoteCallsign local party: $myCallsign&quot;)</span>
+<span class="fc" id="L172">        resetConnection()</span>
+<span class="fc" id="L173">        connectionStatus = ConnectionStatus.CONNECTED</span>
+<span class="fc" id="L174">        val frame = newResponseFrame(ControlField.U_UNNUMBERED_ACKNOWLEDGE_P, false)</span>
+<span class="fc" id="L175">        queueFrameForControl(frame)</span>
+<span class="fc" id="L176">    }</span>
+
+    private fun acceptIncomingConnectionWithMessage(message: String) {
+<span class="nc" id="L179">        acceptIncomingConnection()</span>
+<span class="nc" id="L180">        queueMessageForDelivery(ControlField.INFORMATION_8, message)</span>
+<span class="nc" id="L181">    }</span>
+
+    // Reset sequence state
+    private fun resetConnection() {
+<span class="fc" id="L185">        logger.debug(&quot;Resetting connection&quot;)</span>
+<span class="fc" id="L186">        controlMode = ControlMode.MODULO_8</span>
+<span class="fc" id="L187">        sequencedQueue.reset()</span>
+<span class="fc" id="L188">        unnumberedQueue = ArrayList&lt;KissFrame&gt;()</span>
+<span class="fc" id="L189">        nextQueuedControlFrame = null</span>
+<span class="fc" id="L190">        nextExpectedSendSequenceNumberFromPeer = 0</span>
+<span class="fc" id="L191">        connectionStatus = ConnectionStatus.DISCONNECTED</span>
+<span class="fc" id="L192">    }</span>
+
+    private fun handleIncomingAcknowledgement(incomingFrame: KissFrame) {
+        // If our record of our last acknowledged sent frame is already updated, then the remote party may be asking us to re-sync with an RECEIVE_READY_P
+<span class="fc bfc" id="L196" title="All 2 branches covered.">        if (sequencedQueue.handleIncomingAcknowledgementAndIfRepeated(incomingFrame)</span>
+<span class="pc bpc" id="L197" title="1 of 2 branches missed.">            &amp;&amp; (incomingFrame.controlField() == ControlField.S_8_RECEIVE_READY_P</span>
+<span class="pc bpc" id="L198" title="1 of 2 branches missed.">                    || incomingFrame.controlField() == ControlField.S_128_RECEIVE_READY_P)) {</span>
+<span class="nc" id="L199">            logger.debug(&quot;Received multiple of the same acknowledgement sequence number. Sending an Ready_Receive_P to re-sync.&quot;)</span>
+<span class="nc" id="L200">            handleRequestForState()</span>
+        }
+<span class="fc" id="L202">    }</span>
+
+    private fun sendAcknowlegeAndReadyForReceive() {
+<span class="fc" id="L205">        queueFrameForControl(newResponseFrame(ControlField.S_8_RECEIVE_READY, false))</span>
+<span class="fc" id="L206">    }</span>
+
+    private fun handleRequestForState() {
+<span class="nc" id="L209">        queueFrameForControl(newResponseFrame(ControlField.S_8_RECEIVE_READY_P, false))</span>
+<span class="nc" id="L210">    }</span>
+
+    private fun rejectUnsequencedFrame(incomingFrame: KissFrame) {
+<span class="nc" id="L213">        logger.error(&quot;Rejecting frame with unexpected sequence number. Expected: {} Received {}&quot;, nextExpectedSendSequenceNumberFromPeer, incomingFrame.sendSequenceNumber())</span>
+<span class="nc" id="L214">        val frame = newResponseFrame(ControlField.S_8_REJECT, false)</span>
+<span class="nc" id="L215">        queueFrameForControl(frame)</span>
+<span class="nc" id="L216">    }</span>
+
+    private fun handleDisconnectRequest() {
+<span class="fc" id="L219">        logger.trace(&quot;Disconnecting from $remoteCallsign&quot;)</span>
+<span class="fc" id="L220">        resetConnection()</span>
+<span class="fc" id="L221">        val frame = newResponseFrame(ControlField.U_UNNUMBERED_ACKNOWLEDGE_P, false)</span>
+<span class="fc" id="L222">        queueFrameForControl(frame)</span>
+<span class="fc" id="L223">        connectionStatus = ConnectionStatus.DISCONNECTED</span>
+<span class="fc" id="L224">    }</span>
+
+    private fun ignoreFrame(incomingFrame: KissFrame) {
+<span class="nc" id="L227">        logger.error(&quot;No handler for frame. Ignored. ${incomingFrame.toString()}&quot;)</span>
+<span class="nc" id="L228">    }</span>
+
+    /* Factory methods */
+    private fun newResponseFrame(fieldType: ControlField, extended: Boolean): KissFrame {
+<span class="fc" id="L232">        val newFrame = when (extended) {</span>
+<span class="pc bpc" id="L233" title="1 of 2 branches missed.">            false -&gt; KissFrameStandard()</span>
+<span class="nc bnc" id="L234" title="All 2 branches missed.">            true -&gt; KissFrameExtended()</span>
+        }
+<span class="fc" id="L236">        newFrame.setDestCallsign(remoteCallsign)</span>
+<span class="fc" id="L237">        newFrame.setSourceCallsign(myCallsign)</span>
+        // Set the control type now. The receive and send sequence numbers are updated just before it's transmitted.
+<span class="fc" id="L239">        newFrame.setControlField(fieldType)</span>
+<span class="fc" id="L240">        return newFrame</span>
+    }
+
+    /* State management */
+    private fun incrementReceiveSequenceNumber() {
+<span class="fc" id="L245">        val maxSeq = maxSequenceValue()</span>
+<span class="fc bfc" id="L246" title="All 2 branches covered.">        if (nextExpectedSendSequenceNumberFromPeer &lt; maxSeq) {</span>
+<span class="fc" id="L247">            nextExpectedSendSequenceNumberFromPeer++</span>
+        } else {
+<span class="fc" id="L249">            nextExpectedSendSequenceNumberFromPeer = 0</span>
+        }
+<span class="fc" id="L251">    }</span>
+
+    private fun maxSequenceValue(): Int {
+<span class="pc bpc" id="L254" title="1 of 2 branches missed.">        return when (controlMode) {</span>
+<span class="fc" id="L255">            ControlMode.MODULO_8 -&gt; 7</span>
+<span class="nc" id="L256">            ControlMode.MODULO_128 -&gt; 128</span>
+        }
+    }
+
+    /* Frame utility methods */
+    /**
+     * This method breaks a payload up into smaller chunks so that
+     * the max receive size of a frame is not reached. Typically the
+     * maximum frame size is 256 bytes, however, in the future we need
+     * to implement the XID frame handler so that this value can be
+     * agreed dynamically with the client TNC.
+     */
+    fun chunkUpPayload(payload: String): List&lt;String&gt; {
+<span class="fc" id="L269">        val payloadSize = frameSizeMax - KissFrame.SIZE_HEADERS</span>
+<span class="fc" id="L270">        var remainingPayload = payload</span>
+<span class="fc" id="L271">        var splitPayload = ArrayList&lt;String&gt;()</span>
+        // Break the playload into smaller parts
+<span class="fc bfc" id="L273" title="All 2 branches covered.">        while (remainingPayload.length &gt; payloadSize) {</span>
+<span class="pc bpc" id="L274" title="1 of 2 branches missed.">            splitPayload.add(remainingPayload.substring(0, payloadSize))</span>
+<span class="pc bpc" id="L275" title="1 of 2 branches missed.">            remainingPayload = remainingPayload.substring(payloadSize, remainingPayload.length)</span>
+        }
+        // Add any remaining payload data that falls within the maximum payload size
+<span class="fc" id="L278">        splitPayload.add(remainingPayload)</span>
+<span class="fc" id="L279">        return splitPayload</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

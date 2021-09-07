@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>APRSMessageFrame.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.network.radio.protocol.aprs.model</a> &gt; <span class="el_source">APRSMessageFrame.kt</span></div><h1>APRSMessageFrame.kt</h1><pre class="source lang-java linenums">package pakcatt.network.radio.protocol.aprs.model
+
+import java.lang.NumberFormatException
+import java.lang.StringBuilder
+
+<span class="fc" id="L6">class APRSMessageFrame: APRSFrame() {</span>
+    /*
+    Example payload for message from VK3LIT-7 to VK2VRO-7
+    :  V  K  2  V  R  O  -  7  SP :  H  e  l  l  o  {  4  7  END
+    3a 56 4b 32 56 52 4f 2d 37 20 3a 68 65 6c 6c 6f 7b 34 37 0d
+     */
+
+    companion object {
+        const val MAX_CONTENT_LENGTH = 67
+        const val MAX_MESSAGE_NUMBER_LENGTH = 5
+        const val MAX_MESSAGE_NUMBER = 99999
+        const val MAX_DEST_CALLSIGN_LENGTH = 9
+    }
+
+<span class="fc" id="L20">    private var messageDestinationCallsign = &quot;&quot;</span>
+<span class="fc" id="L21">    private var message = &quot;&quot;</span>
+<span class="fc" id="L22">    private var messageNumber = -1</span>
+
+    init {
+<span class="fc" id="L25">        aprsDataType = APRSDataType.MESSAGE</span>
+    }
+
+    fun setMessageSourceCallsign(sourceCallsign: String) {
+<span class="fc" id="L29">        setSourceCallsign(sourceCallsign)</span>
+<span class="fc" id="L30">    }</span>
+
+    fun setMessageDestinationCallsign(destinationCallsign: String) {
+<span class="fc" id="L33">        this.messageDestinationCallsign = stringUtils.formatCallsignEnsureSSID(destinationCallsign)</span>
+<span class="fc" id="L34">        updateFrameFieldsUsingAPRSMessageParameters()</span>
+<span class="fc" id="L35">    }</span>
+
+    fun setMessage(message: String) {
+<span class="fc" id="L38">        this.message = message</span>
+<span class="fc" id="L39">        updateFrameFieldsUsingAPRSMessageParameters()</span>
+<span class="fc" id="L40">    }</span>
+
+    fun setMessageNumber(messageNumber: Int) {
+<span class="fc" id="L43">        this.messageNumber = messageNumber</span>
+<span class="fc" id="L44">        updateFrameFieldsUsingAPRSMessageParameters()</span>
+<span class="fc" id="L45">    }</span>
+
+    fun messageSourceCallsign(): String {
+<span class="fc" id="L48">        return sourceCallsign()</span>
+    }
+
+    fun messageDestinationCallsign(): String {
+<span class="fc" id="L52">        return messageDestinationCallsign</span>
+    }
+
+    fun message(): String {
+<span class="fc" id="L56">        return message</span>
+    }
+
+    fun messageNumber(): Int {
+<span class="fc" id="L60">        return messageNumber</span>
+    }
+
+    override fun populateFromFrameData(frameByteData: ByteArray): APRSMessageFrame {
+<span class="fc" id="L64">        super.populateFromFrameData(frameByteData)</span>
+        // Update our local message variables
+<span class="fc" id="L66">        val payloadString = payloadDataString()</span>
+<span class="fc" id="L67">        setMessageDestinationCallsignFromPayload(payloadString)</span>
+<span class="fc" id="L68">        setMessageNumberFromPayload(payloadString)</span>
+<span class="fc" id="L69">        setMessageFromPayload(payloadString)</span>
+<span class="fc" id="L70">        return this</span>
+    }
+
+    override fun packetData(): ByteArray {
+<span class="fc" id="L74">        updateFrameFieldsUsingAPRSMessageParameters()</span>
+<span class="fc" id="L75">        return super.packetData()</span>
+    }
+
+    override fun toString(): String {
+<span class="fc" id="L79">        val stringBuilder = StringBuilder()</span>
+<span class="fc" id="L80">        stringBuilder.append(&quot;Data Type: $aprsDataType &quot;)</span>
+<span class="fc" id="L81">        stringBuilder.append(&quot;From: ${sourceCallsign()} &quot;)</span>
+<span class="fc" id="L82">        stringBuilder.append(&quot;To: ${messageDestinationCallsign()} &quot;)</span>
+<span class="pc bpc" id="L83" title="3 of 6 branches missed.">        if (repeaterCallsignOne.isNotEmpty()) {</span>
+<span class="fc" id="L84">            stringBuilder.append(&quot;Via1: ${repeaterCallsignOne()} &quot;)</span>
+        }
+
+<span class="pc bpc" id="L87" title="3 of 6 branches missed.">        if (repeaterCallsignTwo.isNotEmpty()) {</span>
+<span class="fc" id="L88">            stringBuilder.append(&quot;Via2: ${repeaterCallsignTwo()} &quot;)</span>
+        }
+<span class="fc" id="L90">        stringBuilder.append(&quot;No: ${messageNumber()} &quot;)</span>
+<span class="fc" id="L91">        stringBuilder.append(&quot;Message: ${message()} &quot;)</span>
+<span class="pc bpc" id="L92" title="3 of 6 branches missed.">        if (payloadData.isNotEmpty()) {</span>
+<span class="fc" id="L93">            stringBuilder.append(&quot;Payload: ${payloadDataString()}&quot;)</span>
+        }
+<span class="fc" id="L95">        return stringBuilder.toString()</span>
+    }
+
+    private fun setMessageDestinationCallsignFromPayload(payloadDataString: String) {
+<span class="fc" id="L99">        var callsign = payloadDataString.split(&quot;:&quot;)[1]</span>
+<span class="fc" id="L100">        callsign = stringUtils.removeWhitespace(callsign)</span>
+<span class="fc" id="L101">        this.messageDestinationCallsign = callsign</span>
+<span class="fc" id="L102">    }</span>
+
+    private fun setMessageFromPayload(payloadDataString: String) {
+<span class="fc" id="L105">        var parsedMessage = stringUtils.removeEOLChars(payloadDataString)</span>
+        // Find the second instance of ':' That's where the message starts
+<span class="fc" id="L107">        val startIndex = parsedMessage.indexOf(&quot;:&quot;, 1) + 1</span>
+<span class="pc bpc" id="L108" title="1 of 2 branches missed.">        parsedMessage = parsedMessage.substring(startIndex, parsedMessage.length)</span>
+        // Remove the message ID, if there is one.
+<span class="pc bpc" id="L110" title="2 of 4 branches missed.">        if (messageNumber &gt; -1 &amp;&amp; parsedMessage.contains(&quot;{&quot;)) {</span>
+<span class="fc" id="L111">            val indexOfMessageId = parsedMessage.lastIndexOf(&quot;{&quot;)</span>
+<span class="pc bpc" id="L112" title="1 of 2 branches missed.">            parsedMessage = parsedMessage.substring(0, indexOfMessageId)</span>
+        }
+<span class="fc" id="L114">        this.message = parsedMessage</span>
+<span class="fc" id="L115">    }</span>
+
+    private fun setMessageNumberFromPayload(payloadDataString: String) {
+<span class="fc" id="L118">        try {</span>
+<span class="fc" id="L119">            var cleanedPayloadString = stringUtils.removeEOLChars(payloadDataString)</span>
+<span class="pc bpc" id="L120" title="1 of 2 branches missed.">            if (cleanedPayloadString.contains(&quot;{&quot;)) {</span>
+<span class="fc" id="L121">                val indexOfMessageId = cleanedPayloadString.lastIndexOf(&quot;{&quot;) + 1</span>
+<span class="pc bpc" id="L122" title="1 of 2 branches missed.">                var messageNumberString = payloadDataString().substring(indexOfMessageId, cleanedPayloadString.length)</span>
+<span class="fc" id="L123">                this.messageNumber = messageNumberString.toInt()</span>
+            } else {
+<span class="nc" id="L125">                this.messageNumber = -1</span>
+<span class="nc" id="L126">            }</span>
+<span class="nc" id="L127">        } catch (e: NumberFormatException) {</span>
+<span class="nc" id="L128">            this.messageNumber = -1</span>
+        }
+<span class="fc" id="L130">    }</span>
+
+    private fun updateFrameFieldsUsingAPRSMessageParameters() {
+        // The destination callsign must be 9 characters in length and message numbers 5
+<span class="fc" id="L134">        this.message = stringUtils.trimmedString(message, MAX_CONTENT_LENGTH)</span>
+<span class="fc" id="L135">        this.messageNumber = stringUtils.trimmedString(messageNumber.toString(), MAX_MESSAGE_NUMBER_LENGTH).toInt()</span>
+<span class="fc" id="L136">        this.messageDestinationCallsign = stringUtils.trimmedString(messageDestinationCallsign, MAX_DEST_CALLSIGN_LENGTH)</span>
+<span class="fc" id="L137">        val fixedLengthDestination = stringUtils.fixedSizeString(messageDestinationCallsign, MAX_DEST_CALLSIGN_LENGTH)</span>
+        // Construct the payload using our local variables
+<span class="fc" id="L139">        val stringPayloadBuilder = StringBuilder()</span>
+<span class="fc" id="L140">        stringPayloadBuilder.append(&quot;:&quot;)</span>
+<span class="fc" id="L141">        stringPayloadBuilder.append(fixedLengthDestination)</span>
+<span class="fc" id="L142">        stringPayloadBuilder.append(&quot;:&quot;)</span>
+<span class="fc" id="L143">        stringPayloadBuilder.append(message)</span>
+<span class="pc bpc" id="L144" title="1 of 4 branches missed.">        if (messageNumber in 0..MAX_MESSAGE_NUMBER) {</span>
+<span class="fc" id="L145">            stringPayloadBuilder.append(&quot;{&quot;)</span>
+<span class="fc" id="L146">            stringPayloadBuilder.append(messageNumber)</span>
+        }
+<span class="fc" id="L148">        this.payloadData = stringUtils.convertStringToBytes(stringPayloadBuilder.toString())</span>
+<span class="fc" id="L149">    }</span>
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

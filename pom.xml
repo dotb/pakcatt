@@ -129,6 +129,9 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                        <configuration>
+                            <outputDirectory>jacoco-report</outputDirectory>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ByteUtils.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.util</a> &gt; <span class="el_source">ByteUtils.kt</span></div><h1>ByteUtils.kt</h1><pre class="source lang-java linenums">package pakcatt.util
+
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
+import kotlin.experimental.and
+import kotlin.experimental.or
+
+@Component
+<span class="fc" id="L9">class ByteUtils {</span>
+
+<span class="fc" id="L11">    private val logger = LoggerFactory.getLogger(ByteUtils::class.java)</span>
+
+    /**
+     * Convert from a Byte to an Int, retaining the bit formation
+     * of the Byte.
+     *
+     * From the Kotlin docs: https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-byte/to-int.html
+     * The resulting Int value represents the same numerical value as this Byte.
+     * The least significant 8 bits of the resulting Int value are the same as the bits of this Byte value,
+     * whereas the most significant 24 bits are filled with the sign bit of this value.
+     *
+     * This means we might end up with 1's in the most significant bits of the Int, so we
+     * mask them out just in case, to ensure we retain the same bit pattern that was in the original
+     * byte.
+     */
+    fun byteToInt(byte: Byte): Int {
+<span class="fc" id="L27">        val convertedInt = byte.toInt()</span>
+<span class="fc" id="L28">        return maskInt(convertedInt, 0x000000FF)</span>
+    }
+
+    /**
+     * Convert from an Int to a Byte, retaining the integrity of
+     * the bit formation from the Int.
+     */
+    fun intToByte(int: Int): Byte {
+<span class="fc" id="L36">        return int.toByte()</span>
+    }
+
+    /**
+     * Shift the bits in an array of bytes to the left
+     */
+    fun shiftBitsLeft(byteArray: ByteArray, places: Int): ByteArray {
+<span class="fc" id="L43">        var shiftedArray = ByteArray(byteArray.size)</span>
+<span class="fc bfc" id="L44" title="All 2 branches covered.">        for ((index, byte) in byteArray.withIndex()) {</span>
+<span class="fc" id="L45">            val shiftedByte = shiftBitsLeft(byte, places)</span>
+<span class="fc" id="L46">            shiftedArray[index] = shiftedByte</span>
+        }
+<span class="fc" id="L48">        return shiftedArray</span>
+    }
+
+    fun shiftBitsRight(byteArray: ByteArray, places: Int): ByteArray {
+<span class="fc" id="L52">        var shiftedArray = ByteArray(byteArray.size)</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        for ((index, byte) in byteArray.withIndex()) {</span>
+<span class="fc" id="L54">            val shiftedByte = shiftBitsRight(byte, places)</span>
+<span class="fc" id="L55">            shiftedArray[index] = shiftedByte</span>
+        }
+<span class="fc" id="L57">        return shiftedArray</span>
+    }
+
+    /*
+    * When we convert a byte to an integer type additional 1's are added
+    * to the high bytes. We use a mask to remove these and ensure only
+    * the original byte is manipulated.
+     */
+    fun shiftBitsLeft(byte: Byte, places: Int): Byte {
+<span class="fc" id="L66">        val intVal = byte.toInt()</span>
+<span class="fc" id="L67">        val maskedInt = maskInt(intVal, 0x000000FF)</span>
+<span class="fc" id="L68">        val shiftedInt = maskedInt shl places</span>
+<span class="fc" id="L69">        return intToByte(shiftedInt)</span>
+    }
+
+    fun shiftBitsRight(byte: Byte, places: Int): Byte {
+<span class="fc" id="L73">        val intVal = byte.toInt()</span>
+<span class="fc" id="L74">        val maskedInt = maskInt(intVal, 0x000000FF)</span>
+<span class="fc" id="L75">        val shiftedInt = maskedInt shr places</span>
+<span class="fc" id="L76">        return intToByte(shiftedInt)</span>
+    }
+
+    fun shiftBitsRight(int: Int, places: Int): Int {
+<span class="fc" id="L80">        val shiftedInt = int shr places</span>
+<span class="fc" id="L81">        return maskInt(shiftedInt, 0x000000FF)</span>
+    }
+
+    fun maskByte(byte: Byte, mask: Int): Byte {
+<span class="fc" id="L85">        val maskAsByte = intToByte(mask)</span>
+<span class="fc" id="L86">        return byte.and(maskAsByte)</span>
+    }
+
+    fun maskInt(int: Int, mask: Int):Int {
+<span class="fc" id="L90">        return int.and(mask)</span>
+    }
+
+    fun setBits(byte: Byte, mask: Int): Byte {
+<span class="fc" id="L94">        return setBits(byte, mask.toByte())</span>
+    }
+
+    fun setBits(byte: Byte, mask: Byte): Byte {
+<span class="fc" id="L98">        return byte.or(mask)</span>
+    }
+
+    fun compareMaskedByte(sourceByte: Byte, mask: Int, comparisonByte: Int): Boolean {
+<span class="fc" id="L102">        val maskedSourceByte = maskByte(sourceByte, mask)</span>
+<span class="fc" id="L103">        val maskedSourceInt = byteToInt(maskedSourceByte)</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        return maskedSourceInt.compareTo(comparisonByte) == 0</span>
+    }
+
+    fun insertIntoByteArray(source: Byte, destination: ByteArray, index: Int): Int {
+<span class="fc bfc" id="L108" title="All 2 branches covered.">        return if (destination.size &gt; index) {</span>
+<span class="fc" id="L109">            destination[index] = source</span>
+<span class="fc" id="L110">            index + 1</span>
+        } else {
+<span class="fc" id="L112">            index</span>
+        }
+    }
+
+    fun insertIntoByteArray(source: ByteArray, destination: ByteArray, startIndex: Int): Int {
+<span class="fc" id="L117">        var index = startIndex</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">        for (byte in source) {</span>
+<span class="fc" id="L119">            index = insertIntoByteArray(byte, destination, index)</span>
+        }
+<span class="fc" id="L121">        return index</span>
+    }
+
+    fun byteArrayFromInts(vararg elements: Int): ByteArray {
+<span class="fc" id="L125">        val byteArray = ByteArray(elements.size)</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        for ((index, intOctet) in elements.withIndex()) {</span>
+<span class="fc" id="L127">            val byte = intToByte(intOctet)</span>
+<span class="fc" id="L128">            byteArray[index] = byte</span>
+        }
+<span class="fc" id="L130">        return byteArray</span>
+    }
+
+    fun byteArrayFromStringInts(intString: String): ByteArray {
+<span class="fc" id="L134">        val stringInts = intString.split(&quot; &quot;)</span>
+<span class="fc" id="L135">        val byteArray = ByteArray(stringInts.size)</span>
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        for ((index, intStr) in stringInts.withIndex()) {</span>
+<span class="fc" id="L137">            val hexInt = intStr.toInt(16)</span>
+<span class="fc" id="L138">            val byte = intToByte(hexInt)</span>
+<span class="fc" id="L139">            byteArray[index] = byte</span>
+        }
+<span class="fc" id="L141">        return byteArray</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

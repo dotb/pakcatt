@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>TellApp.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.application.tell</a> &gt; <span class="el_source">TellApp.kt</span></div><h1>TellApp.kt</h1><pre class="source lang-java linenums">package pakcatt.application.tell
+
+import pakcatt.application.shared.NavigateBack
+import pakcatt.application.shared.SubApp
+import pakcatt.network.radio.protocol.aprs.model.APRSMessageFrame
+import pakcatt.application.shared.model.DeliveryType
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.model.AppResponse
+
+/**
+ * Allows users to send quick messages to others
+ */
+<span class="nc" id="L13">class TellApp(private val destinationCallsign: String, private val myCallsign: String, private val senderCallsign: String): SubApp() {</span>
+
+<span class="nc" id="L15">    private val messagePrefix = &quot;${stringUtils.formatCallsignRemoveSSID(senderCallsign)} says:&quot;</span>
+
+    override fun returnCommandPrompt(): String {
+<span class="nc" id="L18">        val maxContentLength = APRSMessageFrame.MAX_CONTENT_LENGTH - messagePrefix.length</span>
+<span class="nc" id="L19">        return &quot;Message? (max $maxContentLength):&quot;</span>
+    }
+
+    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+<span class="nc" id="L23">        val message = &quot;$messagePrefix ${stringUtils.removeEOLChars(request.message)}&quot;</span>
+<span class="nc" id="L24">        queueAdhocMessageForTransmission(destinationCallsign, myCallsign, message, DeliveryType.APRS_FIRE_AND_FORGET)</span>
+<span class="nc" id="L25">        return AppResponse.sendText(&quot;Thanks, I'll send that right away!&quot;, NavigateBack(1))</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

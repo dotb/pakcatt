@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Configuration.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.dependencies</a> &gt; <span class="el_source">Configuration.kt</span></div><h1>Configuration.kt</h1><pre class="source lang-java linenums">package pakcatt.dependencies
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Profile
+import pakcatt.application.scriptable.model.Script
+import pakcatt.application.scriptable.model.ScriptableConfig
+import java.lang.NumberFormatException
+
+@Configuration
+@Profile(&quot;production&quot;)
+<span class="nc" id="L16">class Configuration {</span>
+
+<span class="nc" id="L18">    val logger: Logger = LoggerFactory.getLogger(Configuration::class.java)</span>
+
+    @Value(&quot;\${pakcatt.application.mycall}&quot;)
+    private lateinit var myCall: String
+    @Bean
+    fun myCall(): String {
+<span class="nc" id="L24">        return myCall</span>
+    }
+
+    @Value(&quot;\${pakcatt.application.welcomeMessage}&quot;)
+    private lateinit var welcomeMessage: String
+    @Bean
+    fun welcomeMessage(): String {
+<span class="nc" id="L31">        return welcomeMessage</span>
+    }
+
+    @Value(&quot;\${pakcatt.application.defaultEndOfLine}&quot;)
+    private lateinit var defaultEndOfLine: String
+    @Bean
+    fun defaultEndOfLine(): String {
+<span class="nc" id="L38">        return defaultEndOfLine</span>
+    }
+
+    @Value(&quot;\${pakcatt.application.board.summaryLength}&quot;)
+    private lateinit var boardSummaryLength: String
+    @Bean
+    fun boardSummaryLength(): Int {
+<span class="nc" id="L45">        return boardSummaryLength.toInt()</span>
+    }
+
+    @Value(&quot;\${pakcatt.application.board.promptTopicLength}&quot;)
+    private lateinit var boardPromptTopicLength: String
+    @Bean
+    fun boardPromptTopicLength(): Int {
+<span class="nc" id="L52">        return boardPromptTopicLength.toInt()</span>
+    }
+
+    @Value(&quot;\${pakcatt.application.board.defaultPostListLength}&quot;)
+    private lateinit var defaultPostListLength: String
+    @Bean
+    fun boardPostListLength(): Int {
+<span class="nc" id="L59">        return defaultPostListLength.toInt()</span>
+    }
+
+    @Value(&quot;\${pakcatt.application.beacon.message}&quot;)
+    private lateinit var beaconMessage: String
+    @Bean
+    fun beaconMessage(): String {
+<span class="nc" id="L66">        return beaconMessage</span>
+    }
+
+    @Value(&quot;\${pakcatt.application.beacon.interval_minutes}&quot;)
+    private lateinit var beaconIntervalMinutes: String
+    @Bean
+    fun beaconIntervalMinutes(): Int {
+<span class="nc" id="L73">        return try {</span>
+<span class="nc" id="L74">            beaconIntervalMinutes.toInt()</span>
+<span class="nc" id="L75">        } catch (e: NumberFormatException) {</span>
+<span class="nc" id="L76">            logger.error(&quot;The beacon interval {} is not a valid number. Please configure pakcatt.application.beacon.interval_minutes using numeric characters.&quot;, beaconIntervalMinutes)</span>
+<span class="nc" id="L77">            0</span>
+        }
+    }
+
+    @Value(&quot;\${pakcatt.application.beacon.destination}&quot;)
+    private lateinit var beaconDestination: String
+    @Bean
+    fun beaconDestination(): String {
+<span class="nc" id="L85">        return beaconDestination</span>
+    }
+
+    @Value(&quot;\${pakcatt.application.startstop.send.startup.shutdown.messages}&quot;)
+    private lateinit var sendStartupShutdownMessage: String
+    @Bean
+    fun sendStartupShutdownMessage(): Boolean {
+<span class="nc" id="L92">        return sendStartupShutdownMessage.toBoolean()</span>
+    }
+
+    @Value(&quot;\${pakcatt.application.startstop.startup.message}&quot;)
+    private lateinit var startupMessage: String
+    @Bean
+    fun startupMessage(): String {
+<span class="nc" id="L99">        return startupMessage</span>
+    }
+
+    @Value(&quot;\${pakcatt.application.startstop.shutdown.message}&quot;)
+    private lateinit var shutdownMessage: String
+    @Bean
+    fun shutdownMessage(): String {
+<span class="nc" id="L106">        return shutdownMessage</span>
+    }
+
+    @Autowired
+    private lateinit var scriptableConfig: ScriptableConfig
+
+    @Bean
+    fun scriptWorkingDir(): String {
+<span class="nc" id="L114">        return scriptableConfig.workingDir</span>
+    }
+
+    @Bean
+    fun scriptTimeout(): Long {
+<span class="nc" id="L119">        return scriptableConfig.timeout</span>
+    }
+
+    @Bean
+    fun scriptableScripts(): List&lt;Script&gt; {
+<span class="nc" id="L124">        return scriptableConfig.scripts</span>
+    }
+
+    @Value(&quot;\${pakcatt.serial-port-path}&quot;)
+    private lateinit var serialPortPath: String
+    @Bean
+    fun serialPortPath(): String {
+<span class="nc" id="L131">        return serialPortPath</span>
+    }
+
+    @Value(&quot;\${pakcatt.serial-port-baud}&quot;)
+    private lateinit var serialPortBaud: Number
+    @Bean
+    fun serialPortBaud(): Int {
+<span class="nc" id="L138">        return serialPortBaud.toInt()</span>
+    }
+
+    @Value(&quot;\${pakcatt.network.packet.frame_size_max}&quot;)
+    private lateinit var frameSizeMax: Number
+    @Bean
+    fun frameSizeMax(): Int {
+<span class="nc" id="L145">        return frameSizeMax.toInt()</span>
+    }
+
+    @Value(&quot;\${pakcatt.network.packet.frames_per_over}&quot;)
+    private lateinit var framesPerOver: Number
+    @Bean
+    fun framesPerOver(): Int {
+<span class="nc" id="L152">        return framesPerOver.toInt()</span>
+    }
+
+    @Value(&quot;\${pakcatt.network.packet.minTXPauseSeconds}&quot;)
+    private lateinit var minTXPauseSeconds: Number
+    @Bean
+    fun minTXPauseSeconds(): Int {
+<span class="nc" id="L159">        return minTXPauseSeconds.toInt()</span>
+    }
+
+    @Value(&quot;\${pakcatt.network.packet.maxDeliveryAttempts}&quot;)
+    private lateinit var maxDeliveryAttempts: Number
+    @Bean
+    fun maxDeliveryAttempts(): Int {
+<span class="nc" id="L166">        return maxDeliveryAttempts.toInt()</span>
+    }
+
+    @Value(&quot;\${pakcatt.network.packet.deliveryRetryTimeSeconds}&quot;)
+    private lateinit var deliveryRetryTimeSeconds: Number
+    @Bean
+    fun deliveryRetryTimeSeconds(): Int {
+<span class="nc" id="L173">        return deliveryRetryTimeSeconds.toInt()</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>

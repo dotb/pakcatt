@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MainMenuApp.kt</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">pakcatt</a> &gt; <a href="index.source.html" class="el_package">pakcatt.application.mainmenu</a> &gt; <span class="el_source">MainMenuApp.kt</span></div><h1>MainMenuApp.kt</h1><pre class="source lang-java linenums">package pakcatt.application.mainmenu
+
+import org.springframework.context.annotation.Profile
+import org.springframework.stereotype.Component
+import pakcatt.application.bulletinboard.BulletinBoardApp
+import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
+import pakcatt.application.last.LastApp
+import pakcatt.application.last.persistence.LastEntryRepository
+import pakcatt.application.last.persistence.LastEntryStore
+import pakcatt.application.mailbox.MailboxApp
+import pakcatt.application.mailbox.persistence.MailboxStore
+import pakcatt.application.settings.SettingsApp
+import pakcatt.application.shared.COLOUR
+import pakcatt.application.shared.FORMAT
+import pakcatt.application.shared.model.AppRequest
+import pakcatt.application.shared.RootApp
+import pakcatt.application.shared.command.Command
+import pakcatt.application.tell.TellApp
+import pakcatt.application.shared.model.AppResponse
+import pakcatt.util.StringUtils
+import java.lang.StringBuilder
+import kotlin.math.sqrt
+
+@Component
+@Profile(&quot;production&quot;)
+<span class="fc" id="L26">class MainMenuApp(private val myCall: String,</span>
+                  private val mailboxStore: MailboxStore,
+                  bulletinBoardStore: BulletinBoardStore,
+                  lastEntryStore: LastEntryStore,
+                  private val welcomeMessage: String,
+                  boardPromptTopicLength: Int,
+                  boardSummaryLength: Int,
+<span class="fc" id="L33">                  boardPostListLength: Int): RootApp() {</span>
+
+<span class="fc" id="L35">    private val lastApp = LastApp(lastEntryStore)</span>
+
+    init {
+        // Apps and functionality
+<span class="fc" id="L39">        registerCommand(Command(&quot;board&quot;) .reply(&quot;Launching Bulletin Board&quot;)    .openApp(BulletinBoardApp(bulletinBoardStore,</span>
+<span class="fc" id="L40">                                                                                                boardPromptTopicLength,</span>
+<span class="fc" id="L41">                                                                                                boardSummaryLength,</span>
+<span class="fc" id="L42">                                                                                                boardPostListLength))  .description(&quot;Open the Bulletin Board&quot;))</span>
+<span class="fc" id="L43">        registerCommand(Command(&quot;mail&quot;) .reply(&quot;Launching Mail&quot;)    .openApp(MailboxApp(mailboxStore))  .description(&quot;Open your mailbox&quot;))</span>
+<span class="pc" id="L44">        registerCommand(Command(&quot;last&quot;) .function { handleLast(it) }.description(&quot;last [callsign] - See when others were last seen&quot;))</span>
+<span class="pc" id="L45">        registerCommand(Command(&quot;tell&quot;) .function { handleTell(it) } .description(&quot;tell &lt;callsign&gt; - Send a quick APRS message to someone.&quot;))</span>
+<span class="pc" id="L46">        registerCommand(Command(&quot;sqrt&quot;) .function { handleSQRT(it) }.description(&quot;sqrt &lt;number&gt; - Calculate the square root of an argument&quot;))</span>
+
+        // Cute responses
+<span class="fc" id="L49">        registerCommand(Command(&quot;hello&quot;).reply(&quot;Hi, there! *wave*&quot;) .description(&quot;Just a friendly welcome :-)&quot;))</span>
+<span class="fc" id="L50">        registerCommand(Command(&quot;ping&quot;) .reply(&quot;Pong!&quot;).description(&quot;I'll reply with a pong&quot;))</span>
+<span class="fc" id="L51">        registerCommand(Command(&quot;pong&quot;) .reply(&quot;Ping! haha :P&quot;).description(&quot;I'll reply with a pong&quot;))</span>
+<span class="fc" id="L52">        registerCommand(Command(&quot;beep&quot;) .reply(&quot;beep! $beepChar&quot;).description(&quot;Send a beep instruction to your terminal&quot;))</span>
+
+        // Terminal tests
+<span class="fc" id="L55">        registerCommand(Command(&quot;bold&quot;) .reply(&quot;${textFormat.escapeChar}[1mThis should be BOLD and${textFormat.escapeChar}[0m this should not be bold.&quot;).description(&quot;Test the bold control character on your terminal&quot;))</span>
+<span class="pc" id="L56">        registerCommand(Command(&quot;styles&quot;).function { allTheStyles() }.description(&quot;Test the styles supported by your terminal&quot;))</span>
+<span class="fc" id="L57">        registerCommand(Command(&quot;nop&quot;)  .ackOnly().description(&quot;I'll do nothing, just acknowledge your request&quot;))</span>
+<span class="fc" id="L58">        registerCommand(Command(&quot;ignore&quot;).ignore().description(&quot;I'll receive your command but won't acknowledge it.&quot;))</span>
+<span class="fc" id="L59">        registerCommand(Command(&quot;settings&quot;).reply(&quot;Launching Settings&quot;) .openApp(SettingsApp()).description(&quot;View your environment settings.&quot;))</span>
+    }
+
+    override fun returnCommandPrompt(): String {
+<span class="fc" id="L63">        return &quot;menu&gt;&quot;</span>
+    }
+
+    override fun decisionOnConnectionRequest(request: AppRequest): AppResponse {
+<span class="pc bpc" id="L67" title="1 of 2 branches missed.">        return if (isAddressedToMe(request, myCall)) {</span>
+<span class="fc" id="L68">            val stringBuilder = StringBuilder()</span>
+<span class="fc" id="L69">            val mailboxApp = MailboxApp(mailboxStore)</span>
+<span class="fc" id="L70">            val unreadMessages = mailboxApp.unreadMessageCount(request)</span>
+
+<span class="fc" id="L72">            stringBuilder.append(welcomeMessage)</span>
+<span class="fc" id="L73">            stringBuilder.append(stringUtils.EOL)</span>
+<span class="pc bpc" id="L74" title="1 of 2 branches missed.">            if (unreadMessages &gt; 1) {</span>
+<span class="fc" id="L75">                stringBuilder.append(&quot;You have $unreadMessages unread messages.${stringUtils.EOL}&quot;)</span>
+<span class="nc bnc" id="L76" title="All 2 branches missed.">            } else if (unreadMessages &gt; 0) {</span>
+<span class="nc" id="L77">                stringBuilder.append(&quot;You have an unread message.${stringUtils.EOL}&quot;)</span>
+            }
+<span class="fc" id="L79">            AppResponse.sendText(stringBuilder.toString(), this)</span>
+        } else {
+<span class="nc" id="L81">            AppResponse.ignore()</span>
+        }
+    }
+
+    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+<span class="fc" id="L86">       return when (isAddressedToMe(request, myCall)) {</span>
+<span class="pc bpc" id="L87" title="1 of 2 branches missed.">           true -&gt; handleRequestWithRegisteredCommand(request)</span>
+<span class="nc" id="L88">           else -&gt; AppResponse.ignore()</span>
+       }
+    }
+
+    private fun handleTell(request: AppRequest): AppResponse {
+<span class="nc" id="L93">        val destinationCallsign = parseStringArgument(request.message, &quot;&quot;)</span>
+<span class="nc bnc" id="L94" title="All 4 branches missed.">        return if (destinationCallsign.isNotBlank()) {</span>
+<span class="nc" id="L95">            AppResponse.sendText(&quot;&quot;, TellApp(destinationCallsign, myCall, request.remoteCallsign))</span>
+        } else {
+<span class="nc" id="L97">            AppResponse.sendText(&quot;You need to specify a callsign&quot;)</span>
+        }
+    }
+
+    private fun handleSQRT(request: AppRequest): AppResponse {
+<span class="nc" id="L102">        val arg = parseStringArgument(request.message, &quot;0&quot;)</span>
+<span class="nc" id="L103">        val result = sqrt(arg.toDouble()).toString()</span>
+<span class="nc" id="L104">        return AppResponse.sendText(&quot;Square root of $arg is $result&quot;)</span>
+    }
+
+    private fun handleLast(request: AppRequest): AppResponse {
+<span class="nc" id="L108">        return when (val arg = parseStringArgument(request.message, &quot;&quot;)) {</span>
+<span class="nc bnc" id="L109" title="All 2 branches missed.">            &quot;&quot; -&gt; AppResponse.sendText(lastApp.lastEntries())</span>
+<span class="nc" id="L110">            else -&gt; AppResponse.sendText(lastApp.lastEntryFor(arg))</span>
+        }
+    }
+
+    private fun allTheStyles(): AppResponse {
+<span class="nc" id="L115">        val returnString = StringBuilder()</span>
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        for (style in FORMAT.values()) {</span>
+<span class="nc" id="L117">            returnString.append(textFormat.format(style))</span>
+<span class="nc" id="L118">            returnString.append(&quot;Style&quot;)</span>
+<span class="nc" id="L119">            returnString.append(textFormat.format(FORMAT.RESET))</span>
+<span class="nc" id="L120">            returnString.append(stringUtils.EOL)</span>
+        }
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        for (colour in COLOUR.values()) {</span>
+<span class="nc" id="L123">            returnString.append(textFormat.fgColour(colour))</span>
+<span class="nc" id="L124">            returnString.append(&quot;Foreground Colour&quot;)</span>
+<span class="nc" id="L125">            returnString.append(textFormat.fgColour(COLOUR.DEFAULT))</span>
+<span class="nc" id="L126">            returnString.append(stringUtils.EOL)</span>
+        }
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        for (colour in COLOUR.values()) {</span>
+<span class="nc" id="L129">            returnString.append(textFormat.bgColour(colour))</span>
+<span class="nc" id="L130">            returnString.append(&quot;Background Colour&quot;)</span>
+<span class="nc" id="L131">            returnString.append(textFormat.bgColour(COLOUR.DEFAULT))</span>
+<span class="nc" id="L132">            returnString.append(stringUtils.EOL)</span>
+        }
+
+<span class="nc" id="L135">        return AppResponse.sendText(returnString.toString())</span>
+    }
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.2.201808211720</span></div></body></html>
