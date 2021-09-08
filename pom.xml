@@ -116,7 +116,11 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.2</version>
+                <version>0.8.4</version>
+                <configuration>
+                    <destFile>${basedir}/coverage-reports/jacoco-unit.exec</destFile>
+                    <dataFile>${basedir}/coverage-reports/jacoco-unit.exec</dataFile>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>
@@ -130,7 +134,7 @@
                             <goal>report</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>jacoco-report</outputDirectory>
+                            <outputDirectory>${basedir}/target/jacoco-report</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
