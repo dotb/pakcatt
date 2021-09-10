@@ -9,6 +9,7 @@ class MailboxAppTest: AppServiceTest() {
 
     @Test
     fun `test open mailbox and list messages`() {
+        `test starting a connection to the BBS`()
         var request = testRequest()
         request.message = "mail"
 

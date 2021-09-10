@@ -10,12 +10,13 @@ import java.lang.StringBuilder
 
 abstract class SubApp {
 
-    private val commands = ArrayList<Command>()
     private var parentRootApp: RootApp? = null
     protected val stringUtils = StringUtils()
     protected val textFormat = TextFormat()
     protected val tabSpace = "\t"
     protected val beepChar = 7.toChar()
+
+    private val commands = mutableListOf(Command("help") .function { helpResponse() }  .description("Display this list of commands"))
 
     abstract fun returnCommandPrompt(): String
 
@@ -39,7 +40,7 @@ abstract class SubApp {
                     return command.execute(request)
                 }
             }
-            return helpResponse()
+            return AppResponse.sendText("¯\\_(ツ)_/¯ type help for commands")
         }
     }
 
@@ -92,10 +93,6 @@ abstract class SubApp {
                 stringBuilder.append(stringUtils.EOL)
             }
         }
-        stringBuilder.append("help")
-        stringBuilder.append("\t- ")
-        stringBuilder.append("Display this list of commands")
-        stringBuilder.append(stringUtils.EOL)
         return AppResponse.sendText(stringBuilder.toString())
     }
 

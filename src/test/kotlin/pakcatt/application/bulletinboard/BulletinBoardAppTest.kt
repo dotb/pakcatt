@@ -10,6 +10,7 @@ class BulletinBoardAppTest: AppServiceTest() {
 
     @Test
     fun `test open the board and list topics`() {
+        `test starting a connection to the BBS`()
         var request = testRequest()
         request.message = "board"
 
@@ -41,6 +42,7 @@ class BulletinBoardAppTest: AppServiceTest() {
 
     @Test
     fun `test open the board and then a topic and list posts with a default length`() {
+        `test starting a connection to the BBS`()
         var request = testRequest("board")
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
@@ -74,6 +76,7 @@ class BulletinBoardAppTest: AppServiceTest() {
 
     @Test
     fun `test open the board and then a topic and list posts with a specified length`() {
+        `test starting a connection to the BBS`()
         var request = testRequest("board")
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
@@ -101,6 +104,7 @@ class BulletinBoardAppTest: AppServiceTest() {
 
     @Test
     fun `test open a topic and read a post that exists and one that does not exist`() {
+        `test starting a connection to the BBS`()
         var request = testRequest("board")
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
@@ -139,6 +143,39 @@ class BulletinBoardAppTest: AppServiceTest() {
         assertEquals("Post not found${stringUtils.EOL}" +
                 "board/1 This is topic 1> ", response.responseString())
 
+    }
+
+    @Test
+    fun `test help command shows help`() {
+        `test starting a connection to the BBS`()
+        var request = testRequest("board")
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Launching Bulletin Board${stringUtils.EOL}board> ", response.responseString())
+
+        request = testRequest("help")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("${stringUtils.EOL}help\t- Display this list of commands" +
+                                "${stringUtils.EOL}list\t- List the threads" +
+                                "${stringUtils.EOL}open\t- Open a thread" +
+                                "${stringUtils.EOL}post\t- Post a new thread" +
+                                "${stringUtils.EOL}back\t- Return to the main menu" +
+                                "${stringUtils.EOL}${stringUtils.EOL}board> ", response.responseString())
+    }
+
+    @Test
+    fun `test unknown command`() {
+        `test starting a connection to the BBS`()
+        var request = testRequest("board")
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Launching Bulletin Board${stringUtils.EOL}board> ", response.responseString())
+
+        request = testRequest("unknown")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("¯\\_(ツ)_/¯ type help for commands${stringUtils.EOL}board> ", response.responseString())
     }
 
 }
