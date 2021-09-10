@@ -126,8 +126,8 @@
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
                 <configuration>
-                    <destFile>${basedir}/coverage-reports/jacoco-unit.exec</destFile>
-                    <dataFile>${basedir}/coverage-reports/jacoco-unit.exec</dataFile>
+                    <destFile>${basedir}/target/coverage-reports/jacoco-unit.exec</destFile>
+                    <dataFile>${basedir}/target/coverage-reports/jacoco-unit.exec</dataFile>
                 </configuration>
                 <executions>
                     <execution>
@@ -142,7 +142,7 @@
                             <goal>report</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${basedir}/target/jacoco-report</outputDirectory>
+                            <outputDirectory>${basedir}/target/coverage-reports/site</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
