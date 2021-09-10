@@ -14,14 +14,21 @@ import pakcatt.application.bulletinboard.persistence.BulletinBoardThreadReposito
 class BulletinBoardAPI(var bulletinBoardThreadRepository: BulletinBoardThreadRepository,
                        var bulletinBoardPostRepository: BulletinBoardPostRepository) {
 
+    /**
+     * List all topics
+     */
     @GetMapping("/app/board/topic")
     fun getTopics(): List<BulletinBoardThread> {
         return bulletinBoardThreadRepository.findAll()
     }
 
-    @GetMapping("/app/board/topic/{id}")
-    fun getTopic(@PathVariable("id") id: Int): BulletinBoardThread {
-        val topic = bulletinBoardThreadRepository.findById(id)
+    /**
+     * Fetch a topic based on it's database id
+     * @param topicId the database id of the topic
+     */
+    @GetMapping("/app/board/topic/{topicId}")
+    fun getTopic(@PathVariable("topicId") topicId: Int): BulletinBoardThread {
+        val topic = bulletinBoardThreadRepository.findById(topicId)
         return if (topic.isPresent) {
             topic.get()
         } else {
@@ -29,16 +36,40 @@ class BulletinBoardAPI(var bulletinBoardThreadRepository: BulletinBoardThreadRep
         }
     }
 
-    @GetMapping("/app/board/topic/{id}/post")
-    fun getPosts(@PathVariable("id") id: Int): List<BulletinBoardPost> {
-        return bulletinBoardPostRepository.findByThreadNumber(id)
+    /**
+     * List the posts within a topic
+     * @param topicId database id of the topic
+     */
+    @GetMapping("/app/board/topic/{topicId}/post")
+    fun getPosts(@PathVariable("topicId") topicId: Int): List<BulletinBoardPost> {
+        return bulletinBoardPostRepository.findByThreadNumber(topicId)
     }
 
-    @GetMapping("/app/board/topic/{topicId}/post/{postId}")
-    fun getPost(@PathVariable("topicId") topicId: Int, @PathVariable("postId") postId: Int): BulletinBoardPost {
+    /**
+     * Returns a post within a topic.
+     * @param topicId The database ID of the topic
+     * @param postNumber the number, in order, of the post as it's listed under the topic
+     */
+    @GetMapping("/app/board/topic/{topicId}/post/{postNumber}")
+    fun getPostWithinTopicByOrder(@PathVariable("topicId") topicId: Int, @PathVariable("postNumber") postNumber: Int): BulletinBoardPost {
+
         val postList = bulletinBoardPostRepository.findByThreadNumber(topicId)
-        return if (postList.size > postId) {
-            postList[postId]
+        return if (postList.size > postNumber) {
+            postList[postNumber]
+        } else {
+            throw ResponseStatusException(HttpStatus.NOT_FOUND)
+        }
+    }
+
+    /**
+     * Returns a post based on the database ID of the post
+     * @param postId The database id of the post
+     */
+    @GetMapping("/app/board/post/{postId}")
+    fun getPostById(@PathVariable("postId") postId: Int): BulletinBoardPost {
+        val post = bulletinBoardPostRepository.findById(postId)
+        return if (post.isPresent) {
+            post.get()
         } else {
             throw ResponseStatusException(HttpStatus.NOT_FOUND)
         }
