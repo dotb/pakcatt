@@ -113,7 +113,7 @@ class BulletinBoardAppTest: AppServiceTest() {
                 "board/1 This is topic 1> ", response.responseString())
 
         // Read a post that exists
-        request = testRequest("read 0")
+        request = testRequest("open 0")
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${stringUtils.EOL}Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque" +
@@ -126,14 +126,14 @@ class BulletinBoardAppTest: AppServiceTest() {
                 "${stringUtils.EOL}board/1 This is topic 1> ", response.responseString())
 
         // We should be able to read the last post
-        request = testRequest("read 2")
+        request = testRequest("open 2")
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${stringUtils.EOL}Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium, totam rem aperiam, eaque ipsa quae ab illo inventore veritatis et quasi architecto beatae vitae dicta sunt explicabo. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt. Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit, sed quia non numquam eius modi tempora incidunt ut labore et dolore magnam aliquam quaerat voluptatem." +
                 "${stringUtils.EOL}board/1 This is topic 1> ", response.responseString())
 
         // Try read a post that does not exist
-        request = testRequest("read 3")
+        request = testRequest("open 3")
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("Post not found${stringUtils.EOL}" +

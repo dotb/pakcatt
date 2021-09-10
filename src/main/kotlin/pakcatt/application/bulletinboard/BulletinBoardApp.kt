@@ -22,7 +22,7 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
         registerCommand(Command("list") .function { listThreads() }  .description("List the threads"))
         registerCommand(Command("open") .function { openThread(it) }   .description("Open a thread"))
         registerCommand(Command("post") .function { postNewThread(it) }   .description("Post a new thread"))
-        registerCommand(Command("quit") .reply("Bye").openApp(NavigateBack(1)).description("Return to the main menu"))
+        registerCommand(Command("back") .reply("Bye").openApp(NavigateBack(1)).description("Return to the main menu"))
     }
 
     override fun returnCommandPrompt(): String {

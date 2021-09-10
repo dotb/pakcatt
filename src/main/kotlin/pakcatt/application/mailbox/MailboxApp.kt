@@ -16,9 +16,9 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     init {
         registerCommand(Command("list") .function { listMessages(it) }  .description("List the messages available to you"))
         registerCommand(Command("send") .function { sendMessage(it) }   .description("Send a message, passing the destination callsign as an argument"))
-        registerCommand(Command("read") .function { readMessage(it) }   .description("Read a single message, passing the message number as an argument"))
+        registerCommand(Command("open") .function { readMessage(it) }   .description("Read a single message, passing the message number as an argument"))
         registerCommand(Command("del")  .function { deleteMessage(it) } .description("Delete a message, passing the message number as an argument"))
-        registerCommand(Command("quit") .reply("Bye").openApp(NavigateBack(1)).description("Leave the mail app and return to the main menu"))
+        registerCommand(Command("back") .reply("Bye").openApp(NavigateBack(1)).description("Leave the mail app and return to the main menu"))
     }
 
     override fun returnCommandPrompt(): String {

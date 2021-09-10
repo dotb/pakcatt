@@ -14,7 +14,7 @@ class MentionFilterTest: AppServiceTest() {
         request = testRequest("open 1")
         appService.getResponseForReceivedMessage(request)
 
-        request = testRequest("read 0")
+        request = testRequest("open 0")
         val response = appService.getResponseForReceivedMessage(request)
 
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)

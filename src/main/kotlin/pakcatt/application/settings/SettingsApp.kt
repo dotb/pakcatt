@@ -11,7 +11,7 @@ class SettingsApp: SubApp() {
 
     init {
         registerCommand(Command("list") .function { listSettings(it) }  .description("List settings"))
-        registerCommand(Command("quit") .reply("Bye").openApp(NavigateBack(1)).description("Return to the main menu"))
+        registerCommand(Command("back") .reply("Bye").openApp(NavigateBack(1)).description("Return to the main menu"))
     }
 
     override fun returnCommandPrompt(): String {

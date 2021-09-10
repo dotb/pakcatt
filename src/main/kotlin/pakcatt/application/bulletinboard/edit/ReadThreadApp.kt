@@ -20,7 +20,7 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
 
     init {
         registerCommand(Command("list") .function { listPosts(it) }  .description("list [number of posts] - List posts specifying an optional length"))
-        registerCommand(Command("read") .function { readPost(it) }   .description("Read a post."))
+        registerCommand(Command("open") .function { readPost(it) }   .description("Read a post."))
         registerCommand(Command("post") .function { newPost(it) }   .description("Add a post"))
         registerCommand(Command("back") .reply("") .openApp(NavigateBack(1)).description("Return to the list of topics"))
     }
