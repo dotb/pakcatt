@@ -40,7 +40,7 @@ abstract class SubApp {
                     return command.execute(request)
                 }
             }
-            return AppResponse.sendText("¯\\_(ツ)_/¯ type help for commands")
+            return AppResponse.sendText("Say what? Type help for, help")
         }
     }
 

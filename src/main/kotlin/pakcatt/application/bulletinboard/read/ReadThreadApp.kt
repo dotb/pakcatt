@@ -1,5 +1,6 @@
-package pakcatt.application.bulletinboard.edit
+package pakcatt.application.bulletinboard.read
 
+import pakcatt.application.bulletinboard.edit.AddPostApp
 import pakcatt.application.bulletinboard.persistence.BulletinBoardPost
 import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
 import pakcatt.application.bulletinboard.persistence.BulletinBoardThread
@@ -9,7 +10,6 @@ import pakcatt.application.shared.FORMAT
 import pakcatt.application.shared.command.Command
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
-import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 
 class ReadThreadApp(private val parentThread: BulletinBoardThread,
@@ -20,7 +20,7 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
 
     init {
         registerCommand(Command("list") .function { listPosts(it) }  .description("list [number of posts] - List posts specifying an optional length"))
-        registerCommand(Command("open") .function { readPost(it) }   .description("Read a post."))
+        registerCommand(Command("open") .function { readPost(it) }   .description("Read a post"))
         registerCommand(Command("post") .function { newPost(it) }   .description("Add a post"))
         registerCommand(Command("back") .reply("") .openApp(NavigateBack(1)).description("Return to the list of topics"))
     }

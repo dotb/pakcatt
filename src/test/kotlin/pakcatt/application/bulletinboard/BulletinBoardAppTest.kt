@@ -175,7 +175,7 @@ class BulletinBoardAppTest: AppServiceTest() {
         request = testRequest("unknown")
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
-        assertEquals("¯\\_(ツ)_/¯ type help for commands${stringUtils.EOL}board> ", response.responseString())
+        assertEquals("Say what? Type help for, help${stringUtils.EOL}board> ", response.responseString())
     }
 
 }

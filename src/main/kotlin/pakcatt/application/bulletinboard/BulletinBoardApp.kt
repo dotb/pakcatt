@@ -1,7 +1,7 @@
 package pakcatt.application.bulletinboard
 
 import pakcatt.application.bulletinboard.edit.AddThreadApp
-import pakcatt.application.bulletinboard.edit.ReadThreadApp
+import pakcatt.application.bulletinboard.read.ReadThreadApp
 import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
 import pakcatt.application.bulletinboard.persistence.BulletinBoardThread
 import pakcatt.application.shared.FORMAT
@@ -10,7 +10,6 @@ import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.command.Command
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
-import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 
 class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
