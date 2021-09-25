@@ -8,7 +8,7 @@ class MainMenuAppTest: AppServiceTest() {
 
     @Test
     fun `test unknown command`() {
-        `test starting a connection to the BBS`()
+        `test starting a connection to the BBS with messages`()
         val request = testRequest("unknown")
         val response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
@@ -19,7 +19,7 @@ class MainMenuAppTest: AppServiceTest() {
 
     @Test
     fun `test help command`() {
-        `test starting a connection to the BBS`()
+        `test starting a connection to the BBS with messages`()
         var request = testRequest("help")
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)

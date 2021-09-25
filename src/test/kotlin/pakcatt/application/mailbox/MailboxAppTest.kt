@@ -3,13 +3,12 @@ package pakcatt.application.mailbox
 import org.junit.Test
 import pakcatt.application.shared.AppServiceTest
 import pakcatt.application.shared.model.ResponseType
-import pakcatt.util.StringUtils
 
 class MailboxAppTest: AppServiceTest() {
 
     @Test
     fun `test open mailbox and list messages`() {
-        `test starting a connection to the BBS`()
+        `test starting a connection to the BBS with messages`()
         var request = testRequest()
         request.message = "mail"
 

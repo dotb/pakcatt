@@ -19,8 +19,10 @@ import pakcatt.util.StringUtils
 
 open class AppServiceTest: TestCase() {
 
+    protected val mockedMailMessageRepository = MockedMailMessageRepository()
+
     protected val mainMenuApp = MainMenuApp("PAKCATT",
-                                    MailboxStore(MockedMailMessageRepository()),
+                                    MailboxStore(mockedMailMessageRepository),
                                     BulletinBoardStore(MockedBulletinBoardThreadRepository(), MockedBulletinBoardPostRepository()),
                                     LastEntryStore(MockedLastEntryRepository()),
                                     "Welcome",
@@ -37,12 +39,33 @@ open class AppServiceTest: TestCase() {
     protected val resetFormat = "${escapeChar}[0m"
 
     @Test
-    fun `test starting a connection to the BBS`() {
+    fun `test starting a connection to the BBS with messages`() {
+        mockedMailMessageRepository.messageCount = 3
         val request = testRequest()
 
         val response = appService.getDecisionOnConnectionRequest(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("Welcome${stringUtils.EOL}You have 2 unread messages.${stringUtils.EOL}${stringUtils.EOL}menu> ", response.responseString())
+    }
+
+    @Test
+    fun `test starting a connection to the BBS with no messages`() {
+        mockedMailMessageRepository.messageCount = 0
+        val request = testRequest()
+
+        val response = appService.getDecisionOnConnectionRequest(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Welcome${stringUtils.EOL}${stringUtils.EOL}menu> ", response.responseString())
+    }
+
+    @Test
+    fun `test starting a connection to the BBS with one messages`() {
+        mockedMailMessageRepository.messageCount = 1
+        val request = testRequest()
+
+        val response = appService.getDecisionOnConnectionRequest(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Welcome${stringUtils.EOL}You have an unread message.${stringUtils.EOL}${stringUtils.EOL}menu> ", response.responseString())
     }
 
     protected fun testRequest(command: String = ""): AppRequest {
