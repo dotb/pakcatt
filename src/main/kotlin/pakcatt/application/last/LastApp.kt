@@ -37,8 +37,8 @@ class LastApp(private val lastEntryStore: LastEntryStore): RootApp() {
     fun lastEntryFor(callsign: String): String {
         val formattedCallsign = stringUtils.formatCallsignRemoveSSID(callsign)
         return when (val lastEntry = lastEntryStore.getLastEntry(formattedCallsign)) {
-            null -> "Haven't seen $formattedCallsign"
-            else -> "Last seen ${lastEntry.callsign} ${dateFormatter.format(lastEntry.lastSeen)}"
+            null -> "Haven't seen $formattedCallsign${stringUtils.EOL}"
+            else -> "Last seen ${lastEntry.callsign} ${dateFormatter.format(lastEntry.lastSeen)}${stringUtils.EOL}"
         }
     }
 

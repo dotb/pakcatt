@@ -28,7 +28,7 @@ class LastEntryStore(private val lastEntryRepository: LastEntryRepository) {
     }
 
     fun getLastEntries(): List<LastEntry> {
-        return lastEntryRepository.findAll()
+        return lastEntryRepository.findAll().sortedBy { it.lastSeen }
     }
 
 }

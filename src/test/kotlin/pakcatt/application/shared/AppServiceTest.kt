@@ -20,11 +20,12 @@ import pakcatt.util.StringUtils
 open class AppServiceTest: TestCase() {
 
     protected val mockedMailMessageRepository = MockedMailMessageRepository()
+    protected val mockedLastEntryRepository = MockedLastEntryRepository()
 
     protected val mainMenuApp = MainMenuApp("PAKCATT",
                                     MailboxStore(mockedMailMessageRepository),
                                     BulletinBoardStore(MockedBulletinBoardThreadRepository(), MockedBulletinBoardPostRepository()),
-                                    LastEntryStore(MockedLastEntryRepository()),
+                                    LastEntryStore(mockedLastEntryRepository),
                                     "Welcome",
                                     20,
                                     80,
