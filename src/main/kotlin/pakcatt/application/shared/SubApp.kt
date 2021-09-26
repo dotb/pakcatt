@@ -32,7 +32,7 @@ abstract class SubApp {
             // An empty request should return only the prompt / new line
             return AppResponse.sendText("")
         } else {
-            // Find a command that handles the command sent to us
+            // Find a command that handles the request sent to us
             for (command in commands) {
                 if (command.commandText() == commandText
                     || (command.shortCutText().isNotEmpty() && command.shortCutText() == commandText)

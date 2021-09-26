@@ -14,7 +14,7 @@ import java.text.SimpleDateFormat
 class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
     init {
-        registerCommand(Command("list") .function { listMessages(it) }  .description("List the messages available to you"))
+        registerCommand(Command("list") .function { listMessages(it) }  .description("List all messages or list unread to only see your unread messages"))
         registerCommand(Command("send") .function { sendMessage(it) }   .description("Send a message, passing the destination callsign as an argument"))
         registerCommand(Command("open") .function { readMessage(it) }   .description("Read a single message, passing the message number as an argument"))
         registerCommand(Command("del")  .function { deleteMessage(it) } .description("Delete a message, passing the message number as an argument"))
@@ -35,7 +35,9 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun listMessages(request: AppRequest): AppResponse {
-        val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign)
+        val arg = parseStringArgument(request.message, "")
+        val onlyNew = arg == "unread"
+        val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign, onlyNew)
         val listResponse = StringBuilder()
         val messageCount = userMessages.size
 

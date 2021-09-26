@@ -9,8 +9,12 @@ class MailboxStore(val mailMessageRepository: MailMessageRepository) {
 
     private var stringUtils = StringUtils()
 
-    fun messageListForCallsign(userCallsign: String): List<MailMessage> {
-        return filteredMessages(userCallsign)
+    fun messageListForCallsign(userCallsign: String, onlyNew: Boolean): List<MailMessage> {
+        val messagesForThisUser = filteredMessages(userCallsign)
+        return when (onlyNew) {
+            true -> messagesForThisUser.filter { !it.isRead }
+            false -> messagesForThisUser
+        }
     }
 
     fun storeMessage(message: MailMessage) {
