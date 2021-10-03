@@ -177,4 +177,24 @@ class BulletinBoardAppTest: AppServiceTest() {
         assertEquals("Say what? Type help for, help${stringUtils.EOL}board> ", response.responseString())
     }
 
+    @Test
+    fun `test synonyms for exiting a context`() {
+        `test starting a connection to the BBS with messages`()
+        var request = testRequest("board")
+        var response = appService.getResponseForReceivedMessage(request)
+
+        request = testRequest("exit")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Bye${stringUtils.EOL}menu> ", response.responseString())
+
+
+        request = testRequest("board")
+        response = appService.getResponseForReceivedMessage(request)
+        request = testRequest("quit")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Bye${stringUtils.EOL}menu> ", response.responseString())
+    }
+
 }
