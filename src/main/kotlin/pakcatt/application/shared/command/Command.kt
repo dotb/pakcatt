@@ -7,7 +7,7 @@ import pakcatt.application.shared.model.ResponseType
 
 data class Command(private val fullCommand: String,
                    private var description: String? = null,
-                   private var shortCut: String? = null,
+                   private var shortCuts: ArrayList<String> = arrayListOf(),
                    private var response: ResponseType = ResponseType.IGNORE,
                    private var message: String? = null,
                    private var nextApp: SubApp? = null,
@@ -18,8 +18,13 @@ data class Command(private val fullCommand: String,
         return this
     }
 
-    fun shortCut(shortCut: String): Command {
-        this.shortCut = shortCut
+    fun shortCuts(shortCuts: List<String>): Command {
+        this.shortCuts.addAll(shortCuts)
+        return this
+    }
+
+    fun addShortCut(shortCut: String): Command {
+        this.shortCuts.add(shortCut)
         return this
     }
 
@@ -52,11 +57,8 @@ data class Command(private val fullCommand: String,
         return fullCommand.toLowerCase()
     }
 
-    fun shortCutText(): String {
-        return when (val myShortCutText = shortCut) {
-            null -> ""
-            else -> myShortCutText.toLowerCase()
-        }
+    fun shortCutText(): List<String> {
+        return shortCuts
     }
 
     fun descriptionText(): String? {

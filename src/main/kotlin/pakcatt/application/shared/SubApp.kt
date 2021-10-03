@@ -16,28 +16,28 @@ abstract class SubApp {
     protected val tabSpace = "\t"
     protected val beepChar = 7.toChar()
 
-    private val commands = mutableListOf(Command("help") .function { helpResponse() }  .description("Display this list of commands"))
+    private val allRegisteredCommands = mutableListOf(Command("help") .function { helpResponse() }  .description("Display this list of commands"))
 
     abstract fun returnCommandPrompt(): String
 
     abstract fun handleReceivedMessage(request: AppRequest): AppResponse
 
     fun registerCommand(command: Command) {
-        commands.add(command)
+        allRegisteredCommands.add(command)
     }
 
     fun handleRequestWithRegisteredCommand(request: AppRequest): AppResponse {
-        val commandText = parseCommand(request.message)
-        if (commandText.isEmpty()) {
+        val userCommandInput = parseCommand(request.message)
+        if (userCommandInput.isEmpty()) {
             // An empty request should return only the prompt / new line
             return AppResponse.sendText("")
         } else {
             // Find a command that handles the request sent to us
-            for (command in commands) {
-                if (command.commandText() == commandText
-                    || (command.shortCutText().isNotEmpty() && command.shortCutText() == commandText)
+            for (registeredCommand in allRegisteredCommands) {
+                if (registeredCommand.commandText() == userCommandInput
+                    || (registeredCommand.shortCutText().contains(userCommandInput))
                 ) {
-                    return command.execute(request)
+                    return registeredCommand.execute(request)
                 }
             }
             return AppResponse.sendText("Say what? Type help for, help")
@@ -84,7 +84,7 @@ abstract class SubApp {
     private fun helpResponse(): AppResponse {
         val stringBuilder = StringBuilder()
         stringBuilder.append(stringUtils.EOL)
-        for (command in commands) {
+        for (command in allRegisteredCommands) {
             val myDescription = command.descriptionText()
             if (null != myDescription) {
                 stringBuilder.append(command.commandText())
