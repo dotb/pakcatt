@@ -188,6 +188,9 @@ class BulletinBoardAppTest: AppServiceTest() {
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("Bye${stringUtils.EOL}menu> ", response.responseString())
 
+
+        request = testRequest("board")
+        response = appService.getResponseForReceivedMessage(request)
         request = testRequest("quit")
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
