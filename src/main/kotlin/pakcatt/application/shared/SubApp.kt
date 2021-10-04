@@ -64,16 +64,17 @@ abstract class SubApp {
         }
     }
 
-    protected fun parseStringArgument(inputLine: String, defaultArgument: String): String {
-        val stringTokens = inputLine.split(" ")
-        return when (stringTokens.size) {
-            2 -> stringUtils.removeEOLChars(stringTokens[1]).toLowerCase()
-            else -> defaultArgument.toLowerCase()
+    protected fun parseArgument(inputLine: String, defaultArgument: String): List<String> {
+        val tokenList = inputLine.split(" ")
+        return if (tokenList.isEmpty()) {
+             listOf(defaultArgument.toLowerCase())
+        } else {
+            tokenList
         }
     }
 
     protected fun parseIntArgument(inputLine: String): Int? {
-        val stringArg = parseStringArgument(inputLine, "")
+        val stringArg = parseArgument(inputLine, "").first()
         return try {
             stringArg.toInt()
         } catch (e: NumberFormatException) {
