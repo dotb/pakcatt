@@ -1,5 +1,6 @@
 package pakcatt.application.settings.persistence
 
+import org.apache.catalina.User
 import org.springframework.stereotype.Component
 import pakcatt.application.last.persistence.LastEntry
 import pakcatt.application.last.persistence.LastEntryRepository
@@ -15,5 +16,9 @@ class SettingStore(private val settingsRepository: SettingsRepository) {
         } else {
             settingsRepository.save(newSetting)
         }
+    }
+
+    fun getSettingsForUser(callSign: String): List<UserSetting> {
+        return settingsRepository.findBySettingOwner(callSign)
     }
 }

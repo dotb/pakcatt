@@ -35,7 +35,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun listMessages(request: AppRequest): AppResponse {
-        val arg = parseStringArgument(request.message, "")
+        val arg = parseArgument(request.message, "").first()
         val onlyNew = arg == "unread"
         val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign, onlyNew)
         val listResponse = StringBuilder()
@@ -90,7 +90,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun sendMessage(request: AppRequest): AppResponse {
-        val arg = parseStringArgument(request.message, "")
+        val arg = parseArgument(request.message, "").first()
         val fromCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         val toCallsign = stringUtils.formatCallsignRemoveSSID(arg)
         return AppResponse.sendText("", EditSubjectApp(MailMessage(fromCallsign, toCallsign), mailboxStore))

@@ -15,12 +15,16 @@ import pakcatt.application.shared.model.ResponseType
 import pakcatt.application.filter.EOLInputFilter
 import pakcatt.application.filter.EOLOutputFilter
 import pakcatt.application.filter.MentionOutputFilter
+import pakcatt.application.settings.persistence.MockedSettingStoreRepository
+import pakcatt.application.settings.persistence.SettingStore
 import pakcatt.util.StringUtils
 
 open class AppServiceTest: TestCase() {
 
     protected val mockedMailMessageRepository = MockedMailMessageRepository()
     protected val mockedLastEntryRepository = MockedLastEntryRepository()
+    protected val mockedSettingStoreRepository = MockedSettingStoreRepository()
+
 
     protected val mainMenuApp = MainMenuApp("PAKCATT",
                                     MailboxStore(mockedMailMessageRepository),
@@ -29,7 +33,8 @@ open class AppServiceTest: TestCase() {
                                     "Welcome",
                                     20,
                                     80,
-                                    2)
+                                    2,
+                                     SettingStore(mockedSettingStoreRepository))
 
     protected val stringUtils = StringUtils()
     protected val appService = AppService(listOf(mainMenuApp),

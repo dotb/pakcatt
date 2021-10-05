@@ -7,4 +7,5 @@ import pakcatt.application.mailbox.persistence.MailMessage
 @Service
 interface SettingsRepository: MongoRepository<UserSetting, Int> {
     fun findBySettingOwnerAndKey(settingOwner: String, key: String): List<UserSetting>
+    fun findBySettingOwner(settingOwner: String): List<UserSetting>
 }

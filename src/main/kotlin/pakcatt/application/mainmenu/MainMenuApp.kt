@@ -10,6 +10,7 @@ import pakcatt.application.last.persistence.LastEntryStore
 import pakcatt.application.mailbox.MailboxApp
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.settings.SettingsApp
+import pakcatt.application.settings.persistence.SettingStore
 import pakcatt.application.shared.COLOUR
 import pakcatt.application.shared.FORMAT
 import pakcatt.application.shared.model.AppRequest
@@ -30,7 +31,8 @@ class MainMenuApp(private val myCall: String,
                   private val welcomeMessage: String,
                   boardPromptTopicLength: Int,
                   boardSummaryLength: Int,
-                  boardPostListLength: Int): RootApp() {
+                  boardPostListLength: Int,
+                  settingsStore: SettingStore): RootApp() {
 
     private val lastApp = LastApp(lastEntryStore)
 
@@ -56,7 +58,7 @@ class MainMenuApp(private val myCall: String,
         registerCommand(Command("styles").function { allTheStyles() }.description("Test the styles supported by your terminal"))
         registerCommand(Command("nop")  .ackOnly().description("I'll do nothing, just acknowledge your request"))
         registerCommand(Command("ignore").ignore().description("I'll receive your command but won't acknowledge it"))
-        registerCommand(Command("settings").reply("Launching Settings") .openApp(SettingsApp()).description("View your environment settings"))
+        registerCommand(Command("settings").reply("Launching Settings") .openApp(SettingsApp(settingsStore)).description("View your environment settings"))
     }
 
     override fun returnCommandPrompt(): String {
