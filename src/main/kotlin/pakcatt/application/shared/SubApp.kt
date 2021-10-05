@@ -34,8 +34,8 @@ abstract class SubApp {
         } else {
             // Find a command that handles the request sent to us
             for (registeredCommand in allRegisteredCommands) {
-                if (registeredCommand.commandText() == userCommandInput
-                    || (registeredCommand.shortCutText().contains(userCommandInput))
+                if (registeredCommand.commandText() == userCommandInput.split(" ").first()
+                    || (registeredCommand.shortCutText().contains(userCommandInput.split(" ").first()))
                 ) {
                     return registeredCommand.execute(request)
                 }
