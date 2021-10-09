@@ -10,6 +10,7 @@ class SettingsAppTest: AppServiceTest() {
     @Test
     fun `test get settings`() {
         `test starting a connection to the BBS with messages`()
+        mockedSettingStoreRepository.setSingleValueInDatabase()
         var request = testRequest("settings")
         var response = appService.getResponseForReceivedMessage(request)
 
@@ -25,15 +26,16 @@ class SettingsAppTest: AppServiceTest() {
     @Test
     fun `test set settings and reading back`() {
         `test starting a connection to the BBS with messages`()
+        mockedSettingStoreRepository.resetInMemoryDatabase()
         var request = testRequest("settings")
         var response = appService.getResponseForReceivedMessage(request)
 
-        request = testRequest("set EOL CRLF")
+        request = testRequest("set EOL LF")
         response = appService.getResponseForReceivedMessage(request)
 
         TestCase.assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         TestCase.assertEquals(
-                "Settings saved" +
+                "Setting saved" +
                 "${stringUtils.EOL}" +
                 "settings> ", response.responseString())
 

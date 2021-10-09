@@ -6,18 +6,33 @@ import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.repository.MongoRepository
 import java.util.*
+import kotlin.collections.ArrayList
 
 class MockedSettingStoreRepository: SettingsRepository {
+    private var inMemorySettingsDB: ArrayList<UserSetting> = ArrayList<UserSetting>()
+
+    fun resetInMemoryDatabase() {
+        inMemorySettingsDB = ArrayList<UserSetting>()
+    }
+
+    fun setSingleValueInDatabase() {
+        resetInMemoryDatabase()
+        inMemorySettingsDB.add(UserSetting("EOL", "CRLF", emptyList(), true, "VK3LIT"))
+    }
+
     override fun findBySettingOwnerAndKey(settingOwner: String, key: String): List<UserSetting> {
-        return listOf(UserSetting("EOL", "CRLF", emptyList(), true, "VK3LIT"))
+        return inMemorySettingsDB
     }
 
     override fun findBySettingOwner(settingOwner: String): List<UserSetting> {
-        return listOf(UserSetting("EOL", "CRLF", emptyList(), true, "VK3LIT"))
+        return inMemorySettingsDB
     }
 
     override fun <S : UserSetting?> save(p0: S): S {
-        TODO("Not yet implemented")
+        if (null != p0) {
+            inMemorySettingsDB.add(p0)
+        }
+        return p0
     }
 
     override fun <S : UserSetting?> saveAll(p0: MutableIterable<S>): MutableList<S> {
