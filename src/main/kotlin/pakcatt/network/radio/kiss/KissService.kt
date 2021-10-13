@@ -48,7 +48,7 @@ class KissService(val tncConnection: TNC,
 
     /**
      * This method is called when the PakCatt service is started, and
-     * can send a broadcase to announce it's on frequency, if configured.
+     * can send a broadcast message to announce it's on frequency, if configured.
      */
     private fun onStartup() {
         if (sendStartupShutdownMessage) {
