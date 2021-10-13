@@ -64,17 +64,35 @@ abstract class SubApp {
         }
     }
 
-    protected fun parseArgument(inputLine: String, defaultArgument: String): List<String> {
-        val tokenList = inputLine.split(" ")
-        return if (tokenList.isEmpty()) {
-             listOf(defaultArgument.toLowerCase())
+    /**
+     * Takes in an input string and returns any list of arguments that appear
+     * as single words after the first word, which is assumed to be the command.
+     * @param inputLine the intput string from the user
+     * @param defaultArgument a default argument to return if none are present in the input string
+     * @return List<String> of arguments after the command word
+     */
+    protected fun parseStringArguments(inputLine: String, defaultArgument: String): List<String> {
+        val chompedInputLine = stringUtils.removeEOLChars(inputLine).toLowerCase()
+        val stringTokens = chompedInputLine.split(" ")
+        return if (stringTokens.size >= 2) {
+            stringTokens.subList(1, stringTokens.size)
         } else {
-            tokenList
+            listOf(defaultArgument.toLowerCase())
         }
     }
 
+    /**
+     * Takes an input string and is only interested in a single argument
+     * @param inputLine the intput string from the user
+     * @param defaultArgument a default argument to return if none are present in the input string
+     * @return A single String arguments after the command word
+     */
+    protected fun parseStringArgument(inputLine: String, defaultArgument: String): String {
+        return parseStringArguments(inputLine, defaultArgument).first()
+    }
+
     protected fun parseIntArgument(inputLine: String): Int? {
-        val stringArg = parseArgument(inputLine, "").first()
+        val stringArg = parseStringArgument(inputLine, "")
         return try {
             stringArg.toInt()
         } catch (e: NumberFormatException) {

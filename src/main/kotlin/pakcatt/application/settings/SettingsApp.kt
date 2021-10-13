@@ -8,7 +8,6 @@ import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.command.Command
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
-import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 
 class SettingsApp(val settingStore: SettingStore): SubApp() {
@@ -62,8 +61,8 @@ class SettingsApp(val settingStore: SettingStore): SubApp() {
         // To be implemented
 
         // Get key and value to be set
-        val settingName = parseArgument(request.message, "")[1]
-        val settingValue = parseArgument(request.message, "")[2]
+        val settingName = parseStringArguments(request.message, "")[1]
+        val settingValue = parseStringArguments(request.message, "")[2]
 
         // Put these in the database
         val callSign = request.remoteCallsign

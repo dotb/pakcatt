@@ -7,9 +7,7 @@ import pakcatt.application.shared.*
 import pakcatt.application.shared.command.Command
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
-import pakcatt.util.StringUtils
 import java.lang.StringBuilder
-import java.text.SimpleDateFormat
 
 class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
@@ -35,7 +33,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun listMessages(request: AppRequest): AppResponse {
-        val arg = parseArgument(request.message, "").first()
+        val arg = parseStringArgument(request.message, "")
         val onlyNew = arg == "unread"
         val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign, onlyNew)
         val listResponse = StringBuilder()
@@ -90,7 +88,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun sendMessage(request: AppRequest): AppResponse {
-        val arg = parseArgument(request.message, "").first()
+        val arg = parseStringArgument(request.message, "")
         val fromCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         val toCallsign = stringUtils.formatCallsignRemoveSSID(arg)
         return AppResponse.sendText("", EditSubjectApp(MailMessage(fromCallsign, toCallsign), mailboxStore))

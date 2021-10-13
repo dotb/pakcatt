@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component
 import pakcatt.application.bulletinboard.BulletinBoardApp
 import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
 import pakcatt.application.last.LastApp
-import pakcatt.application.last.persistence.LastEntryRepository
 import pakcatt.application.last.persistence.LastEntryStore
 import pakcatt.application.mailbox.MailboxApp
 import pakcatt.application.mailbox.persistence.MailboxStore
@@ -18,7 +17,6 @@ import pakcatt.application.shared.RootApp
 import pakcatt.application.shared.command.Command
 import pakcatt.application.tell.TellApp
 import pakcatt.application.shared.model.AppResponse
-import pakcatt.util.StringUtils
 import java.lang.StringBuilder
 import kotlin.math.sqrt
 
@@ -92,7 +90,7 @@ class MainMenuApp(private val myCall: String,
     }
 
     private fun handleTell(request: AppRequest): AppResponse {
-        val destinationCallsign = parseArgument(request.message, "").first()
+        val destinationCallsign = parseStringArgument(request.message, "")
         return if (destinationCallsign.isNotBlank()) {
             AppResponse.sendText("", TellApp(destinationCallsign, myCall, request.remoteCallsign))
         } else {
@@ -101,13 +99,13 @@ class MainMenuApp(private val myCall: String,
     }
 
     private fun handleSQRT(request: AppRequest): AppResponse {
-        val arg = parseArgument(request.message, "0").first()
+        val arg = parseStringArgument(request.message, "0")
         val result = sqrt(arg.toDouble()).toString()
         return AppResponse.sendText("Square root of $arg is $result")
     }
 
     private fun handleLast(request: AppRequest): AppResponse {
-        return when (val arg = parseArgument(request.message, "").first()) {
+        return when (val arg = parseStringArgument(request.message, "")) {
             "" -> AppResponse.sendText(lastApp.lastEntries())
             else -> AppResponse.sendText(lastApp.lastEntryFor(arg))
         }
