@@ -51,9 +51,11 @@ class APRSMicEDataHandler(myCall: String,
                           stringUtils.formatCallsignRemoveSSID(micEDataFrame.sourceCallsign()),
                           micEDataFrame.destCallsign(),
                           micEDataFrame.statusText(),
+                          false,
                           micEDataFrame.repeaterCallsignOne(),
                           micEDataFrame.repeaterCallsignTwo(),
-                          remoteStationCanReceiveResponse, location)
+                          remoteStationCanReceiveResponse,
+                          location)
     }
 
 }

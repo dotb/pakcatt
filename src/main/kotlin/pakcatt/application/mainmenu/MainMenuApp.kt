@@ -106,8 +106,8 @@ class MainMenuApp(private val myCall: String,
 
     private fun handleLast(request: AppRequest): AppResponse {
         return when (val arg = parseStringArgument(request.message, "")) {
-            "" -> AppResponse.sendText(lastApp.lastEntries())
-            else -> AppResponse.sendText(lastApp.lastEntryFor(arg))
+            "" -> AppResponse.sendText(lastApp.lastEntries(request))
+            else -> AppResponse.sendText(lastApp.lastEntryFor(request, arg))
         }
     }
 

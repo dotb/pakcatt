@@ -69,8 +69,8 @@ open class AppServiceTest: TestCase() {
         assertEquals("Welcome${stringUtils.EOL}You have an unread message.${stringUtils.EOL}${stringUtils.EOL}menu> ", response.responseString())
     }
 
-    protected fun testRequest(command: String = ""): AppRequest {
-        return AppRequest("VK3LIT-1", "VK3LIT", "PAKCATT", command, "", "", true)
+    protected fun testRequest(command: String = "", channelIsSynchronous: Boolean = true): AppRequest {
+        return AppRequest("VK3LIT-1", "VK3LIT", "PAKCATT", command, channelIsSynchronous, "", "", true)
     }
 
 }

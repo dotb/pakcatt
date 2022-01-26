@@ -30,7 +30,7 @@ class AppService(private val rootApplications: List<RootApp>,
         prepareRequest(request)
         // Find an app who is willing to connect
         val response = findAppWillingToAcceptConnection(request)
-        prepareResponse(response, request.userContext)
+        prepareResponse(request, response)
         return response
     }
 
@@ -39,7 +39,7 @@ class AppService(private val rootApplications: List<RootApp>,
         prepareRequest(request)
         // Get the interaction response from the app
         val response = getResponseFromApplication(request)
-        prepareResponse(response, request.userContext)
+        prepareResponse(request, response)
         return response
     }
 
@@ -54,13 +54,13 @@ class AppService(private val rootApplications: List<RootApp>,
         // Get the interaction response from the app
     }
 
-    private fun prepareResponse(response: AppResponse, userContext: UserContext?) {
+    private fun prepareResponse(request: AppRequest, response: AppResponse) {
         // Update any focus state in the user context if required, returned by the selected app.
-        updateAppFocus(response.nextApp(), userContext)
+        updateAppFocus(response.nextApp(), request.userContext)
         // Return any response with an included command prompt string
-        addPromptToResponse(userContext?.engagedApplication(), response)
+        addPromptToResponse(request, response)
         // Clean and customise the response before sending it to the remote party
-        filterResponseOnOutput(response, userContext)
+        filterResponseOnOutput(response, request.userContext)
     }
 
     private fun findAppWillingToAcceptConnection(request: AppRequest): AppResponse {
@@ -143,13 +143,16 @@ class AppService(private val rootApplications: List<RootApp>,
     }
 
     // Rewrite the prompt string into the textual response
-    private fun addPromptToResponse(app: SubApp?, response: AppResponse) {
-        val message = response.responseString()
-
-        when (val prompt = app?.returnCommandPrompt()) {
-            "" -> response.updateResponseString("$message${stringUtils.EOL}")
-            null -> response.updateResponseString("$message${stringUtils.EOL}")
-            else -> response.updateResponseString("$message${stringUtils.EOL}$prompt ")
+    private fun addPromptToResponse(request: AppRequest, response: AppResponse) {
+        // Only add a prompt to synchronous conversations
+        if (request.channelIsSynchronous) {
+            val message = response.responseString()
+            val currentUserEngagedApp = request.userContext?.engagedApplication()
+            when (val prompt = currentUserEngagedApp?.returnCommandPrompt()) {
+                "" -> response.updateResponseString("$message${stringUtils.EOL}")
+                null -> response.updateResponseString("$message${stringUtils.EOL}")
+                else -> response.updateResponseString("$message${stringUtils.EOL}$prompt ")
+            }
         }
     }
 

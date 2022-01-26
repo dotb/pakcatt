@@ -143,7 +143,8 @@ class ConnectionHandler(private val remoteCallsign: String,
             val  appResponse = linkInterface.getResponseForReceivedMessage(AppRequest(incomingFrame.sourceCallsign(),
                                                                             stringUtils.formatCallsignRemoveSSID(incomingFrame.sourceCallsign()),
                                                                             incomingFrame.destCallsign(),
-                                                                            incomingFrame.payloadDataString()))
+                                                                            incomingFrame.payloadDataString(),
+                                                                            true))
             when (appResponse.responseType) {
                 ResponseType.ACK_WITH_TEXT -> queueMessageForDelivery(ControlField.INFORMATION_8, appResponse.responseString())
                 ResponseType.ACK_ONLY -> sendAcknowlegeAndReadyForReceive()
@@ -159,7 +160,8 @@ class ConnectionHandler(private val remoteCallsign: String,
         val appResponse = linkInterface.getDecisionOnConnectionRequest(AppRequest(incomingFrame.sourceCallsign(),
                                                                         stringUtils.formatCallsignRemoveSSID(incomingFrame.sourceCallsign()),
                                                                         incomingFrame.destCallsign(),
-                                                                        incomingFrame.payloadDataString()))
+                                                                        incomingFrame.payloadDataString(),
+                                                                        true))
         when (appResponse.responseType) {
             ResponseType.ACK_ONLY -> acceptIncomingConnection()
             ResponseType.ACK_WITH_TEXT -> acceptIncomingConnectionWithMessage(appResponse.responseString())
