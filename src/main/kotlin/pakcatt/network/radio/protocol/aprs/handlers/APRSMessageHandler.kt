@@ -32,9 +32,9 @@ class APRSMessageHandler(myCall: String,
                 val appRequest = AppRequest(aprsMessageFrame.messageSourceCallsign(),
                                             stringUtils.formatCallsignRemoveSSID(aprsMessageFrame.messageSourceCallsign()),
                                             aprsMessageFrame.messageDestinationCallsign(),
+                                            aprsMessageFrame.message(),
                                             aprsFrame.repeaterCallsignOne(),
                                             aprsFrame.repeaterCallsignTwo(),
-                                            aprsMessageFrame.message(),
                                             true)
                 val appResponse = appInterface.getResponseForReceivedMessage(appRequest)
 
