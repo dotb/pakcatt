@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.RootApp
 import pakcatt.application.shared.model.AppResponse
+import pakcatt.application.shared.model.ParsedCommandTokens
 import pakcatt.util.StringUtils
 
 @Component
@@ -26,7 +27,7 @@ class TestApp: RootApp() {
         return AppResponse.acknowledgeOnly()
     }
 
-    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+    override fun handleReceivedMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         return when (stringUtils.removeEOLChars(request.message)) {
             "nop" -> AppResponse.acknowledgeOnly()
             "Hello!" -> AppResponse.sendText("Hi, there! *wave*")

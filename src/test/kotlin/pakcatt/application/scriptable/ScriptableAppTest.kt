@@ -5,6 +5,7 @@ import org.junit.Test
 import pakcatt.application.scriptable.model.Script
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
+import pakcatt.application.shared.model.ParsedCommandTokens
 
 class ScriptableAppTest : TestCase() {
 
@@ -47,7 +48,7 @@ class ScriptableAppTest : TestCase() {
     fun testMessageWithReponse() {
         val validConnectionRequest = AppRequest("REM1C", "MYCALL", "MYCALL", "date", true)
         val expectedResponse = AppResponse.sendText("The date is 1 Jan")
-        val connectionResponse = subject.handleReceivedMessage(validConnectionRequest)
+        val connectionResponse = subject.handleReceivedMessage(validConnectionRequest, ParsedCommandTokens().parseCommandLine(validConnectionRequest.message))
         assertEquals(expectedResponse.responseType, connectionResponse.responseType)
         assertEquals(expectedResponse.responseString(), connectionResponse.responseString())
         assertEquals(expectedResponse.nextApp(), connectionResponse.nextApp())
@@ -57,7 +58,7 @@ class ScriptableAppTest : TestCase() {
     fun testMessageWithoutResponse() {
         val validConnectionRequest = AppRequest("REM1C", "MYCALL", "MYCALL", "ack", true)
         val expectedResponse = AppResponse.acknowledgeOnly()
-        val connectionResponse = subject.handleReceivedMessage(validConnectionRequest)
+        val connectionResponse = subject.handleReceivedMessage(validConnectionRequest, ParsedCommandTokens().parseCommandLine(validConnectionRequest.message))
         assertEquals(expectedResponse.responseType, connectionResponse.responseType)
         assertEquals(expectedResponse.responseString(), connectionResponse.responseString())
         assertEquals(expectedResponse.nextApp(), connectionResponse.nextApp())
@@ -67,7 +68,7 @@ class ScriptableAppTest : TestCase() {
     fun testMessageThatIsIgnored() {
         val validConnectionRequest = AppRequest("REM1C", "NOTMYCALL", "NOTMYCALL", "ignore me", true)
         val expectedResponse = AppResponse.ignore()
-        val connectionResponse = subject.handleReceivedMessage(validConnectionRequest)
+        val connectionResponse = subject.handleReceivedMessage(validConnectionRequest, ParsedCommandTokens().parseCommandLine(validConnectionRequest.message))
         assertEquals(expectedResponse.responseType, connectionResponse.responseType)
         assertEquals(expectedResponse.responseString(), connectionResponse.responseString())
         assertEquals(expectedResponse.nextApp(), connectionResponse.nextApp())

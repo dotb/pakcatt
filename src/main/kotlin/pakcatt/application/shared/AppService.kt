@@ -87,29 +87,54 @@ class AppService(private val rootApplications: List<RootApp>,
         return allAdhocResponses
     }
 
+    /**
+     * Iterate the registered applications to service a user request,
+     * take action and return an appropriate response to the user.
+     */
     private fun getResponseFromApplication(request: AppRequest): AppResponse  {
-        // Start with a default response to ignored the incoming request
-        var finalInteractionResponse = AppResponse.ignore()
+        // If the command is in dot notation, ignore any currently engaged app
+        return if (stringUtils.stringIsInDottedNotation(request.message) || null == request.userContext?.engagedApplication()) {
+            getResponseFromRootApplication(request)
+        } else {
+            // if this user is engaged with a specific app, get the response directly from the engaged app
+            getResponseFromUserEngagedApplication(request, AppResponse.ignore())
+        }
+    }
 
-        val userContext = request.userContext
-        // Share the request with app registered root level apps for processing
+    /**
+     *  Iteratively call sub apps until the instructions issued in the
+     *  command line have all been parsed and satisfied.
+     */
+    private fun getResponseFromRootApplication(request: AppRequest): AppResponse {
+        var finalInteractionResponse = AppResponse.ignore()
         for (app in rootApplications) {
-            val interactionResponse = app.handleReceivedMessage(request)
+            val parsedCommandInput = ParsedCommandTokens().parseCommandLine(request.message)
+            val interactionResponse = callAppsRecursively(request, parsedCommandInput, app)
             when (interactionResponse.responseType) {
                 ResponseType.ACK_WITH_TEXT -> finalInteractionResponse = interactionResponse
                 ResponseType.ACK_ONLY -> finalInteractionResponse = interactionResponse
                 ResponseType.IGNORE -> logger.trace("App isn't interested in responding {}", app)
             }
         }
-
-        // Check if this user is engaged with a specific app. This app response will take priority
-        val app = userContext?.engagedApplication()
-        if (null != app) {
-            // Direct requests to the app this user is engaged with
-            finalInteractionResponse = app.handleReceivedMessage(request)
-        }
-
         return finalInteractionResponse
+    }
+
+    private fun callAppsRecursively(request: AppRequest, parsedCommandInput: ParsedCommandTokens, app: SubApp): AppResponse {
+        var interactionResponse = app.handleReceivedMessage(request, parsedCommandInput)
+        val nextApp = interactionResponse.nextApp()
+        if (null != nextApp && parsedCommandInput.remainingCommandLine().isNotEmpty()) {
+            val nextAppRequest = request.copy()
+            nextAppRequest.message = parsedCommandInput.remainingCommandLine()
+            parsedCommandInput.parseCommandLine(nextAppRequest.message)
+            interactionResponse = callAppsRecursively(nextAppRequest, parsedCommandInput, nextApp)
+        }
+        return interactionResponse
+    }
+
+    private fun getResponseFromUserEngagedApplication(request: AppRequest, currentBestResponse: AppResponse): AppResponse {
+        val currentUserEngagedApp = request.userContext?.engagedApplication()
+        val parsedCommandInput = ParsedCommandTokens().parseCommandLine(request.message)
+        return currentUserEngagedApp?.handleReceivedMessage(request, parsedCommandInput) ?: currentBestResponse
     }
 
     private fun filterRequestOnInput(request: AppRequest) {
@@ -145,7 +170,7 @@ class AppService(private val rootApplications: List<RootApp>,
     // Rewrite the prompt string into the textual response
     private fun addPromptToResponse(request: AppRequest, response: AppResponse) {
         // Only add a prompt to synchronous conversations
-        if (request.channelIsSynchronous) {
+        if (request.channelIsInteractive) {
             val message = response.responseString()
             val currentUserEngagedApp = request.userContext?.engagedApplication()
             when (val prompt = currentUserEngagedApp?.returnCommandPrompt()) {

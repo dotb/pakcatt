@@ -5,7 +5,6 @@ import org.springframework.stereotype.Component
 import pakcatt.application.bulletinboard.BulletinBoardApp
 import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
 import pakcatt.application.last.LastApp
-import pakcatt.application.last.persistence.LastEntryRepository
 import pakcatt.application.last.persistence.LastEntryStore
 import pakcatt.application.mailbox.MailboxApp
 import pakcatt.application.mailbox.persistence.MailboxStore
@@ -17,7 +16,7 @@ import pakcatt.application.shared.RootApp
 import pakcatt.application.shared.command.Command
 import pakcatt.application.tell.TellApp
 import pakcatt.application.shared.model.AppResponse
-import pakcatt.util.StringUtils
+import pakcatt.application.shared.model.ParsedCommandTokens
 import java.lang.StringBuilder
 import kotlin.math.sqrt
 
@@ -41,19 +40,19 @@ class MainMenuApp(private val myCall: String,
                                                                                                 boardSummaryLength,
                                                                                                 boardPostListLength))  .description("Open the Bulletin Board"))
         registerCommand(Command("mail")    .shortCuts(listOf("m")) .reply("Launching Mail")    .openApp(MailboxApp(mailboxStore))  .description("Open your mailbox"))
-        registerCommand(Command("last")    .function { handleLast(it) }.description("last [callsign] - See when others were last seen"))
-        registerCommand(Command("tell")    .function { handleTell(it) } .description("tell <callsign> - Send a quick APRS message to someone"))
-        registerCommand(Command("sqrt")    .function { handleSQRT(it) }.description("sqrt <number> - Calculate the square root of an argument"))
+        registerCommand(Command("last")    .function(::handleLast).description("last [callsign] - See when others were last seen"))
+        registerCommand(Command("tell")    .function(::handleTell).description("tell <callsign> - Send a quick APRS message to someone"))
+        registerCommand(Command("sqrt")    .function(::handleSQRT).description("sqrt <number> - Calculate the square root of an argument"))
 
         // Cute responses
-        registerCommand(Command("hello")   .reply("Hi, there! *wave*") .description("Just a friendly welcome :-)"))
+        registerCommand(Command("hello")   .reply("Hi, there! *wave*").description("Just a friendly welcome :-)"))
         registerCommand(Command("ping")    .reply("Pong!").description("I'll reply with a pong"))
         registerCommand(Command("pong")    .reply("Ping! haha :P").description("I'll reply with a pong"))
         registerCommand(Command("beep")    .reply("beep! $beepChar").description("Send a beep instruction to your terminal"))
 
         // Terminal tests
         registerCommand(Command("bold")    .reply("${textFormat.escapeChar}[1mThis should be BOLD and${textFormat.escapeChar}[0m this should not be bold.").description("Test the bold control character on your terminal"))
-        registerCommand(Command("styles")  .function { allTheStyles() }.description("Test the styles supported by your terminal"))
+        registerCommand(Command("styles")  .function(::allTheStyles).description("Test the styles supported by your terminal"))
         registerCommand(Command("nop")     .ackOnly().description("I'll do nothing, just acknowledge your request"))
         registerCommand(Command("ignore")  .ignore().description("I'll receive your command but won't acknowledge it"))
         registerCommand(Command("settings").reply("Launching Settings") .openApp(SettingsApp()).description("View your environment settings"))
@@ -82,15 +81,15 @@ class MainMenuApp(private val myCall: String,
         }
     }
 
-    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+    override fun handleReceivedMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
        return when (isAddressedToMe(request, myCall)) {
-           true -> handleRequestWithRegisteredCommand(request)
+           true -> handleRequestWithARegisteredCommand(request, parsedCommandTokens)
            else -> AppResponse.ignore()
        }
     }
 
-    private fun handleTell(request: AppRequest): AppResponse {
-        val destinationCallsign = parseStringArgument(request.message, "")
+    private fun handleTell(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
+        val destinationCallsign = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsString(1)
         return if (destinationCallsign.isNotBlank()) {
             AppResponse.sendText("", TellApp(destinationCallsign, myCall, request.remoteCallsign))
         } else {
@@ -98,20 +97,20 @@ class MainMenuApp(private val myCall: String,
         }
     }
 
-    private fun handleSQRT(request: AppRequest): AppResponse {
-        val arg = parseStringArgument(request.message, "0")
+    private fun handleSQRT(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
+        val arg = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsString(1)
         val result = sqrt(arg.toDouble()).toString()
         return AppResponse.sendText("Square root of $arg is $result")
     }
 
-    private fun handleLast(request: AppRequest): AppResponse {
-        return when (val arg = parseStringArgument(request.message, "")) {
+    private fun handleLast(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
+        return when (val arg = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsString(1)) {
             "" -> AppResponse.sendText(lastApp.lastEntries(request))
             else -> AppResponse.sendText(lastApp.lastEntryFor(request, arg))
         }
     }
 
-    private fun allTheStyles(): AppResponse {
+    private fun allTheStyles(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         val returnString = StringBuilder()
         for (style in FORMAT.values()) {
             returnString.append(textFormat.format(style))

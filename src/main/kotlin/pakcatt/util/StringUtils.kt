@@ -20,7 +20,8 @@ class StringUtils {
     private var defaultEndOfLine: String = LF
 
     val EOL: String = defaultEndOfLine
-    private val dateFormatter = SimpleDateFormat("dd MMM HH:mm")
+    private val dateFormatterLong = SimpleDateFormat("dd MMM HH:mm")
+    private val dateFormatterShort = SimpleDateFormat("dd-MM HH:mm")
 
     fun byteToHex(byte: Byte): String {
         return String.format("%02x", byte)
@@ -147,8 +148,12 @@ class StringUtils {
         return inputString.substring(0, min(maxLength, inputString.length))
     }
 
-    fun formattedDate(date: Date): String {
-        return dateFormatter.format(date.time)
+    fun formattedDateLong(date: Date): String {
+        return dateFormatterLong.format(date.time)
+    }
+
+    fun formattedDateShort(date: Date): String {
+        return dateFormatterShort.format(date.time)
     }
 
     fun shortenString(string: String, maxLength: Int, withEllipsis: Boolean): String {
@@ -158,6 +163,14 @@ class StringUtils {
         } else {
             string.substring(0 until length)
         }
+    }
+
+    /**
+     * Test if a string is dotted notation.
+     * For example, board.open.1 list 2
+     */
+    fun stringIsInDottedNotation(string: String): Boolean {
+        return string.contains(".") && (!string.contains(" ") || string.indexOf(".") < string.indexOf(" "))
     }
 
 }

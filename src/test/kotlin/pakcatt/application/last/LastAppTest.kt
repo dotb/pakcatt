@@ -10,7 +10,7 @@ class LastAppTest: AppServiceTest() {
 
 
     @Test
-    fun `test last app returns results in the correct order for sync requests`() {
+    fun `test last app returns results in the correct order for interactive requests`() {
         `test starting a connection to the BBS with messages`()
 
         var request = testRequest("last")
@@ -41,7 +41,7 @@ class LastAppTest: AppServiceTest() {
 
     @Test
     fun `test last app returns an individual result`() {
-        mockedLastEntryRepository.lastSingleEntry = LastEntry("VK3LIT", Date(1000000))
+        mockedLastEntryRepository.lastEntryIsAvailable = true
         `test starting a connection to the BBS with messages`()
 
         var request = testRequest()
@@ -55,6 +55,7 @@ class LastAppTest: AppServiceTest() {
 
     @Test
     fun `test last app returns an an unknown result`() {
+        mockedLastEntryRepository.lastEntryIsAvailable = false
         `test starting a connection to the BBS with messages`()
 
         var request = testRequest()
@@ -64,6 +65,30 @@ class LastAppTest: AppServiceTest() {
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("Haven't seen UNKNOWN${stringUtils.EOL}" +
                 "${stringUtils.EOL}menu> ", response.responseString())
+    }
+
+    @Test
+    fun `test last entry is updated with and without a sub app engaged`() {
+        assertEquals(null, mockedLastEntryRepository.lastInsertedEntry)
+        `test starting a connection to the BBS with messages`()
+        assertEquals("VK3LIT", mockedLastEntryRepository.lastInsertedEntry?.callsign)
+
+        var previousLastEntryDate = mockedLastEntryRepository.lastInsertedEntry?.lastSeen
+        Thread.sleep(1000) // Yuck, I know
+        var request = testRequest()
+        request.message = "mail"
+        appService.getResponseForReceivedMessage(request)
+        assertEquals("VK3LIT", mockedLastEntryRepository.lastInsertedEntry?.callsign)
+        assert(null != previousLastEntryDate && previousLastEntryDate.before(mockedLastEntryRepository.lastInsertedEntry?.lastSeen))
+
+        previousLastEntryDate = mockedLastEntryRepository.lastInsertedEntry?.lastSeen
+        Thread.sleep(1000) // Yuck, I know
+        request.remoteCallsign = "VK2VRO-0"
+        request.remoteCallsignWithoutSSID = "VK2VRO"
+        request.message = "list"
+        appService.getResponseForReceivedMessage(request)
+        assert(null != previousLastEntryDate && previousLastEntryDate.before(mockedLastEntryRepository.lastInsertedEntry?.lastSeen))
+
     }
 
 }

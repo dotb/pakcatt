@@ -14,27 +14,38 @@ import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.ResponseType
 import pakcatt.application.filter.EOLInputFilter
 import pakcatt.application.filter.EOLOutputFilter
+import pakcatt.application.filter.LastAppInputFilter
 import pakcatt.application.filter.MentionOutputFilter
+import pakcatt.application.last.LastApp
 import pakcatt.util.StringUtils
 
 open class AppServiceTest: TestCase() {
 
-    protected val mockedMailMessageRepository = MockedMailMessageRepository()
     protected val mockedLastEntryRepository = MockedLastEntryRepository()
+    protected val lastEntryStore = LastEntryStore(mockedLastEntryRepository)
+    protected val mockedMailMessageRepository = MockedMailMessageRepository()
+    protected val mailboxStore = MailboxStore(mockedMailMessageRepository)
+    protected val mockedBulletinBoardThreadRepository = MockedBulletinBoardThreadRepository()
+    protected val mockedBulletinBoardPostRepository = MockedBulletinBoardPostRepository()
+    protected val bulletinBoardStore = BulletinBoardStore(mockedBulletinBoardThreadRepository, mockedBulletinBoardPostRepository)
+    protected val boardPromptTopicLength = 20
+    protected val boardSummaryLength = 80
+    protected val boardPostListLength = 2
+
 
     protected val mainMenuApp = MainMenuApp("PAKCATT",
-                                    MailboxStore(mockedMailMessageRepository),
-                                    BulletinBoardStore(MockedBulletinBoardThreadRepository(), MockedBulletinBoardPostRepository()),
-                                    LastEntryStore(mockedLastEntryRepository),
+                                    mailboxStore,
+                                    bulletinBoardStore,
+                                    lastEntryStore,
                                     "Welcome",
-                                    20,
-                                    80,
-                                    2)
+                                    boardPromptTopicLength,
+                                    boardSummaryLength,
+                                    boardPostListLength)
 
     protected val stringUtils = StringUtils()
     protected val appService = AppService(listOf(mainMenuApp),
-    listOf(EOLInputFilter()),
-    listOf(EOLOutputFilter(), MentionOutputFilter()))
+                                            listOf(EOLInputFilter(), LastAppInputFilter(lastEntryStore)),
+                                            listOf(EOLOutputFilter(), MentionOutputFilter()))
     protected val escapeChar = 27.toChar()
     protected val startBold = "${escapeChar}[1m"
     protected val resetFormat = "${escapeChar}[0m"
@@ -69,8 +80,8 @@ open class AppServiceTest: TestCase() {
         assertEquals("Welcome${stringUtils.EOL}You have an unread message.${stringUtils.EOL}${stringUtils.EOL}menu> ", response.responseString())
     }
 
-    protected fun testRequest(command: String = "", channelIsSynchronous: Boolean = true): AppRequest {
-        return AppRequest("VK3LIT-1", "VK3LIT", "PAKCATT", command, channelIsSynchronous, "", "", true)
+    protected fun testRequest(command: String = "", channelIsInteractive: Boolean = true): AppRequest {
+        return AppRequest("VK3LIT-1", "VK3LIT", "PAKCATT", command, channelIsInteractive, "", "", true)
     }
 
 }

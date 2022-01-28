@@ -4,8 +4,8 @@ import pakcatt.application.shared.command.Command
 import pakcatt.application.shared.model.DeliveryType
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
+import pakcatt.application.shared.model.ParsedCommandTokens
 import pakcatt.util.StringUtils
-import java.lang.NumberFormatException
 import java.lang.StringBuilder
 
 abstract class SubApp {
@@ -16,28 +16,26 @@ abstract class SubApp {
     protected val tabSpace = "\t"
     protected val beepChar = 7.toChar()
 
-    private val allRegisteredCommands = mutableListOf(Command("help") .function { helpResponse() }  .description("Display this list of commands"))
+    private val allRegisteredCommands = mutableListOf(Command("help") .function(::helpResponse).description("Display this list of commands"))
 
     abstract fun returnCommandPrompt(): String
 
-    abstract fun handleReceivedMessage(request: AppRequest): AppResponse
+    abstract fun handleReceivedMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse
 
     fun registerCommand(command: Command) {
         allRegisteredCommands.add(command)
     }
 
-    fun handleRequestWithRegisteredCommand(request: AppRequest): AppResponse {
-        val userCommandInput = parseCommand(request.message)
-        if (userCommandInput.isEmpty()) {
+    fun handleRequestWithARegisteredCommand(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
+        if (parsedCommandTokens.command().isEmpty()) {
             // An empty request should return only the prompt / new line
             return AppResponse.sendText("")
         } else {
             // Find a command that handles the request sent to us
             for (registeredCommand in allRegisteredCommands) {
-                if (registeredCommand.commandText() == userCommandInput
-                    || (registeredCommand.shortCutText().contains(userCommandInput))
-                ) {
-                    return registeredCommand.execute(request)
+                if (registeredCommand.commandText() == parsedCommandTokens.command()
+                    || (registeredCommand.shortCutText().contains(parsedCommandTokens.command()))) {
+                    return registeredCommand.execute(request, parsedCommandTokens)
                 }
             }
             return AppResponse.sendText("Say what? Type help for, help")
@@ -56,32 +54,7 @@ abstract class SubApp {
         this.parentRootApp = parent
     }
 
-    protected fun parseCommand(inputLine: String): String {
-        val stringTokens = inputLine.split(" ")
-        return when (stringTokens.size) {
-            2 -> stringUtils.removeEOLChars(stringTokens[0]).toLowerCase()
-            else -> stringUtils.removeEOLChars(inputLine).toLowerCase()
-        }
-    }
-
-    protected fun parseStringArgument(inputLine: String, defaultArgument: String): String {
-        val stringTokens = inputLine.split(" ")
-        return when (stringTokens.size) {
-            2 -> stringUtils.removeEOLChars(stringTokens[1]).toLowerCase()
-            else -> defaultArgument.toLowerCase()
-        }
-    }
-
-    protected fun parseIntArgument(inputLine: String): Int? {
-        val stringArg = parseStringArgument(inputLine, "")
-        return try {
-            stringArg.toInt()
-        } catch (e: NumberFormatException) {
-            null
-        }
-    }
-
-    private fun helpResponse(): AppResponse {
+    private fun helpResponse(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         val stringBuilder = StringBuilder()
         stringBuilder.append(stringUtils.EOL)
         for (command in allRegisteredCommands) {

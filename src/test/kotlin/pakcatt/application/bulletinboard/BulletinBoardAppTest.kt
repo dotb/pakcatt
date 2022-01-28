@@ -197,4 +197,37 @@ class BulletinBoardAppTest: AppServiceTest() {
         assertEquals("Bye${stringUtils.EOL}menu> ", response.responseString())
     }
 
+    @Test
+    fun `test open the board and list topics from async device`() {
+        `test starting a connection to the BBS with messages`()
+        var request = testRequest("board.list", false)
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("2 01-01 10:00: This is topic 2${stringUtils.EOL}" +
+                "3 01-01 10:00: This is topic 3${stringUtils.EOL}" +
+                "5 01-01 10:00: This is topic 5${stringUtils.EOL}" +
+                "6 01-01 10:00: This is topic 6${stringUtils.EOL}" +
+                "7 01-01 10:00: This is topic 7${stringUtils.EOL}" +
+                "8 01-01 10:00: This is topic 8${stringUtils.EOL}" +
+                "9 01-01 10:00: This is topic 9${stringUtils.EOL}" +
+                "10 01-01 10:00: This is topic 10${stringUtils.EOL}" +
+                "1 01-01 12:46: This is topic 1${stringUtils.EOL}" +
+                "4 10-07 02:00: This is topic 4${stringUtils.EOL}"
+                , response.responseString())
+    }
+
+    @Test
+    fun `test open the board and then a topic and list posts with a default length from an async device`() {
+        `test starting a connection to the BBS with messages`()
+        var request = testRequest("board.open.1.list", false)
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("1) 01-01 10:16 VK2VRO: 567B Sed ut perspiciatis${stringUtils.EOL}" +
+                "unde omnis iste natus${stringUtils.EOL}" +
+                "error sit voluptatem accusantium${stringUtils.EOL}" +
+                "dolor...${stringUtils.EOL}${stringUtils.EOL}" +
+                "2) 01-01 10:33 PACKATT: 567B Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${stringUtils.EOL}${stringUtils.EOL}",
+                response.responseString())
+    }
+
 }

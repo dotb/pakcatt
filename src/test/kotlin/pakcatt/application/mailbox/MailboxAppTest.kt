@@ -74,4 +74,15 @@ class MailboxAppTest: AppServiceTest() {
                 "${stringUtils.EOL}mail> ", response.responseString())
     }
 
+    fun `test mail list async`() {
+        `test starting a connection to the BBS with messages`()
+        var request = testRequest("mail.list", false)
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("  1 01-01 10:00 PAKCATT->VK3LIT: Subject 1${stringUtils.EOL}" +
+                "* 2 01-01 10:16 VK2VRO->VK3LIT: Subject 2${stringUtils.EOL}" +
+                "* 3 01-01 12:30 VK3LIT->VK2VRO: Subject 3${stringUtils.EOL}" +
+                "* 4 02-01 13:46 PAKCATT->VK3LIT: Subject 4${stringUtils.EOL}",
+                response.responseString())
+    }
 }

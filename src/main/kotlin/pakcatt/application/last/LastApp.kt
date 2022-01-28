@@ -1,11 +1,10 @@
 package pakcatt.application.last
 
-import org.springframework.context.annotation.Profile
-import org.springframework.stereotype.Component
 import pakcatt.application.last.persistence.LastEntryStore
-import pakcatt.application.shared.RootApp
+import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
+import pakcatt.application.shared.model.ParsedCommandTokens
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -13,9 +12,7 @@ import java.util.*
  * Keeps a record of the last time a callsign is seen on the system,
  * and allows users to query the record.
  */
-@Component
-@Profile("production")
-class LastApp(private val lastEntryStore: LastEntryStore): RootApp() {
+class LastApp(private val lastEntryStore: LastEntryStore): SubApp() {
 
     private val dateFormatterLong = SimpleDateFormat("EEEE, dd MMMM yyyy, HH:mm") // For sync terminals
     private val dateFormatterShort = SimpleDateFormat("dd-MM-yyyy@HH:mm") // For small async message devices
@@ -24,13 +21,7 @@ class LastApp(private val lastEntryStore: LastEntryStore): RootApp() {
         return ""
     }
 
-    override fun decisionOnConnectionRequest(request: AppRequest): AppResponse {
-        updateCallsignEntry(request.remoteCallsign)
-        return AppResponse.ignore()
-    }
-
-    override fun handleReceivedMessage(request: AppRequest): AppResponse {
-        updateCallsignEntry(request.remoteCallsign)
+    override fun handleReceivedMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         return AppResponse.ignore()
     }
 
@@ -52,16 +43,11 @@ class LastApp(private val lastEntryStore: LastEntryStore): RootApp() {
         return stringBuilder.toString()
     }
 
-    private fun updateCallsignEntry(callsign: String) {
-        val formattedCallsign = stringUtils.formatCallsignRemoveSSID(callsign)
-        lastEntryStore.updateLastEntryFor(formattedCallsign, Date())
-    }
-
     /**
      * We shorten the date format for smaller message based devices
      */
     private fun appropriateDateFormatter(request: AppRequest): SimpleDateFormat {
-        return when (request.channelIsSynchronous) {
+        return when (request.channelIsInteractive) {
             true -> dateFormatterLong
             false -> dateFormatterShort
         }

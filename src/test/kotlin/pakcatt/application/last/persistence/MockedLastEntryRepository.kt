@@ -7,11 +7,12 @@ import org.springframework.data.domain.Sort
 import java.util.*
 
 class MockedLastEntryRepository: LastEntryRepository {
-
-    var lastSingleEntry: LastEntry? = null
+    var lastEntryIsAvailable = true
+    var lastInsertedEntry: LastEntry? = null
 
     override fun <S : LastEntry?> save(p0: S): S {
-        TODO("Not yet implemented")
+        lastInsertedEntry = p0
+        return p0
     }
 
     override fun <S : LastEntry?> saveAll(p0: MutableIterable<S>): MutableList<S> {
@@ -19,10 +20,9 @@ class MockedLastEntryRepository: LastEntryRepository {
     }
 
     override fun findById(p0: String): Optional<LastEntry> {
-        val lastEntry = lastSingleEntry
-        return when (lastEntry) {
-            null -> Optional.empty()
-            else -> Optional.of(lastEntry)
+        return when (lastEntryIsAvailable) {
+            false -> Optional.empty()
+            true -> Optional.of(LastEntry("VK3LIT", Date(1000000)))
         }
     }
 
@@ -95,7 +95,8 @@ class MockedLastEntryRepository: LastEntryRepository {
     }
 
     override fun <S : LastEntry?> insert(p0: S): S {
-        TODO("Not yet implemented")
+        lastInsertedEntry = p0
+        return p0
     }
 
     override fun <S : LastEntry?> insert(p0: MutableIterable<S>): MutableList<S> {

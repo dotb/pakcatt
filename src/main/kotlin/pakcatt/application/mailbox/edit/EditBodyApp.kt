@@ -6,6 +6,7 @@ import pakcatt.application.shared.NavigateBack
 import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
+import pakcatt.application.shared.model.ParsedCommandTokens
 
 class EditBodyApp(private val mailMessage: MailMessage, private val mailboxStore: MailboxStore): SubApp() {
 
@@ -15,7 +16,7 @@ class EditBodyApp(private val mailMessage: MailMessage, private val mailboxStore
         return ""
     }
 
-    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+    override fun handleReceivedMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         val bodyText = request.message
         return if (stringUtils.removeEOLChars(bodyText) == ".") {
             // Finish editing the body

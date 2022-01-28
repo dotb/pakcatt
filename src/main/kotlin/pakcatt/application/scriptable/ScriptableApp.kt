@@ -9,6 +9,7 @@ import pakcatt.application.scriptable.model.Script
 import pakcatt.application.shared.RootApp
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
+import pakcatt.application.shared.model.ParsedCommandTokens
 import pakcatt.application.shared.model.ResponseType
 import java.io.File
 import java.io.IOException
@@ -51,7 +52,7 @@ class ScriptableApp(private val scriptableScripts: List<Script>,
      * Find a script that will handle this message.
      * Only one script can handle the message. The first non-ignored response will be selected.
      */
-    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+    override fun handleReceivedMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         return handleRequestWithScript(ScriptType.REQUEST, request)
     }
 

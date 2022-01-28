@@ -10,6 +10,7 @@ import pakcatt.application.shared.FORMAT
 import pakcatt.application.shared.command.Command
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
+import pakcatt.application.shared.model.ParsedCommandTokens
 import java.lang.StringBuilder
 
 class ReadThreadApp(private val parentThread: BulletinBoardThread,
@@ -19,72 +20,92 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
                     private val defaultPostListLength: Int): SubApp() {
 
     init {
-        registerCommand(Command("list") .function { listPosts(it) }  .description("list [number of posts] - List posts specifying an optional length"))
-        registerCommand(Command("open") .function { readPost(it) }   .description("Read a post"))
-        registerCommand(Command("post") .function { newPost(it) }   .description("Add a post"))
+        registerCommand(Command("list") .function(::listPosts).description("list [number of posts] - List posts specifying an optional length"))
+        registerCommand(Command("open") .function(::readPost).description("Read a post"))
+        registerCommand(Command("post") .function(::newPost).description("Add a post"))
         registerCommand(Command("back") .reply("") .openApp(NavigateBack(1)).description("Return to the list of topics"))
     }
 
     override fun returnCommandPrompt(): String {
-        val topicSummary = "${stringUtils.shortenString(parentThread.topic, boardPromptTopicLength, false)}"
+        val topicSummary = stringUtils.shortenString(parentThread.topic, boardPromptTopicLength, false)
         return "board/${parentThread.threadNumber} ${topicSummary}>"
     }
 
-    override fun handleReceivedMessage(request: AppRequest): AppResponse {
-        return handleRequestWithRegisteredCommand(request)
+    override fun handleReceivedMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
+        return handleRequestWithARegisteredCommand(request, parsedCommandTokens)
     }
 
-    private fun listPosts(request: AppRequest): AppResponse {
+    private fun listPosts(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         val postList = bulletinBoardStore.getPostsInThread(parentThread.threadNumber)
         val totalPosts = postList.size
-        val requestedNumberOfPosts = parseIntArgument(request.message)
+        val requestedNumberOfPosts = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsInt(1)
         val numberOfPostsToList = requestedNumberOfPosts ?: defaultPostListLength
         val rangeOfIndexesToInclude = totalPosts - numberOfPostsToList..totalPosts
-        val responseString = compilePostListResponse(postList, totalPosts, rangeOfIndexesToInclude)
+        val responseString = compilePostListResponse(postList, totalPosts, rangeOfIndexesToInclude, request.channelIsInteractive)
         return AppResponse.sendText(responseString)
     }
 
-    private fun compilePostListResponse(postList: List<BulletinBoardPost>, totalPosts: Int, rangeOfIndexesToInclude: IntRange): String {
+    private fun compilePostListResponse(postList: List<BulletinBoardPost>, totalPosts: Int, rangeOfIndexesToInclude: IntRange, channelIsInteractive: Boolean): String {
         val listResponse = StringBuilder()
         if (totalPosts > 0) {
-            listResponse.append(stringUtils.EOL)
-            listResponse.append(textFormat.format(FORMAT.BOLD))
-            listResponse.append("No${tabSpace}Posted       By${tabSpace}${tabSpace}Size")
-            listResponse.append(textFormat.format(FORMAT.RESET))
-            listResponse.append(stringUtils.EOL)
+            if (channelIsInteractive) {
+                listResponse.append(stringUtils.EOL)
+                listResponse.append(textFormat.format(FORMAT.BOLD))
+                listResponse.append("No${tabSpace}Posted       By${tabSpace}${tabSpace}Size")
+                listResponse.append(textFormat.format(FORMAT.RESET))
+                listResponse.append(stringUtils.EOL)
+            }
             for ((index, post) in postList.withIndex()) {
                 if (rangeOfIndexesToInclude.contains(index)) {
-                    val summary = "${stringUtils.shortenString(post.body, boardSummaryLength, true)}"
-                    listResponse.append(stringUtils.EOL)
-                    listResponse.append(textFormat.format(FORMAT.BOLD))
+                    val summary = stringUtils.shortenString(post.body, boardSummaryLength, true)
+                    if (channelIsInteractive) {
+                        listResponse.append(stringUtils.EOL)
+                        listResponse.append(textFormat.format(FORMAT.BOLD))
+                    }
                     listResponse.append(index)
                     listResponse.append(")")
-                    listResponse.append(tabSpace)
-                    listResponse.append(stringUtils.formattedDate(post.postDateTime))
-                    listResponse.append("  ")
+                    if (channelIsInteractive) {
+                        listResponse.append(tabSpace)
+                        listResponse.append(stringUtils.formattedDateLong(post.postDateTime))
+                        listResponse.append("  ")
+                    } else {
+                        listResponse.append(" ")
+                        listResponse.append(stringUtils.formattedDateShort(post.postDateTime))
+                        listResponse.append(" ")
+                    }
                     listResponse.append(post.fromCallsign)
-                    listResponse.append(tabSpace)
+                    if (channelIsInteractive) {
+                        listResponse.append(tabSpace)
+                    } else {
+                        listResponse.append(": ")
+                    }
                     listResponse.append(post.body.length)
                     listResponse.append("B")
-                    listResponse.append(textFormat.format(FORMAT.RESET))
-                    listResponse.append(stringUtils.EOL)
+                    if (channelIsInteractive) {
+                        listResponse.append(textFormat.format(FORMAT.RESET))
+                        listResponse.append(stringUtils.EOL)
+                    } else {
+                        listResponse.append(" ")
+                    }
                     listResponse.append(summary)
                     listResponse.append(stringUtils.EOL)
                     listResponse.append(stringUtils.EOL)
                 }
             }
         }
-        listResponse.append(stringUtils.EOL)
-        listResponse.append(totalPosts)
-        listResponse.append(" posts in: ")
-        listResponse.append(parentThread.topic)
-        listResponse.append(stringUtils.EOL)
+        if (channelIsInteractive) {
+            listResponse.append(stringUtils.EOL)
+            listResponse.append(totalPosts)
+            listResponse.append(" posts in: ")
+            listResponse.append(parentThread.topic)
+            listResponse.append(stringUtils.EOL)
+        }
         return listResponse.toString()
     }
 
-    private fun readPost(request: AppRequest): AppResponse {
+    private fun readPost(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         var post: BulletinBoardPost? = null
-        val postNumber = parseIntArgument(request.message)
+        val postNumber = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsInt(1)
         if (null != postNumber) {
             post = bulletinBoardStore.getPost(postNumber, parentThread.threadNumber)
         }
@@ -95,7 +116,7 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
         }
     }
 
-    private fun newPost(request: AppRequest): AppResponse {
+    private fun newPost(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         val authorCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         return AppResponse.sendText("Compose your post and finish with . on a line of it's own.", AddPostApp(parentThread,
                                                                                                             BulletinBoardPost(authorCallsign),

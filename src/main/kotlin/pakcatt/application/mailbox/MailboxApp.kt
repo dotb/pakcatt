@@ -7,17 +7,16 @@ import pakcatt.application.shared.*
 import pakcatt.application.shared.command.Command
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
-import pakcatt.util.StringUtils
+import pakcatt.application.shared.model.ParsedCommandTokens
 import java.lang.StringBuilder
-import java.text.SimpleDateFormat
 
 class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
     init {
-        registerCommand(Command("list") .function { listMessages(it) }  .description("List all messages or list unread to only see your unread messages"))
-        registerCommand(Command("send") .function { sendMessage(it) }   .description("Send a message, passing the destination callsign as an argument"))
-        registerCommand(Command("open") .function { readMessage(it) }   .description("Read a single message, passing the message number as an argument"))
-        registerCommand(Command("del")  .function { deleteMessage(it) } .description("Delete a message, passing the message number as an argument"))
+        registerCommand(Command("list") .function (::listMessages).description("List all messages or list unread to only see your unread messages"))
+        registerCommand(Command("send") .function(::sendMessage).description("Send a message, passing the destination callsign as an argument"))
+        registerCommand(Command("open") .function(::readMessage).description("Read a single message, passing the message number as an argument"))
+        registerCommand(Command("del")  .function(::deleteMessage).description("Delete a message, passing the message number as an argument"))
         registerCommand(Command("back") .reply("Bye").openApp(NavigateBack(1)).description("Leave the mail app and return to the main menu"))
     }
 
@@ -25,8 +24,8 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         return "mail>"
     }
 
-    override fun handleReceivedMessage(request: AppRequest): AppResponse {
-        return handleRequestWithRegisteredCommand(request)
+    override fun handleReceivedMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
+        return handleRequestWithARegisteredCommand(request, parsedCommandTokens)
     }
 
     fun unreadMessageCount(request: AppRequest): Int {
@@ -34,46 +33,65 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         return mailboxStore.getUnreadMessagesTo(formattedCallsign).size
     }
 
-    private fun listMessages(request: AppRequest): AppResponse {
-        val arg = parseStringArgument(request.message, "")
+    private fun listMessages(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
+        val arg = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsString(1)
         val onlyNew = arg == "unread"
         val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign, onlyNew)
         val listResponse = StringBuilder()
         val messageCount = userMessages.size
 
         if (messageCount > 0) {
-            listResponse.append(stringUtils.EOL)
-            listResponse.append(textFormat.format(FORMAT.BOLD))
-            listResponse.append("  No${tabSpace}Date          From${tabSpace}To${tabSpace}Subject")
-            listResponse.append(textFormat.format(FORMAT.RESET))
-            listResponse.append(stringUtils.EOL)
+            if (request.channelIsInteractive) {
+                listResponse.append(stringUtils.EOL)
+                listResponse.append(textFormat.format(FORMAT.BOLD))
+                listResponse.append("  No${tabSpace}Date          From${tabSpace}To${tabSpace}Subject")
+                listResponse.append(textFormat.format(FORMAT.RESET))
+                listResponse.append(stringUtils.EOL)
+            }
+
             for (message in userMessages) {
                 listResponse.append(when (message.isRead) {
                     true -> "  "
                     false -> "* "
                 })
                 listResponse.append(message.messageNumber)
-                listResponse.append(tabSpace)
-                listResponse.append(stringUtils.formattedDate(message.dateTime))
-                listResponse.append("  ")
+                if (request.channelIsInteractive) {
+                    listResponse.append(tabSpace)
+                    listResponse.append(stringUtils.formattedDateLong(message.dateTime))
+                    listResponse.append("  ")
+                } else {
+                    listResponse.append(" ")
+                    listResponse.append(stringUtils.formattedDateShort(message.dateTime))
+                    listResponse.append(" ")
+                }
                 listResponse.append(message.fromCallsign)
-                listResponse.append(tabSpace)
+                if (request.channelIsInteractive) {
+                    listResponse.append(tabSpace)
+                } else {
+                    listResponse.append("->")
+                }
                 listResponse.append(message.toCallsign)
-                listResponse.append(tabSpace)
+                if (request.channelIsInteractive) {
+                    listResponse.append(tabSpace)
+                } else {
+                    listResponse.append(": ")
+                }
                 listResponse.append(message.subject)
                 listResponse.append(stringUtils.EOL)
             }
         }
-        listResponse.append(messageCount)
-        listResponse.append(" messages")
-        listResponse.append(stringUtils.EOL)
+        if (request.channelIsInteractive) {
+            listResponse.append(messageCount)
+            listResponse.append(" messages")
+            listResponse.append(stringUtils.EOL)
+        }
         return AppResponse.sendText(listResponse.toString())
     }
 
-    private fun readMessage(request: AppRequest): AppResponse {
+    private fun readMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         val userCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         var message: MailMessage? = null
-        val messageNumber = parseIntArgument(request.message)
+        val messageNumber = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsInt(1)
         if (null != messageNumber) {
             message = mailboxStore.getMessage(userCallsign, messageNumber)
         }
@@ -89,17 +107,17 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         }
     }
 
-    private fun sendMessage(request: AppRequest): AppResponse {
-        val arg = parseStringArgument(request.message, "")
+    private fun sendMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
+        val arg = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsString(1)
         val fromCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         val toCallsign = stringUtils.formatCallsignRemoveSSID(arg)
         return AppResponse.sendText("", EditSubjectApp(MailMessage(fromCallsign, toCallsign), mailboxStore))
     }
 
-    private fun deleteMessage(request: AppRequest): AppResponse {
+    private fun deleteMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         var message: MailMessage? = null
         val userCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
-        val messageNumber = parseIntArgument(request.message)
+        val messageNumber = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsInt(1)
         if (null != messageNumber) {
             message = mailboxStore.deleteMessage(userCallsign, messageNumber)
         }

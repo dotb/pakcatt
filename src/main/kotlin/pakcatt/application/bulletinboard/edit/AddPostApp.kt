@@ -7,6 +7,7 @@ import pakcatt.application.shared.NavigateBack
 import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
+import pakcatt.application.shared.model.ParsedCommandTokens
 
 class AddPostApp(private val parentThread: BulletinBoardThread,
                  private val newPost: BulletinBoardPost,
@@ -18,7 +19,7 @@ class AddPostApp(private val parentThread: BulletinBoardThread,
         return ""
     }
 
-    override fun handleReceivedMessage(request: AppRequest): AppResponse {
+    override fun handleReceivedMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         val bodyText = request.message
         return if (stringUtils.removeEOLChars(bodyText) == ".") {
             // New topics need 2 steps back, while posts to an existing topic need one step back.

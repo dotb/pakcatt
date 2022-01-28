@@ -3,6 +3,7 @@ package pakcatt.application.shared.command
 import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
+import pakcatt.application.shared.model.ParsedCommandTokens
 import pakcatt.application.shared.model.ResponseType
 
 data class Command(private val fullCommand: String,
@@ -11,7 +12,7 @@ data class Command(private val fullCommand: String,
                    private var response: ResponseType = ResponseType.IGNORE,
                    private var message: String? = null,
                    private var nextApp: SubApp? = null,
-                   private var function: ((request: AppRequest) -> AppResponse)? = null) {
+                   private var function: ((request: AppRequest, parsedCommandTokens: ParsedCommandTokens) -> AppResponse)? = null) {
 
     fun description(description: String): Command {
         this.description = description
@@ -48,7 +49,7 @@ data class Command(private val fullCommand: String,
         return this
     }
 
-    fun function(function: (request: AppRequest) -> AppResponse): Command {
+    fun function(function: (request: AppRequest, parsedCommandTokens: ParsedCommandTokens) -> AppResponse): Command {
         this.function = function
         return this
     }
@@ -65,7 +66,7 @@ data class Command(private val fullCommand: String,
         return description
     }
 
-    fun execute(request: AppRequest): AppResponse {
+    fun execute(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         val myMessage = message
         val myNextApp = nextApp
         val myFunction = function
@@ -74,7 +75,7 @@ data class Command(private val fullCommand: String,
             null != myMessage && null != myNextApp -> AppResponse.sendText(myMessage, nextApp)
             null != myMessage -> AppResponse.sendText(myMessage)
             null != myNextApp -> AppResponse.acknowledgeOnly(nextApp)
-            null != myFunction -> myFunction(request)
+            null != myFunction -> myFunction(request, parsedCommandTokens)
             else -> AppResponse.ignore()
         }
     }
