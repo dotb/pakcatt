@@ -43,7 +43,11 @@ class APRSMessageHandler(myCall: String,
                 if (aprsMessageFrame.messageNumber() > 0 &&
                     (appResponse.responseType == ResponseType.ACK_ONLY ||
                             appResponse.responseType == ResponseType.ACK_WITH_TEXT)) {
-                    val ackMessage = "ack${aprsMessageFrame.messageNumber()}"
+                    // I've that the FT3D wants the ACK number have a prepended 0 when less than 10. For example, "08" and not "8"
+                    var ackMessage = "ack${aprsMessageFrame.messageNumber()}"
+                    if (aprsFrame.messageNumber() < 10) {
+                        ackMessage = "ack0${aprsMessageFrame.messageNumber()}"
+                    }
                     aprsQueue.queueAPRSMessageForDelivery(myCall, aprsMessageFrame.messageSourceCallsign(), ackMessage)
                 }
 
