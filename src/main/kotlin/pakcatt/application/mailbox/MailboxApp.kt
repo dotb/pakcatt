@@ -34,7 +34,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun listMessages(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
-        val arg = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsString(1)
+        val arg = parsedCommandTokens.argumentAtIndexAsString(1)
         val onlyNew = arg == "unread"
         val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign, onlyNew)
         val listResponse = StringBuilder()
@@ -91,7 +91,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     private fun readMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         val userCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         var message: MailMessage? = null
-        val messageNumber = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsInt(1)
+        val messageNumber = parsedCommandTokens.argumentAtIndexAsInt(1)
         if (null != messageNumber) {
             message = mailboxStore.getMessage(userCallsign, messageNumber)
         }
@@ -108,7 +108,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun sendMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
-        val arg = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsString(1)
+        val arg = parsedCommandTokens.argumentAtIndexAsString(1)
         val fromCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
         val toCallsign = stringUtils.formatCallsignRemoveSSID(arg)
         return AppResponse.sendText("", EditSubjectApp(MailMessage(fromCallsign, toCallsign), mailboxStore))
@@ -117,7 +117,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     private fun deleteMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         var message: MailMessage? = null
         val userCallsign = stringUtils.formatCallsignRemoveSSID(request.remoteCallsign)
-        val messageNumber = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsInt(1)
+        val messageNumber = parsedCommandTokens.argumentAtIndexAsInt(1)
         if (null != messageNumber) {
             message = mailboxStore.deleteMessage(userCallsign, messageNumber)
         }

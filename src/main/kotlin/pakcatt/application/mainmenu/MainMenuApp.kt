@@ -89,7 +89,7 @@ class MainMenuApp(private val myCall: String,
     }
 
     private fun handleTell(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
-        val destinationCallsign = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsString(1)
+        val destinationCallsign = parsedCommandTokens.argumentAtIndexAsString(1)
         return if (destinationCallsign.isNotBlank()) {
             AppResponse.sendText("", TellApp(destinationCallsign, myCall, request.remoteCallsign))
         } else {
@@ -98,13 +98,13 @@ class MainMenuApp(private val myCall: String,
     }
 
     private fun handleSQRT(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
-        val arg = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsString(1)
+        val arg = parsedCommandTokens.argumentAtIndexAsString(1)
         val result = sqrt(arg.toDouble()).toString()
         return AppResponse.sendText("Square root of $arg is $result")
     }
 
     private fun handleLast(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
-        return when (val arg = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsString(1)) {
+        return when (val arg = parsedCommandTokens.argumentAtIndexAsString(1)) {
             "" -> AppResponse.sendText(lastApp.lastEntries(request))
             else -> AppResponse.sendText(lastApp.lastEntryFor(request, arg))
         }

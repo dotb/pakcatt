@@ -38,7 +38,7 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
     private fun listPosts(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         val postList = bulletinBoardStore.getPostsInThread(parentThread.threadNumber)
         val totalPosts = postList.size
-        val requestedNumberOfPosts = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsInt(1)
+        val requestedNumberOfPosts = parsedCommandTokens.argumentAtIndexAsInt(1)
         val numberOfPostsToList = requestedNumberOfPosts ?: defaultPostListLength
         val rangeOfIndexesToInclude = totalPosts - numberOfPostsToList..totalPosts
         val responseString = compilePostListResponse(postList, totalPosts, rangeOfIndexesToInclude, request.channelIsInteractive)
@@ -105,7 +105,7 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
 
     private fun readPost(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         var post: BulletinBoardPost? = null
-        val postNumber = ParsedCommandTokens().parseCommandLine(request.message).argumentAtIndexAsInt(1)
+        val postNumber = parsedCommandTokens.argumentAtIndexAsInt(1)
         if (null != postNumber) {
             post = bulletinBoardStore.getPost(postNumber, parentThread.threadNumber)
         }
