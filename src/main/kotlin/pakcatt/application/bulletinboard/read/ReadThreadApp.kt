@@ -8,6 +8,8 @@ import pakcatt.application.shared.NavigateBack
 import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.FORMAT
 import pakcatt.application.shared.command.Command
+import pakcatt.application.shared.list.LimitType
+import pakcatt.application.shared.list.ListLimiter
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
 import pakcatt.application.shared.model.ParsedCommandTokens
@@ -36,17 +38,18 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
     }
 
     private fun listPosts(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
-        val postList = bulletinBoardStore.getPostsInThread(parentThread.threadNumber)
-        val totalPosts = postList.size
         val requestedNumberOfPosts = parsedCommandTokens.argumentAtIndexAsInt(1)
         val numberOfPostsToList = requestedNumberOfPosts ?: defaultPostListLength
-        val rangeOfIndexesToInclude = totalPosts - numberOfPostsToList..totalPosts
-        val responseString = compilePostListResponse(postList, totalPosts, rangeOfIndexesToInclude, request.channelIsInteractive)
+        val postList = bulletinBoardStore.getPostsInThread(parentThread.threadNumber)
+        val listLimiter = ListLimiter<BulletinBoardPost>(numberOfPostsToList, LimitType.LIST_TAIL)
+        listLimiter.addItems(postList)
+        val responseString = compilePostListResponse(request.channelIsInteractive, listLimiter)
         return AppResponse.sendText(responseString)
     }
 
-    private fun compilePostListResponse(postList: List<BulletinBoardPost>, totalPosts: Int, rangeOfIndexesToInclude: IntRange, channelIsInteractive: Boolean): String {
+    private fun compilePostListResponse(channelIsInteractive: Boolean, listLimiter: ListLimiter<BulletinBoardPost>): String {
         val listResponse = StringBuilder()
+        val totalPosts = listLimiter.getAllItems().size
         if (totalPosts > 0) {
             if (channelIsInteractive) {
                 listResponse.append(stringUtils.EOL)
@@ -55,42 +58,41 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
                 listResponse.append(textFormat.format(FORMAT.RESET))
                 listResponse.append(stringUtils.EOL)
             }
-            for ((index, post) in postList.withIndex()) {
-                if (rangeOfIndexesToInclude.contains(index)) {
-                    val summary = stringUtils.shortenString(post.body, boardSummaryLength, true)
-                    if (channelIsInteractive) {
-                        listResponse.append(stringUtils.EOL)
-                        listResponse.append(textFormat.format(FORMAT.BOLD))
-                    }
-                    listResponse.append(index)
-                    listResponse.append(")")
-                    if (channelIsInteractive) {
-                        listResponse.append(tabSpace)
-                        listResponse.append(stringUtils.formattedDateLong(post.postDateTime))
-                        listResponse.append("  ")
-                    } else {
-                        listResponse.append(" ")
-                        listResponse.append(stringUtils.formattedDateShort(post.postDateTime))
-                        listResponse.append(" ")
-                    }
-                    listResponse.append(post.fromCallsign)
-                    if (channelIsInteractive) {
-                        listResponse.append(tabSpace)
-                    } else {
-                        listResponse.append(": ")
-                    }
-                    listResponse.append(post.body.length)
-                    listResponse.append("B")
-                    if (channelIsInteractive) {
-                        listResponse.append(textFormat.format(FORMAT.RESET))
-                        listResponse.append(stringUtils.EOL)
-                    } else {
-                        listResponse.append(" ")
-                    }
-                    listResponse.append(summary)
+            for (postToList in listLimiter.getLimitedList()) {
+                val post = postToList.item
+                val summary = stringUtils.shortenString(post.body, boardSummaryLength, true)
+                if (channelIsInteractive) {
                     listResponse.append(stringUtils.EOL)
-                    listResponse.append(stringUtils.EOL)
+                    listResponse.append(textFormat.format(FORMAT.BOLD))
                 }
+                listResponse.append(postToList.originalIndex)
+                listResponse.append(")")
+                if (channelIsInteractive) {
+                    listResponse.append(tabSpace)
+                    listResponse.append(stringUtils.formattedDateLong(post.postDateTime))
+                    listResponse.append("  ")
+                } else {
+                    listResponse.append(" ")
+                    listResponse.append(stringUtils.formattedDateShort(post.postDateTime))
+                    listResponse.append(" ")
+                }
+                listResponse.append(post.fromCallsign)
+                if (channelIsInteractive) {
+                    listResponse.append(tabSpace)
+                } else {
+                    listResponse.append(": ")
+                }
+                listResponse.append(post.body.length)
+                listResponse.append("B")
+                if (channelIsInteractive) {
+                    listResponse.append(textFormat.format(FORMAT.RESET))
+                    listResponse.append(stringUtils.EOL)
+                } else {
+                    listResponse.append(" ")
+                }
+                listResponse.append(summary)
+                listResponse.append(stringUtils.EOL)
+                listResponse.append(stringUtils.EOL)
             }
         }
         if (channelIsInteractive) {

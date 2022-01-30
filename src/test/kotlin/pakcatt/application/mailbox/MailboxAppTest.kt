@@ -85,4 +85,25 @@ class MailboxAppTest: AppServiceTest() {
                 "* 4 02-01 13:46 PAKCATT->VK3LIT: Subject 4${stringUtils.EOL}",
                 response.responseString())
     }
+
+    fun `test mail list with limit async`() {
+        `test starting a connection to the BBS with messages`()
+        var request = testRequest("mail.list.2", false)
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("* 3 01-01 12:30 VK3LIT->VK2VRO: Subject 3${stringUtils.EOL}" +
+                "* 4 02-01 13:46 PAKCATT->VK3LIT: Subject 4${stringUtils.EOL}",
+            response.responseString())
+    }
+
+    fun `test mail list with unread limit async`() {
+        `test starting a connection to the BBS with messages`()
+        var request = testRequest("mail.list.unread.2", false)
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("* 3 01-01 12:30 VK3LIT->VK2VRO: Subject 3${stringUtils.EOL}" +
+                "* 4 02-01 13:46 PAKCATT->VK3LIT: Subject 4${stringUtils.EOL}",
+            response.responseString())
+    }
+
 }

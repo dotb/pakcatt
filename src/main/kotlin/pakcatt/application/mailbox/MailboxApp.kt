@@ -1,10 +1,13 @@
 package pakcatt.application.mailbox
 
+import pakcatt.application.bulletinboard.persistence.BulletinBoardPost
 import pakcatt.application.mailbox.edit.EditSubjectApp
 import pakcatt.application.mailbox.persistence.MailMessage
 import pakcatt.application.mailbox.persistence.MailboxStore
 import pakcatt.application.shared.*
 import pakcatt.application.shared.command.Command
+import pakcatt.application.shared.list.LimitType
+import pakcatt.application.shared.list.ListLimiter
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
 import pakcatt.application.shared.model.ParsedCommandTokens
@@ -34,14 +37,27 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
     }
 
     private fun listMessages(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
-        val arg = parsedCommandTokens.argumentAtIndexAsString(1)
-        val onlyNew = arg == "unread"
+        val argUnread = parsedCommandTokens.argumentAtIndexAsString(1)
+        val argLimitOne = parsedCommandTokens.argumentAtIndexAsInt(1)
+        val argLimitTwo = parsedCommandTokens.argumentAtIndexAsInt(2)
+        val onlyNew = argUnread == "unread"
         val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign, onlyNew)
+
+        val listLimit = argLimitTwo ?: argLimitOne
+        val listLimiter = when (listLimit) {
+            null -> ListLimiter(userMessages.size, LimitType.LIST_TAIL)
+            else -> ListLimiter<MailMessage>(listLimit, LimitType.LIST_TAIL)
+        }
+        listLimiter.addItems(userMessages)
+        return compileMessageListResponse(request.channelIsInteractive, listLimiter)
+    }
+
+    private fun compileMessageListResponse(channelIsInteractive: Boolean, listLimiter: ListLimiter<MailMessage>): AppResponse {
         val listResponse = StringBuilder()
-        val messageCount = userMessages.size
+        val messageCount = listLimiter.getAllItems().size
 
         if (messageCount > 0) {
-            if (request.channelIsInteractive) {
+            if (channelIsInteractive) {
                 listResponse.append(stringUtils.EOL)
                 listResponse.append(textFormat.format(FORMAT.BOLD))
                 listResponse.append("  No${tabSpace}Date          From${tabSpace}To${tabSpace}Subject")
@@ -49,13 +65,14 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
                 listResponse.append(stringUtils.EOL)
             }
 
-            for (message in userMessages) {
+            for (limitedMessage in listLimiter.getLimitedList()) {
+                val message = limitedMessage.item
                 listResponse.append(when (message.isRead) {
                     true -> "  "
                     false -> "* "
                 })
                 listResponse.append(message.messageNumber)
-                if (request.channelIsInteractive) {
+                if (channelIsInteractive) {
                     listResponse.append(tabSpace)
                     listResponse.append(stringUtils.formattedDateLong(message.dateTime))
                     listResponse.append("  ")
@@ -65,13 +82,13 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
                     listResponse.append(" ")
                 }
                 listResponse.append(message.fromCallsign)
-                if (request.channelIsInteractive) {
+                if (channelIsInteractive) {
                     listResponse.append(tabSpace)
                 } else {
                     listResponse.append("->")
                 }
                 listResponse.append(message.toCallsign)
-                if (request.channelIsInteractive) {
+                if (channelIsInteractive) {
                     listResponse.append(tabSpace)
                 } else {
                     listResponse.append(": ")
@@ -80,7 +97,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
                 listResponse.append(stringUtils.EOL)
             }
         }
-        if (request.channelIsInteractive) {
+        if (channelIsInteractive) {
             listResponse.append(messageCount)
             listResponse.append(" messages")
             listResponse.append(stringUtils.EOL)
