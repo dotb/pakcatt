@@ -217,6 +217,19 @@ class BulletinBoardAppTest: AppServiceTest() {
     }
 
     @Test
+    fun `test open the board and list topics with a limit from async device`() {
+        `test starting a connection to the BBS with messages`()
+        var request = testRequest("board.list.4", false)
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("9 01-01 10:00: This is topic 9${stringUtils.EOL}" +
+                "10 01-01 10:00: This is topic 10${stringUtils.EOL}" +
+                "1 01-01 12:46: This is topic 1${stringUtils.EOL}" +
+                "4 10-07 02:00: This is topic 4${stringUtils.EOL}"
+            , response.responseString())
+    }
+
+    @Test
     fun `test open the board and then a topic and list posts with a default length from an async device`() {
         `test starting a connection to the BBS with messages`()
         var request = testRequest("board.open.1.list", false)

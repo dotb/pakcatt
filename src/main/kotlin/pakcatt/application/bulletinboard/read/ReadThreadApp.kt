@@ -41,8 +41,7 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
         val requestedNumberOfPosts = parsedCommandTokens.argumentAtIndexAsInt(1)
         val numberOfPostsToList = requestedNumberOfPosts ?: defaultPostListLength
         val postList = bulletinBoardStore.getPostsInThread(parentThread.threadNumber)
-        val listLimiter = ListLimiter<BulletinBoardPost>(numberOfPostsToList, LimitType.LIST_TAIL)
-        listLimiter.addItems(postList)
+        val listLimiter = ListLimiter<BulletinBoardPost>(numberOfPostsToList, LimitType.LIST_TAIL).addItems(postList)
         val responseString = compilePostListResponse(request.channelIsInteractive, listLimiter)
         return AppResponse.sendText(responseString)
     }

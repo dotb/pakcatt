@@ -8,6 +8,8 @@ import pakcatt.application.shared.FORMAT
 import pakcatt.application.shared.NavigateBack
 import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.command.Command
+import pakcatt.application.shared.list.LimitType
+import pakcatt.application.shared.list.ListLimiter
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
 import pakcatt.application.shared.model.ParsedCommandTokens
@@ -34,7 +36,9 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
     }
 
     private fun listThreads(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
+        val listLimit = parsedCommandTokens.argumentAtIndexAsInt(1)
         val threadList = bulletinBoardStore.getThreads()
+        val listLimiter = ListLimiter<BulletinBoardThread>(listLimit, LimitType.LIST_TAIL).addItems(threadList)
         val listResponse = StringBuilder()
         val threadCount = threadList.size
 
@@ -46,7 +50,8 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
                 listResponse.append(textFormat.format(FORMAT.RESET))
                 listResponse.append(stringUtils.EOL)
             }
-            for (thread in threadList) {
+            for (limitedThread in listLimiter.getLimitedList()) {
+                val thread = limitedThread.item
                 val topicSummary = stringUtils.shortenString(thread.topic, boardSummaryLength, true)
                 if (request.channelIsInteractive) {
                     listResponse.append("  ")

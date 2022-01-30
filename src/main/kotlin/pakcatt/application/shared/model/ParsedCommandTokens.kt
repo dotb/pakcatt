@@ -26,7 +26,10 @@ class ParsedCommandTokens {
      * as well as any remaining instructions not yet parsed.
      */
     fun parseCommandLine(inputLine: String): ParsedCommandTokens {
+        // Remove end-of-line, and whitespace chars at each end of the string
         val chompedInputLine = stringUtils.removeEOLChars(inputLine)
+            .replace("^[\\s]+".toRegex(),"")
+            .replace("[\\s]+$".toRegex(),"")
         consumedArgumentIndex = -1
         if (stringUtils.stringIsInDottedNotation(chompedInputLine)) {
             isInDottedNotation = true

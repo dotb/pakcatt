@@ -44,11 +44,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         val userMessages = mailboxStore.messageListForCallsign(request.remoteCallsign, onlyNew)
 
         val listLimit = argLimitTwo ?: argLimitOne
-        val listLimiter = when (listLimit) {
-            null -> ListLimiter(userMessages.size, LimitType.LIST_TAIL)
-            else -> ListLimiter<MailMessage>(listLimit, LimitType.LIST_TAIL)
-        }
-        listLimiter.addItems(userMessages)
+        val listLimiter = ListLimiter<MailMessage>(listLimit, LimitType.LIST_TAIL).addItems(userMessages)
         return compileMessageListResponse(request.channelIsInteractive, listLimiter)
     }
 

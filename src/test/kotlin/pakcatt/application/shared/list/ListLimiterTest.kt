@@ -30,6 +30,29 @@ class ListLimiterTest : TestCase() {
     }
 
     @Test
+    fun `test all items are listed when a null limit count is specified by head`() {
+        val listLimiter = ListLimiter<String>(null, LimitType.LIST_HEAD)
+        listLimiter.addItems(listOfStrings)
+        val stringBuilder = StringBuilder()
+        for (limitedItem in listLimiter.getLimitedList()) {
+            stringBuilder.append(limitedItem.item)
+        }
+        assertEquals("12345678910", stringBuilder.toString())
+    }
+
+    @Test
+    fun `test all items are listed when a null limit count is specified by tail`() {
+        val listLimiter = ListLimiter<String>(null, LimitType.LIST_TAIL)
+        listLimiter.addItems(listOfStrings)
+        val stringBuilder = StringBuilder()
+        for (limitedItem in listLimiter.getLimitedList()) {
+            stringBuilder.append(limitedItem.item)
+        }
+        assertEquals("12345678910", stringBuilder.toString())
+    }
+
+
+    @Test
     fun `test limiter can handle out of bounds head`() {
         val listLimiter = ListLimiter<String>(12, LimitType.LIST_HEAD)
         listLimiter.addItems(listOfStrings)

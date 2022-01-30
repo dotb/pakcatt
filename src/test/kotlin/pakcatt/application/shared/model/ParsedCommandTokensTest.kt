@@ -68,4 +68,11 @@ class ParsedCommandTokensTest : TestCase() {
         assertEquals("", parsedCommandTokens.remainingCommandLine())
     }
 
+    @Test
+    fun `test dotted command line with a space at the end`() {
+        val parsedCommandTokens = ParsedCommandTokens().parseCommandLine(" board.list.3 ")
+        assertEquals("board", parsedCommandTokens.command())
+        assertEquals(3, parsedCommandTokens.argumentAtIndexAsInt(2))
+    }
+
 }
