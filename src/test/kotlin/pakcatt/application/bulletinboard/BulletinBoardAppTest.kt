@@ -243,4 +243,31 @@ class BulletinBoardAppTest: AppServiceTest() {
                 response.responseString())
     }
 
+    @Test
+    fun `test open a topic and add a new post to it`() {
+        `test starting a connection to the BBS with messages`()
+        var request = testRequest("board")
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Launching Bulletin Board${stringUtils.EOL}board> ", response.responseString())
+
+        request = testRequest("open 1")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("${stringUtils.EOL}" +
+                "board/1 This is topic 1> ", response.responseString())
+
+        request = testRequest("post")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals("Compose your post and finish with . on a line of it's own.${stringUtils.EOL}", response.responseString())
+
+        request = testRequest("This is a test")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals("${stringUtils.EOL}", response.responseString())
+
+        request = testRequest(".")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals("Thanks. Your post has been stored.${stringUtils.EOL}board/1 This is topic 1> ", response.responseString())
+    }
+
 }

@@ -106,4 +106,56 @@ class MailboxAppTest: AppServiceTest() {
             response.responseString())
     }
 
+    @Test
+    fun `test sending a mail message with existing messages`() {
+        `test starting a connection to the BBS with messages`()
+        var request = testRequest("mail")
+
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Launching Mail${stringUtils.EOL}mail> ", response.responseString())
+
+        request = testRequest("send vk3lit")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals("${stringUtils.EOL}Subject: ", response.responseString())
+
+        request = testRequest("TEst")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals("Compose your message and finish with . on a line of it's own.${stringUtils.EOL}", response.responseString())
+
+        request = testRequest("CR LF test.")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals("${stringUtils.EOL}", response.responseString())
+
+        request = testRequest(".")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals("Thanks. Your message has been stored.\nmail> ", response.responseString())
+    }
+
+    @Test
+    fun `test sending a mail message with no messages`() {
+        `test starting a connection to the BBS with no messages`()
+        var request = testRequest("mail")
+
+        var response = appService.getResponseForReceivedMessage(request)
+        assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
+        assertEquals("Launching Mail${stringUtils.EOL}mail> ", response.responseString())
+
+        request = testRequest("send vk3lit")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals("${stringUtils.EOL}Subject: ", response.responseString())
+
+        request = testRequest("TEst")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals("Compose your message and finish with . on a line of it's own.${stringUtils.EOL}", response.responseString())
+
+        request = testRequest("CR LF test.")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals("${stringUtils.EOL}", response.responseString())
+
+        request = testRequest(".")
+        response = appService.getResponseForReceivedMessage(request)
+        assertEquals("Thanks. Your message has been stored.${stringUtils.EOL}mail> ", response.responseString())
+    }
+
 }

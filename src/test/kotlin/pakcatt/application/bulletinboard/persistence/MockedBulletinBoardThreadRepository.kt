@@ -8,7 +8,7 @@ import java.util.*
 
 class MockedBulletinBoardThreadRepository: BulletinBoardThreadRepository {
     override fun <S : BulletinBoardThread?> save(p0: S): S {
-        TODO("Not yet implemented")
+        return p0
     }
 
     override fun <S : BulletinBoardThread?> saveAll(p0: MutableIterable<S>): MutableList<S> {
