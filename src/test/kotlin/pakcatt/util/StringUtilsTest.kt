@@ -5,9 +5,7 @@ import org.junit.Test
 
 class StringUtilsTest : TestCase() {
 
-
     private val subject = StringUtils()
-
 
     @Test
     fun testChompString() {
@@ -53,5 +51,28 @@ class StringUtilsTest : TestCase() {
         assertEquals(realPacketResult,subject.fixEndOfLineCharacters(realPacketTest, targetEOLSequence))
     }
 
+    @Test
+    fun testStringIsInDottedNotation() {
+        assertEquals(false, subject.stringIsInDottedNotation("."))
+        assertEquals(false, subject.stringIsInDottedNotation(" ."))
+        assertEquals(false, subject.stringIsInDottedNotation(". "))
+        assertEquals(false, subject.stringIsInDottedNotation(".\r"))
+        assertEquals(false, subject.stringIsInDottedNotation(".\n"))
+        assertEquals(false, subject.stringIsInDottedNotation(".\r\n"))
+        assertEquals(false, subject.stringIsInDottedNotation(".\n\r"))
+        assertEquals(false, subject.stringIsInDottedNotation("list"))
+        assertEquals(false, subject.stringIsInDottedNotation(".test"))
+        assertEquals(false, subject.stringIsInDottedNotation("CR LF test."))
+        assertEquals(false, subject.stringIsInDottedNotation("test."))
+        assertEquals(false, subject.stringIsInDottedNotation("This is a sentance. and another one."))
+        assertEquals(false, subject.stringIsInDottedNotation("but.this.is.not.actually.a.command."))
+        assertEquals(false, subject.stringIsInDottedNotation("no dot at all"))
+        assertEquals(true, subject.stringIsInDottedNotation("this.is.a.command"))
+        assertEquals(true, subject.stringIsInDottedNotation("test.test"))
+        assertEquals(true, subject.stringIsInDottedNotation("one.2.three.4.five"))
+        assertEquals(true, subject.stringIsInDottedNotation("mail.list.4"))
+        assertEquals(true, subject.stringIsInDottedNotation("list.2"))
+        assertEquals(true, subject.stringIsInDottedNotation("this.is.a.really.long.command"))
+    }
 
 }

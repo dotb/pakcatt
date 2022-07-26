@@ -170,7 +170,7 @@ class StringUtils {
      * For example, board.open.1 list 2
      */
     fun stringIsInDottedNotation(string: String): Boolean {
-        return string.contains(".") && string != "." && (!string.contains(" ") || string.indexOf(".") < string.indexOf(" "))
+        return string.matches("^\\w+(\\.\\w+)+".toRegex())
     }
 
 }
