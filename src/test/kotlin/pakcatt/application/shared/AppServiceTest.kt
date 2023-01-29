@@ -12,11 +12,10 @@ import pakcatt.application.mailbox.persistence.MockedMailMessageRepository
 import pakcatt.application.mainmenu.MainMenuApp
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.ResponseType
-import pakcatt.application.filter.EOLInputFilter
-import pakcatt.application.filter.EOLOutputFilter
-import pakcatt.application.filter.LastAppInputFilter
-import pakcatt.application.filter.MentionOutputFilter
-import pakcatt.application.last.LastApp
+import pakcatt.application.shared.filter.EOLInputFilter
+import pakcatt.application.shared.filter.EOLOutputFilter
+import pakcatt.application.last.filter.LastAppInputFilter
+import pakcatt.application.shared.filter.MentionOutputFilter
 import pakcatt.application.tell.model.TellAppConfig
 import pakcatt.util.StringUtils
 

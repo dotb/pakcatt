@@ -1,7 +1,7 @@
-package pakcatt.application.filter
+package pakcatt.application.last.filter
 
 import org.springframework.stereotype.Component
-import pakcatt.application.filter.shared.InputFilter
+import pakcatt.application.shared.filter.common.InputFilter
 import pakcatt.application.last.persistence.LastEntryStore
 import pakcatt.application.shared.model.AppRequest
 import java.util.*

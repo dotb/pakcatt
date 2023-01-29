@@ -1,4 +1,4 @@
-package pakcatt.application.filter.shared
+package pakcatt.application.shared.filter.common
 
 import pakcatt.application.shared.UserContext
 import pakcatt.application.shared.model.AppResponse

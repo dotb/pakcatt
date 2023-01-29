@@ -1,4 +1,4 @@
-package pakcatt.application.filter
+package pakcatt.application.shared.filter
 
 import org.junit.Test
 import pakcatt.application.shared.AppServiceTest
