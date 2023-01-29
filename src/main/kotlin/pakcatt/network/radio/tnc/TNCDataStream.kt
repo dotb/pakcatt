@@ -21,12 +21,18 @@ abstract class TNCDataStream(channelIdentifier: String): TNC(channelIdentifier) 
     }
 
     override fun sendData(outputData: Int) {
-        logger.trace("TNC sending data of size: 1 byte")
-        val myOutputStream = outputStream
-        if (null != myOutputStream) {
-            myOutputStream.write(outputData)
-        } else {
-            logger.error("Tried to send a line to the TNC port but it's not connected.")
+        try {
+            logger.trace("TNC sending data of size: 1 byte")
+            val myOutputStream = outputStream
+            if (null != myOutputStream) {
+                myOutputStream.write(outputData)
+            } else {
+                logger.error("Tried to send a line to the TNC port but it's not connected.")
+                disconnect()
+            }
+        } catch (e: Exception) {
+            logger.error("Error while trying to send data to a TNC {}", e.message)
+            disconnect()
         }
     }
 
@@ -37,10 +43,14 @@ abstract class TNCDataStream(channelIdentifier: String): TNC(channelIdentifier) 
                 if (null != myInputStream) {
                     val byteIn = myInputStream.readByte()
                     receiveDataCallback(byteIn)
+                } else {
+                    logger.error("Error while trying to service incoming TNC buffer, input stream was null")
+                    disconnect()
                 }
             }
-        } catch (ex: Exception) {
-            ex.printStackTrace()
+        } catch (e: Exception) {
+            logger.error("Error while trying to service incoming TNC buffer {}", e.message)
+            disconnect()
         }
     }
 

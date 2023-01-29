@@ -59,8 +59,24 @@ class KissService(val tncConnections: List<TNC>,
     }
 
     /**
+     * Check the TNC connections and reconnect to any that might have disconnected
+     */
+    @Scheduled(fixedRate = 60000)
+    fun checkTNCConnections() {
+        for (tncConnection in tncConnections) {
+            if (!tncConnection.isConnected()) {
+                logger.info("TNC channel {} is disconnected. Attempting to reconnect.", tncConnection.channelIdentifier)
+                tncConnection.connect()
+            } else {
+                logger.trace("TNC channel {} is connected, sending keepalive.", tncConnection.channelIdentifier)
+                tncConnection.sendData(KissFrame.FRAME_END)
+            }
+        }
+    }
+
+    /**
      * This method is called when the PakCatt service is started, and
-     * can send a broadcase to announce it's on frequency, if configured.
+     * can send a broadcast to announce it's on frequency, if configured.
      */
     private fun onStartup() {
         if (sendStartupShutdownMessage) {
