@@ -29,7 +29,7 @@ class LastApp(private val lastEntryStore: LastEntryStore): SubApp() {
         val formattedCallsign = stringUtils.formatCallsignRemoveSSID(callsign)
         return when (val lastEntry = lastEntryStore.getLastEntry(formattedCallsign)) {
             null -> "Haven't seen $formattedCallsign${stringUtils.EOL}"
-            else -> "${lastEntry.callsign}: ${appropriateDateFormatter(request).format(lastEntry.lastSeen)}${stringUtils.EOL}"
+            else -> "${lastEntry.callsign}: ${appropriateDateFormatter(request).format(lastEntry.lastSeen)} via ${lastEntry.channelId}${stringUtils.EOL}"
         }
     }
 
@@ -38,6 +38,8 @@ class LastApp(private val lastEntryStore: LastEntryStore): SubApp() {
         val stringBuilder = StringBuilder()
         for (lastEntry in lastEntries) {
             stringBuilder.append("${lastEntry.callsign}: ${appropriateDateFormatter(request).format(lastEntry.lastSeen)}")
+            stringBuilder.append(" via ")
+            stringBuilder.append(lastEntry.channelId)
             stringBuilder.append(stringUtils.EOL)
         }
         return stringBuilder.toString()

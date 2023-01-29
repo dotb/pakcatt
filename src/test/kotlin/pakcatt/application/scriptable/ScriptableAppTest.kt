@@ -16,7 +16,7 @@ class ScriptableAppTest : TestCase() {
 
     @Test
     fun testConnectionRequestSuccessWithMessage() {
-        val validConnectionRequest = AppRequest("REM1C", "MYCALL","MYCALL", "date", true)
+        val validConnectionRequest = AppRequest("144.875Mhz", "REM1C", "MYCALL","MYCALL", "date", true)
         val expectedResponse = AppResponse.sendText("The date is 1 Jan")
         val connectionResponse = subject.decisionOnConnectionRequest(validConnectionRequest)
         assertEquals(expectedResponse.responseType, connectionResponse.responseType)
@@ -26,7 +26,7 @@ class ScriptableAppTest : TestCase() {
 
     @Test
     fun testConnectionRequestSuccessWithACK() {
-        val validConnectionRequest = AppRequest("REM1C", "MYCALL", "MYCALL", "ack", true)
+        val validConnectionRequest = AppRequest("144.875Mhz", "REM1C", "MYCALL", "MYCALL", "ack", true)
         val expectedResponse = AppResponse.acknowledgeOnly()
         val connectionResponse = subject.decisionOnConnectionRequest(validConnectionRequest)
         assertEquals(expectedResponse.responseType, connectionResponse.responseType)
@@ -36,7 +36,7 @@ class ScriptableAppTest : TestCase() {
 
     @Test
     fun testConnectionRequestSuccessWithIgnore() {
-        val validConnectionRequest = AppRequest("REM1C", "NOTMYCALL", "NOTMYCALL", "ignore me", true)
+        val validConnectionRequest = AppRequest("144.875Mhz", "REM1C", "NOTMYCALL", "NOTMYCALL", "ignore me", true)
         val expectedResponse = AppResponse.ignore()
         val connectionResponse = subject.decisionOnConnectionRequest(validConnectionRequest)
         assertEquals(expectedResponse.responseType, connectionResponse.responseType)
@@ -46,7 +46,7 @@ class ScriptableAppTest : TestCase() {
 
     @Test
     fun testMessageWithReponse() {
-        val validConnectionRequest = AppRequest("REM1C", "MYCALL", "MYCALL", "date", true)
+        val validConnectionRequest = AppRequest("144.875Mhz", "REM1C", "MYCALL", "MYCALL", "date", true)
         val expectedResponse = AppResponse.sendText("The date is 1 Jan")
         val connectionResponse = subject.handleReceivedMessage(validConnectionRequest, ParsedCommandTokens().parseCommandLine(validConnectionRequest.message))
         assertEquals(expectedResponse.responseType, connectionResponse.responseType)
@@ -56,7 +56,7 @@ class ScriptableAppTest : TestCase() {
 
     @Test
     fun testMessageWithoutResponse() {
-        val validConnectionRequest = AppRequest("REM1C", "MYCALL", "MYCALL", "ack", true)
+        val validConnectionRequest = AppRequest("144.875Mhz", "REM1C", "MYCALL", "MYCALL", "ack", true)
         val expectedResponse = AppResponse.acknowledgeOnly()
         val connectionResponse = subject.handleReceivedMessage(validConnectionRequest, ParsedCommandTokens().parseCommandLine(validConnectionRequest.message))
         assertEquals(expectedResponse.responseType, connectionResponse.responseType)
@@ -66,7 +66,7 @@ class ScriptableAppTest : TestCase() {
 
     @Test
     fun testMessageThatIsIgnored() {
-        val validConnectionRequest = AppRequest("REM1C", "NOTMYCALL", "NOTMYCALL", "ignore me", true)
+        val validConnectionRequest = AppRequest("144.875Mhz", "REM1C", "NOTMYCALL", "NOTMYCALL", "ignore me", true)
         val expectedResponse = AppResponse.ignore()
         val connectionResponse = subject.handleReceivedMessage(validConnectionRequest, ParsedCommandTokens().parseCommandLine(validConnectionRequest.message))
         assertEquals(expectedResponse.responseType, connectionResponse.responseType)

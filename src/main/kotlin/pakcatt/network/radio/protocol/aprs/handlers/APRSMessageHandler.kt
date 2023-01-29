@@ -29,7 +29,8 @@ class APRSMessageHandler(myCall: String,
             aprsMessageFrame.messageDestinationCallsign() == stringUtils.formatCallsignEnsureSSID(myCall)) {
 
                 // Find an app that will handle this message
-                val appRequest = AppRequest(aprsMessageFrame.messageSourceCallsign(),
+                val appRequest = AppRequest(aprsFrame.channelIdentifier,
+                                            aprsMessageFrame.messageSourceCallsign(),
                                             stringUtils.formatCallsignRemoveSSID(aprsMessageFrame.messageSourceCallsign()),
                                             aprsMessageFrame.messageDestinationCallsign(),
                                             aprsMessageFrame.message(),

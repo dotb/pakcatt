@@ -142,7 +142,8 @@ class ConnectionHandler(
             handleIncomingAcknowledgement(incomingFrame)
 
             // Share the payload with any listening applications to process
-            val  appResponse = linkInterface.getResponseForReceivedMessage(AppRequest(incomingFrame.sourceCallsign(),
+            val  appResponse = linkInterface.getResponseForReceivedMessage(AppRequest(incomingFrame.channelIdentifier,
+                                                                            incomingFrame.sourceCallsign(),
                                                                             stringUtils.formatCallsignRemoveSSID(incomingFrame.sourceCallsign()),
                                                                             incomingFrame.destCallsign(),
                                                                             incomingFrame.payloadDataString(),
@@ -161,7 +162,8 @@ class ConnectionHandler(
      * Iterate the available applications and ask them if anyone wants us to establish a connection for this incoming frame.
      */
     private fun handleConnectionRequest(incomingFrame: KissFrame) {
-        val appResponse = linkInterface.getDecisionOnConnectionRequest(AppRequest(incomingFrame.sourceCallsign(),
+        val appResponse = linkInterface.getDecisionOnConnectionRequest(AppRequest(incomingFrame.channelIdentifier,
+                                                                        incomingFrame.sourceCallsign(),
                                                                         stringUtils.formatCallsignRemoveSSID(incomingFrame.sourceCallsign()),
                                                                         incomingFrame.destCallsign(),
                                                                         incomingFrame.payloadDataString(),

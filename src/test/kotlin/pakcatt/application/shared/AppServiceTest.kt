@@ -83,7 +83,7 @@ open class AppServiceTest: TestCase() {
     }
 
     protected fun testRequest(command: String = "", channelIsInteractive: Boolean = true): AppRequest {
-        return AppRequest("VK3LIT-1", "VK3LIT", "PAKCATT", command, channelIsInteractive, "", "", true)
+        return AppRequest("144.875Mhz", "VK3LIT-1", "VK3LIT", "PAKCATT", command, channelIsInteractive, "", "", true)
     }
 
 }

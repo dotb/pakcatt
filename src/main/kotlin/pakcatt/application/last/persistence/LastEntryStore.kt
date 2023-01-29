@@ -8,13 +8,14 @@ import java.util.*
 class LastEntryStore(private val lastEntryRepository: LastEntryRepository) {
 
     @Async
-    fun updateLastEntryFor(callsign: String, datetimeStamp: Date) {
+    fun updateLastEntryFor(callsign: String, datetimeStamp: Date, channelIdentifier: String) {
         var lastEntry = getLastEntry(callsign)
         if (null == lastEntry) {
-            lastEntry = LastEntry(callsign, datetimeStamp)
+            lastEntry = LastEntry(callsign, datetimeStamp, channelIdentifier)
             lastEntryRepository.insert(lastEntry)
         } else {
             lastEntry.lastSeen = datetimeStamp
+            lastEntry.channelId = channelIdentifier
             lastEntryRepository.save(lastEntry)
         }
     }

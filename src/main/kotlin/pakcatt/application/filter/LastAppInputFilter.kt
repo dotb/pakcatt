@@ -14,12 +14,12 @@ import java.util.*
 class LastAppInputFilter(private val lastEntryStore: LastEntryStore): InputFilter() {
 
     override fun applyFilter(request: AppRequest) {
-        updateCallsignEntry(request.remoteCallsign)
+        updateCallsignEntry(request.remoteCallsign, request.channelIdentifier)
     }
 
-    private fun updateCallsignEntry(callsign: String) {
+    private fun updateCallsignEntry(callsign: String, channelIdentifier: String) {
         val formattedCallsign = stringUtils.formatCallsignRemoveSSID(callsign)
-        lastEntryStore.updateLastEntryFor(formattedCallsign, Date())
+        lastEntryStore.updateLastEntryFor(formattedCallsign, Date(), channelIdentifier)
     }
 
 }

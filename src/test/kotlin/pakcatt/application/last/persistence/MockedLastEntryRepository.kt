@@ -22,7 +22,7 @@ class MockedLastEntryRepository: LastEntryRepository {
     override fun findById(p0: String): Optional<LastEntry> {
         return when (lastEntryIsAvailable) {
             false -> Optional.empty()
-            true -> Optional.of(LastEntry("VK3LIT", Date(1000000)))
+            true -> Optional.of(LastEntry("VK3LIT", Date(1000000), "144.875Mhz"))
         }
     }
 
@@ -31,10 +31,10 @@ class MockedLastEntryRepository: LastEntryRepository {
     }
 
     override fun findAll(): MutableList<LastEntry> {
-        return mutableListOf(LastEntry("VK3LIT", Date(1000000)),
-                LastEntry("VK2VRO", Date(10000000)),
-                LastEntry("VK3FUR", Date(100000000)),
-                LastEntry("VK3DUB", Date(50000000)),
+        return mutableListOf(LastEntry("VK3LIT", Date(1000000), "144.875Mhz"),
+                LastEntry("VK2VRO", Date(10000000), "144.875Mhz"),
+                LastEntry("VK3FUR", Date(100000000), "144.875Mhz"),
+                LastEntry("VK3DUB", Date(50000000), "144.875Mhz"),
                 LastEntry("VK4XSS", Date(20000000)))
     }
 
