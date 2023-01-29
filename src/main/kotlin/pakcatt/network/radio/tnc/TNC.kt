@@ -1,6 +1,6 @@
 package pakcatt.network.radio.tnc
 
-abstract class TNC {
+abstract class TNC(val channelIdentifier: String) {
 
     internal lateinit var receiveDataCallback:(receivedData: Byte) -> Unit?
 
@@ -17,5 +17,7 @@ abstract class TNC {
     abstract fun sendData(outputData: ByteArray)
 
     abstract fun sendData(outputData: Int)
+
+    abstract fun serviceTNCOutputBuffer()
 
 }

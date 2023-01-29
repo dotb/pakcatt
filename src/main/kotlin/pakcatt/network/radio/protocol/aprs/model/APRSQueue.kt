@@ -8,8 +8,9 @@ class APRSQueue {
 
     private var deliveryQueue = ArrayList<KissFrame>()
 
-    fun queueAPRSMessageForDelivery(sourceCallsign: String, destinationCallsign: String, message: String) {
+    fun queueAPRSMessageForDelivery(transmitChannelIdentifier: String, sourceCallsign: String, destinationCallsign: String, message: String) {
         val aprsMessageFrame = APRSMessageFrame()
+        aprsMessageFrame.channelIdentifier = transmitChannelIdentifier
         aprsMessageFrame.setSourceCallsign(sourceCallsign)
         aprsMessageFrame.setMessageDestinationCallsign(destinationCallsign)
         aprsMessageFrame.setMessage(message)

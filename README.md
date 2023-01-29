@@ -3,7 +3,7 @@ PakCatt is a modern packet radio framework built on top of KISS and AX25. It's n
 
 It's written in Kotlin and the Springboot framework, which makes it highly extensible and able to integrate into other web services.
 
-PakCatt is maintained by VK3LIT and VK3LE, who also run an instance on 144.875MHz FM in the Melbourne area, Australia - Connect to VK3LIT-1. VK3FUR has made a fantastic video that walks you through the technical setup you need to access the PakCatt BBS in Melbourne, or any other BBS for that matter. You can find it on her Youtube channel: https://www.youtube.com/watch?v=ix7YEMuo2Jk
+PakCatt is maintained by VK3AT and VK3LE, who also run an instance on 144.875MHz FM in the Melbourne area, Australia - Connect to VK3LIT-1. VK3FUR has made a fantastic video that walks you through the technical setup you need to access the PakCatt BBS in Melbourne, or any other BBS for that matter. You can find it on her Youtube channel: https://www.youtube.com/watch?v=ix7YEMuo2Jk
 
 ## Features
 
@@ -46,7 +46,7 @@ $ java -jar target/pakcatt-0.1.jar
 ║╔══╝╚ ╗║ ║╚╝╝║║ ╔╗╚ ╗║  ║║  ║║ 
 ║║   ║╚╝╚╗║╔╗╗║╚═╝║║╚╝╚╗ ║╚╗ ║╚╗
 ╚╝   ╚═══╝╚╝╚╝╚═══╝╚═══╝ ╚═╝ ╚═╝
-By VK3LIT & VK2VRO 
+By VK3AT & VK3LE
 ```  
 You can also run the handy build.sh script, which will build and create a Docker image.
 ```bash

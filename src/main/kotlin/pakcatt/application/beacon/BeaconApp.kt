@@ -2,6 +2,7 @@ package pakcatt.application.beacon
 
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import pakcatt.application.beacon.model.BeaconAppConfig
 import pakcatt.application.shared.RootApp
 import pakcatt.application.shared.model.DeliveryType
 import pakcatt.application.shared.model.AppRequest
@@ -11,9 +12,7 @@ import java.util.*
 
 @Component
 class BeaconApp(private val myCall: String,
-                private val beaconMessage: String,
-                private val beaconIntervalMinutes: Int,
-                private val beaconDestination: String): RootApp() {
+                private val beaconAppConfig: BeaconAppConfig): RootApp() {
 
     private var lastBeaconTimestamp: Long = 0
 
@@ -32,11 +31,19 @@ class BeaconApp(private val myCall: String,
     @Scheduled(fixedDelay = 1000)
     private fun beacon() {
         val timestampNow = Date().time
-        val intervalMilliseconds = beaconIntervalMinutes * 60000
-        if (beaconIntervalMinutes > 0
+        val intervalMilliseconds = beaconAppConfig.intervalMinutes() * 60000
+        if (beaconAppConfig.intervalMinutes() > 0
             && lastBeaconTimestamp + intervalMilliseconds < timestampNow) {
-            queueAdhocMessageForTransmission(beaconDestination, myCall, beaconMessage, DeliveryType.LINK_FIRE_AND_FORGET)
             lastBeaconTimestamp = timestampNow
+            for (channelIdentifier in beaconAppConfig.channelIdentifiers) {
+                queueAdhocMessageForTransmission(
+                    channelIdentifier,
+                    beaconAppConfig.destination,
+                    myCall,
+                    beaconAppConfig.message,
+                    DeliveryType.LINK_FIRE_AND_FORGET
+                )
+            }
         }
     }
 

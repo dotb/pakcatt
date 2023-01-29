@@ -32,8 +32,10 @@ class APRSService(private val appInterface: AppInterface,
         logger.trace("APRS Service: Handling frame: {}", incomingFrame)
         val untypedAPRSFrame = APRSFrame()
         untypedAPRSFrame.populateFromKissFrame(incomingFrame)
+        untypedAPRSFrame.channelIdentifier = incomingFrame.channelIdentifier
         logger.trace("Untyped APRS Frame: {}", untypedAPRSFrame.toString())
         val typedAPRSFrame = getTypedAPRSFrame(untypedAPRSFrame)
+        typedAPRSFrame.channelIdentifier = incomingFrame.channelIdentifier
         logger.debug("Typed APRS Frame: {}", typedAPRSFrame.toString())
         handleTypedAPRSFrame(typedAPRSFrame)
     }
@@ -42,7 +44,7 @@ class APRSService(private val appInterface: AppInterface,
         // Queue any adhoc frames requested by apps, for delivery
         for (adhocDelivery in appInterface.getAdhocResponses(DeliveryType.APRS_FIRE_AND_FORGET)) {
             if (adhocDelivery.deliveryType == DeliveryType.APRS_FIRE_AND_FORGET) {
-                aprsQueue.queueAPRSMessageForDelivery(adhocDelivery.myCallsign, adhocDelivery.remoteCallsign, adhocDelivery.message)
+                aprsQueue.queueAPRSMessageForDelivery(adhocDelivery.channelIdentifier, adhocDelivery.myCallsign, adhocDelivery.remoteCallsign, adhocDelivery.message)
             }
         }
 

@@ -54,17 +54,17 @@ class PacketService(private var appService: AppInterface,
         while (receiveQueue.isNotEmpty()) {
             val nextReceivedFrame = receiveQueue.pop()
             val connectionHandler =
-                connectionHandlerForConversation(nextReceivedFrame.sourceCallsign(), nextReceivedFrame.destCallsign())
+                connectionHandlerForConversation(nextReceivedFrame.channelIdentifier, nextReceivedFrame.sourceCallsign(), nextReceivedFrame.destCallsign())
                 connectionHandler.handleIncomingFrame(nextReceivedFrame)
         }
 
         // Queue any adhoc frames requested by apps, for delivery
         for (adhocDelivery in appService.getAdhocResponses(DeliveryType.LINK_REQUIRES_ACK)) {
-            val adhocConnectionHandler = connectionHandlerForConversation(adhocDelivery.remoteCallsign, adhocDelivery.myCallsign)
+            val adhocConnectionHandler = connectionHandlerForConversation(adhocDelivery.channelIdentifier, adhocDelivery.remoteCallsign, adhocDelivery.myCallsign)
             adhocConnectionHandler.queueMessageForDelivery(ControlField.INFORMATION_8, adhocDelivery.message)
         }
         for (adhocDelivery in appService.getAdhocResponses(DeliveryType.LINK_FIRE_AND_FORGET)) {
-            val adhocConnectionHandler = connectionHandlerForConversation(adhocDelivery.remoteCallsign, adhocDelivery.myCallsign)
+            val adhocConnectionHandler = connectionHandlerForConversation(adhocDelivery.channelIdentifier, adhocDelivery.remoteCallsign, adhocDelivery.myCallsign)
             adhocConnectionHandler.queueMessageForDelivery(ControlField.U_UNNUMBERED_INFORMATION, adhocDelivery.message)
         }
 
@@ -83,13 +83,13 @@ class PacketService(private var appService: AppInterface,
         }
     }
 
-    private fun connectionHandlerForConversation(remoteCallsign: String, myCallsign: String): ConnectionHandler {
+    private fun connectionHandlerForConversation(channelIdentifier: String, remoteCallsign: String, myCallsign: String): ConnectionHandler {
         val key = connectionHandlerKey(remoteCallsign, myCallsign)
         val existingConnectionHandler = connectionHandlers[key]
         return if (null != existingConnectionHandler) {
             existingConnectionHandler
         } else {
-            val newConnectionHandler = ConnectionHandler(remoteCallsign, myCallsign, this, frameSizeMax, framesPerOver, maxDeliveryAttempts, deliveryRetryTimeSeconds)
+            val newConnectionHandler = ConnectionHandler(channelIdentifier, remoteCallsign, myCallsign, this, frameSizeMax, framesPerOver, maxDeliveryAttempts, deliveryRetryTimeSeconds)
             connectionHandlers[key] = newConnectionHandler
             newConnectionHandler
         }

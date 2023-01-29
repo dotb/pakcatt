@@ -10,7 +10,16 @@ pakcatt:
     beacon:
       message: PAKCAT-1 on frequency, running PakCatt. Connect to PAKCAT-1 to try it out.
       interval_minutes: 0 # An interval of 0 disables beaconing.
-      destination: CQ # The destination address for beacon messages. This is typically 'CQ'
+      destination: CQ # The destination address for beacon messages. This is typically 'CQ'.
+      channel_identifiers: # List the channels beacon messages should be broadcast on.
+        - 'Serial TNC'
+        - 'TCP TNC'
+
+    # Tell app configuration
+    tell:
+      channel_identifiers: # List the channels tell messages should be delivered on
+        - 'Serial TNC'
+        - 'TCP TNC'
 
     # Startup and shutdown messages
     # These messages are broadcast on air when Pakcatt starts up, and just before it shuts down
@@ -38,9 +47,19 @@ pakcatt:
 #          pathConnect: 'scripts/location_messages_wrapper.sh'
 #          pathRequest: 'scripts/location_messages_wrapper.sh'
 
-  ## Serial port / TNC configuration
-  serial-port-path: /dev/<YOUR TNC SERIAL PATH>
-  serial-port-baud: 9600
+  ## TNC Configuration
+  tnc:
+    ## Serial port / TNC configuration
+    serial_connections:
+      - channel_identifier: 'Serial TNC'
+        port_path: /dev/<YOUR TNC SERIAL PATH>
+        port_baud: 9600
+
+    ## TCP/IP TNC connections
+    tcp_connections:
+      - channel_identifier: 'TCP TNC'
+        ip_address: 127.0.0.1
+        port: 8001
 
   ## Packet performance parameters
   network.packet:

@@ -9,6 +9,10 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
 import pakcatt.application.scriptable.model.Script
 import pakcatt.application.scriptable.model.ScriptableConfig
+import pakcatt.network.radio.tnc.TNC
+import pakcatt.network.radio.tnc.TNCDataStreamSerial
+import pakcatt.network.radio.tnc.TNCDataStreamTCP
+import pakcatt.network.radio.tnc.model.TNCConfig
 import java.lang.NumberFormatException
 
 @Configuration
@@ -59,32 +63,6 @@ class Configuration {
         return defaultPostListLength.toInt()
     }
 
-    @Value("\${pakcatt.application.beacon.message}")
-    private lateinit var beaconMessage: String
-    @Bean
-    fun beaconMessage(): String {
-        return beaconMessage
-    }
-
-    @Value("\${pakcatt.application.beacon.interval_minutes}")
-    private lateinit var beaconIntervalMinutes: String
-    @Bean
-    fun beaconIntervalMinutes(): Int {
-        return try {
-            beaconIntervalMinutes.toInt()
-        } catch (e: NumberFormatException) {
-            logger.error("The beacon interval {} is not a valid number. Please configure pakcatt.application.beacon.interval_minutes using numeric characters.", beaconIntervalMinutes)
-            0
-        }
-    }
-
-    @Value("\${pakcatt.application.beacon.destination}")
-    private lateinit var beaconDestination: String
-    @Bean
-    fun beaconDestination(): String {
-        return beaconDestination
-    }
-
     @Value("\${pakcatt.application.startstop.send.startup.shutdown.messages}")
     private lateinit var sendStartupShutdownMessage: String
     @Bean
@@ -124,18 +102,18 @@ class Configuration {
         return scriptableConfig.scripts
     }
 
-    @Value("\${pakcatt.serial-port-path}")
-    private lateinit var serialPortPath: String
+    @Autowired
+    private lateinit var tncConfig: TNCConfig
     @Bean
-    fun serialPortPath(): String {
-        return serialPortPath
-    }
-
-    @Value("\${pakcatt.serial-port-baud}")
-    private lateinit var serialPortBaud: Number
-    @Bean
-    fun serialPortBaud(): Int {
-        return serialPortBaud.toInt()
+    fun tncConnections(): List<TNC> {
+        val consolidatedTNCList = mutableListOf<TNC>()
+        for (tncConfig in tncConfig.serial_connections) {
+            consolidatedTNCList.add(TNCDataStreamSerial(tncConfig.channel_identifier, tncConfig.port_path, tncConfig.port_baud.toInt()))
+        }
+        for (tncConfig in tncConfig.tcp_connections) {
+            consolidatedTNCList.add(TNCDataStreamTCP(tncConfig.channel_identifier, tncConfig.ip_address, tncConfig.port.toInt()))
+        }
+        return consolidatedTNCList
     }
 
     @Value("\${pakcatt.network.packet.frame_size_max}")

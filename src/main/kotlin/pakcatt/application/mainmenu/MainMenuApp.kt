@@ -17,6 +17,7 @@ import pakcatt.application.shared.command.Command
 import pakcatt.application.tell.TellApp
 import pakcatt.application.shared.model.AppResponse
 import pakcatt.application.shared.model.ParsedCommandTokens
+import pakcatt.application.tell.model.TellAppConfig
 import java.lang.StringBuilder
 import kotlin.math.sqrt
 
@@ -29,7 +30,8 @@ class MainMenuApp(private val myCall: String,
                   private val welcomeMessage: String,
                   boardPromptTopicLength: Int,
                   boardSummaryLength: Int,
-                  boardPostListLength: Int): RootApp() {
+                  boardPostListLength: Int,
+                  private val tellAppConfig: TellAppConfig): RootApp() {
 
     private val lastApp = LastApp(lastEntryStore)
 
@@ -91,7 +93,7 @@ class MainMenuApp(private val myCall: String,
     private fun handleTell(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         val destinationCallsign = parsedCommandTokens.argumentAtIndexAsString(1)
         return if (destinationCallsign.isNotBlank()) {
-            AppResponse.sendText("", TellApp(destinationCallsign, myCall, request.remoteCallsign))
+            AppResponse.sendText("", TellApp(destinationCallsign, myCall, request.remoteCallsign, tellAppConfig.channelIdentifiers))
         } else {
             AppResponse.sendText("You need to specify a callsign")
         }

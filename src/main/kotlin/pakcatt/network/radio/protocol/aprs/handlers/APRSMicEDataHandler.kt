@@ -33,7 +33,7 @@ class APRSMicEDataHandler(myCall: String,
 
             // Send a response message if required
             if (appResponse.responseType == ResponseType.ACK_WITH_TEXT) {
-                aprsQueue.queueAPRSMessageForDelivery(myCall, micEDataFrame.sourceCallsign(), appResponse.responseString())
+                aprsQueue.queueAPRSMessageForDelivery(aprsFrame.channelIdentifier, myCall, micEDataFrame.sourceCallsign(), appResponse.responseString())
             }
         } else {
             logger.trace("APRS message is not for us {}", aprsFrame)

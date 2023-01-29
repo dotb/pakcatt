@@ -33,7 +33,7 @@ class APRSStatusHandler(myCall: String,
 
             // Send a response message if required
             if (appResponse.responseType == ResponseType.ACK_WITH_TEXT) {
-                aprsQueue.queueAPRSMessageForDelivery(myCall, aprsStatusFrame.sourceCallsign(), appResponse.responseString())
+                aprsQueue.queueAPRSMessageForDelivery(aprsFrame.channelIdentifier, myCall, aprsStatusFrame.sourceCallsign(), appResponse.responseString())
             }
         } else {
             logger.trace("APRS status frame was not typed correctly: {}", aprsFrame)

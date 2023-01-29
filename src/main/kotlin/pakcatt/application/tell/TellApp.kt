@@ -11,7 +11,11 @@ import pakcatt.application.shared.model.ParsedCommandTokens
 /**
  * Allows users to send quick messages to others
  */
-class TellApp(private val destinationCallsign: String, private val myCallsign: String, private val senderCallsign: String): SubApp() {
+class TellApp(
+    private val destinationCallsign: String,
+    private val myCallsign: String,
+    private val senderCallsign: String,
+    private val tellChannelIdentifiers: List<String>): SubApp() {
 
     private val messagePrefix = "${stringUtils.formatCallsignRemoveSSID(senderCallsign)} says:"
 
@@ -22,7 +26,14 @@ class TellApp(private val destinationCallsign: String, private val myCallsign: S
 
     override fun handleReceivedMessage(request: AppRequest, parsedCommandTokens: ParsedCommandTokens): AppResponse {
         val message = "$messagePrefix ${stringUtils.removeEOLChars(request.message)}"
-        queueAdhocMessageForTransmission(destinationCallsign, myCallsign, message, DeliveryType.APRS_FIRE_AND_FORGET)
+        for (channelIdentifier in tellChannelIdentifiers) {
+            queueAdhocMessageForTransmission(
+                channelIdentifier,
+                destinationCallsign,
+                myCallsign,
+                message,
+                DeliveryType.APRS_FIRE_AND_FORGET)
+        }
         return AppResponse.sendText("Thanks, I'll send that right away!", NavigateBack(1))
     }
 

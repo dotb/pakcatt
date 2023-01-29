@@ -20,13 +20,15 @@ enum class ConnectionStatus {
     CONNECTED, DISCONNECTED
 }
 
-class ConnectionHandler(private val remoteCallsign: String,
-                        private val myCallsign: String,
-                        private val linkInterface: LinkInterface,
-                        private val frameSizeMax: Int,
-                        framesPerOver: Int,
-                        maxDeliveryAttempts: Int,
-                        deliveryRetryTimeSeconds: Int) {
+class ConnectionHandler(
+    private val channelIdentifier: String, // The channel identifier (TNC) to which this handler is connected.
+    private val remoteCallsign: String,
+    private val myCallsign: String,
+    private val linkInterface: LinkInterface,
+    private val frameSizeMax: Int,
+    framesPerOver: Int,
+    maxDeliveryAttempts: Int,
+    deliveryRetryTimeSeconds: Int) {
 
     private val logger = LoggerFactory.getLogger(ConnectionHandler::class.java)
     private val stringUtils = StringUtils()
@@ -155,8 +157,10 @@ class ConnectionHandler(private val remoteCallsign: String,
         }
     }
 
+    /**
+     * Iterate the available applications and ask them if anyone wants us to establish a connection for this incoming frame.
+     */
     private fun handleConnectionRequest(incomingFrame: KissFrame) {
-        // Gather a connection decision from applications
         val appResponse = linkInterface.getDecisionOnConnectionRequest(AppRequest(incomingFrame.sourceCallsign(),
                                                                         stringUtils.formatCallsignRemoveSSID(incomingFrame.sourceCallsign()),
                                                                         incomingFrame.destCallsign(),
@@ -165,12 +169,12 @@ class ConnectionHandler(private val remoteCallsign: String,
         when (appResponse.responseType) {
             ResponseType.ACK_ONLY -> acceptIncomingConnection()
             ResponseType.ACK_WITH_TEXT -> acceptIncomingConnectionWithMessage(appResponse.responseString())
-            ResponseType.IGNORE -> logger.trace("Ignored connection request from: $remoteCallsign to :$myCallsign")
+            ResponseType.IGNORE -> logger.trace("Ignored connection request from: $remoteCallsign to :$myCallsign on Chan: $channelIdentifier")
         }
     }
 
     private fun acceptIncomingConnection() {
-        logger.info("Accepting connection from remote party: $remoteCallsign local party: $myCallsign")
+        logger.info("Accepting connection from remote party: $remoteCallsign local party: $myCallsign on Chan: $channelIdentifier")
         resetConnection()
         connectionStatus = ConnectionStatus.CONNECTED
         val frame = newResponseFrame(ControlField.U_UNNUMBERED_ACKNOWLEDGE_P, false)
@@ -239,6 +243,7 @@ class ConnectionHandler(private val remoteCallsign: String,
         newFrame.setSourceCallsign(myCallsign)
         // Set the control type now. The receive and send sequence numbers are updated just before it's transmitted.
         newFrame.setControlField(fieldType)
+        newFrame.channelIdentifier = channelIdentifier
         return newFrame
     }
 

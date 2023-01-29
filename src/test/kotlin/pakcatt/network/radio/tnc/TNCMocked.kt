@@ -6,7 +6,7 @@ import pakcatt.util.ByteUtils
 
 @Component
 @Profile("test")
-class TNCMocked: TNC() {
+class TNCMocked: TNC("Mocked TNC") {
 
     private val maxBufferSize = 8192
     private val byteUtils = ByteUtils()
@@ -45,6 +45,10 @@ class TNCMocked: TNC() {
     override fun sendData(outputData: Int) {
         sentDataBuffer[dataIndex] = byteUtils.intToByte(outputData)
         dataIndex++
+    }
+
+    override fun serviceTNCOutputBuffer() {
+        // This mock TNC does not yet simulate received data that is passed up to the application stack.
     }
 
 }

@@ -42,12 +42,12 @@ abstract class SubApp {
         }
     }
 
-    open fun queueAdhocMessageForTransmission(remoteCallsign: String,
-                                         myCallsign: String,
-                                         message: String,
-                                         deliveryType: DeliveryType
-    ) {
-        parentRootApp?.queueAdhocMessageForTransmission(remoteCallsign, myCallsign, message, deliveryType)
+    open fun queueAdhocMessageForTransmission(transmissionChannelIdentifier: String,
+                                              remoteCallsign: String,
+                                              myCallsign: String,
+                                              message: String,
+                                              deliveryType: DeliveryType) {
+        parentRootApp?.queueAdhocMessageForTransmission(transmissionChannelIdentifier, remoteCallsign, myCallsign, message, deliveryType)
     }
 
     fun setParentRootApp(parent: RootApp?) {

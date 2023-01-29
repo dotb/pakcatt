@@ -14,7 +14,7 @@ import pakcatt.util.StringUtils
 import javax.annotation.PreDestroy
 
 @Service
-class KissService(val tncConnection: TNC,
+class KissService(val tncConnections: List<TNC>,
                   val protocolServices: List<ProtocolService>,
                   val stringUtils: StringUtils,
                   val byteUtils: ByteUtils,
@@ -28,10 +28,12 @@ class KissService(val tncConnection: TNC,
     private var incomingFrameIndex = -1
 
     init {
-        tncConnection.setReceiveDataCallback {
-            handleNewByte(it)
+        for (tncConnection in tncConnections) {
+            tncConnection.setReceiveDataCallback {
+                handleNewByte(it, tncConnection)
+            }
+            tncConnection.connect()
         }
-        tncConnection.connect()
         onStartup()
     }
 
@@ -40,9 +42,19 @@ class KissService(val tncConnection: TNC,
         val framesForDelivery = DeliveryQueue()
         for (protocolService in protocolServices) {
             protocolService.queueFramesForDelivery(framesForDelivery)
+            if (framesForDelivery.allFrames().isNotEmpty()) {
+                logger.trace("Protocol service {} has {} frames for delivery", protocolService, framesForDelivery.allFrames().size)
+            }
         }
         for (frame in framesForDelivery.allFrames()) {
             transmitFrame(frame)
+        }
+    }
+
+    @Scheduled(fixedRate = 1)
+    fun serviceTNCOutputBuffers() {
+        for (tncConnection in tncConnections) {
+            tncConnection.serviceTNCOutputBuffer()
         }
     }
 
@@ -81,13 +93,19 @@ class KissService(val tncConnection: TNC,
     }
 
     private fun transmitFrame(frame: KissFrame) {
-        tncConnection.sendData(frame.packetData())
-        tncConnection.sendData(KissFrame.FRAME_END)
-        logger.trace("Sent bytes:\t\t {}", stringUtils.byteArrayToHex(frame.packetData()))
-        logger.debug("Sent frame:\t\t {}", stringUtils.removeEOLChars(frame.toString(), " "))
+        for (tncConnection in tncConnections) {
+            if (tncConnection.channelIdentifier.equals(frame.channelIdentifier)) {
+                tncConnection.sendData(frame.packetData())
+                tncConnection.sendData(KissFrame.FRAME_END)
+                logger.trace("Sent bytes:\t\t {}", stringUtils.byteArrayToHex(frame.packetData()))
+                logger.debug("Sent frame:\t\t Chan: {} {}", frame.channelIdentifier, stringUtils.removeEOLChars(frame.toString(), " "))
+            } else {
+                logger.trace("Not sending frame to TNC: {}, doesn't match frame channel identifier: {} for Frame: {}", tncConnection.channelIdentifier, frame.channelIdentifier, stringUtils.removeEOLChars(frame.toString(), " "))
+            }
+        }
     }
 
-    private fun handleNewByte(newByte: Byte) {
+    private fun handleNewByte(newByte: Byte, tncConnection: TNC) {
         if (KissFrame.FRAME_END == newByte.toInt()) {
             logger.trace("Received boundary of KISS frame after ${incomingFrameIndex + 1} bytes")
 
@@ -100,7 +118,7 @@ class KissService(val tncConnection: TNC,
                 incomingFrame = ByteArray(1024)
 
                 // Handle the new frame
-                handleNewFrame(newFrame)
+                handleNewFrame(newFrame, tncConnection)
             }
         } else if (incomingFrameIndex >= incomingFrame.size) {
             incomingFrameIndex = -1
@@ -111,10 +129,11 @@ class KissService(val tncConnection: TNC,
         }
     }
 
-    private fun handleNewFrame(frame: ByteArray) {
+    private fun handleNewFrame(frame: ByteArray, tncConnection: TNC) {
         logger.debug("Received bytes:\t {}", stringUtils.byteArrayToHex(frame))
         if (frame.size >= KissFrame.SIZE_MIN) {
             val kissFrame = KissFrameStandard()
+            kissFrame.channelIdentifier = tncConnection.channelIdentifier
             kissFrame.populateFromFrameData(frame)
             logger.trace("Recoded bytes:\t {}", stringUtils.byteArrayToHex(kissFrame.packetData()))
             logger.debug("Received frame:\t {}", stringUtils.removeEOLChars(kissFrame.toString(), " "))
@@ -125,6 +144,9 @@ class KissService(val tncConnection: TNC,
         }
     }
 
+    /**
+     * Find a protocol service that can handle this incoming Kiss Frame
+     */
     private fun handFrameToProtocolServices(frame: KissFrame) {
         for (protocolService in protocolServices) {
             if (protocolService.supportedProtocol(byteUtils.byteToInt(frame.protocolID()), frame.controlField())) {

@@ -17,6 +17,7 @@ import pakcatt.application.filter.EOLOutputFilter
 import pakcatt.application.filter.LastAppInputFilter
 import pakcatt.application.filter.MentionOutputFilter
 import pakcatt.application.last.LastApp
+import pakcatt.application.tell.model.TellAppConfig
 import pakcatt.util.StringUtils
 
 open class AppServiceTest: TestCase() {
@@ -40,7 +41,8 @@ open class AppServiceTest: TestCase() {
                                     "Welcome",
                                     boardPromptTopicLength,
                                     boardSummaryLength,
-                                    boardPostListLength)
+                                    boardPostListLength,
+                                    TellAppConfig(listOf("Serial TNC", "TCP TNC")))
 
     protected val stringUtils = StringUtils()
     protected val appService = AppService(listOf(mainMenuApp),

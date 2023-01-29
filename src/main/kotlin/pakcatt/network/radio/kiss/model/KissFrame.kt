@@ -84,6 +84,7 @@ abstract class KissFrame() {
     protected var payloadData: ByteArray = ByteArray(0)
     var lastDeliveryAttemptTimeStamp: Long = 0
     var deliveryAttempts = 0
+    var channelIdentifier: String = ""
 
     companion object {
         const val FRAME_END = -64
@@ -301,7 +302,10 @@ abstract class KissFrame() {
     }
 
     override fun toString(): String {
-        val stringBuilder = StringBuilder()
+        val stringBuilder = StringBuilder("CHAN: ")
+
+        stringBuilder.append(channelIdentifier)
+        stringBuilder.append(" ")
 
         if (listOf(
                 ControlField.S_8_RECEIVE_READY,
