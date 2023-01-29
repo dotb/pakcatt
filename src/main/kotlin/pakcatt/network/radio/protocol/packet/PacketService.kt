@@ -84,7 +84,7 @@ class PacketService(private var appService: AppInterface,
     }
 
     private fun connectionHandlerForConversation(channelIdentifier: String, remoteCallsign: String, myCallsign: String): ConnectionHandler {
-        val key = connectionHandlerKey(remoteCallsign, myCallsign)
+        val key = connectionHandlerKey(channelIdentifier, remoteCallsign, myCallsign)
         val existingConnectionHandler = connectionHandlers[key]
         return if (null != existingConnectionHandler) {
             existingConnectionHandler
@@ -95,14 +95,8 @@ class PacketService(private var appService: AppInterface,
         }
     }
 
-    private fun connectionHandlerKey(fromCallsign: String, toCallsign: String): String {
-        return "$fromCallsign $toCallsign"
-    }
-
-    fun closeConnection(remoteCallsign: String, myCallsign: String) {
-        appService.closeConnection(remoteCallsign, myCallsign)
-        connectionHandlers.remove(connectionHandlerKey(remoteCallsign, myCallsign))
-        logger.debug("Removed connection handler for {}", remoteCallsign)
+    private fun connectionHandlerKey(channelIdentifier: String, fromCallsign: String, toCallsign: String): String {
+        return "$channelIdentifier $fromCallsign $toCallsign"
     }
 
     /* LinkInterface Methods delegated from ConnectionHandlers */
