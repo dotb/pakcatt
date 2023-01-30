@@ -28,35 +28,35 @@ class Configuration {
         return myCall
     }
 
-    @Value("\${pakcatt.application.welcomeMessage}")
+    @Value("\${pakcatt.application.welcome-message}")
     private lateinit var welcomeMessage: String
     @Bean
     fun welcomeMessage(): String {
         return welcomeMessage
     }
 
-    @Value("\${pakcatt.application.defaultEndOfLine}")
+    @Value("\${pakcatt.application.default-end-of-line}")
     private lateinit var defaultEndOfLine: String
     @Bean
     fun defaultEndOfLine(): String {
         return defaultEndOfLine
     }
 
-    @Value("\${pakcatt.application.board.summaryLength}")
+    @Value("\${pakcatt.application.board.summary-length}")
     private lateinit var boardSummaryLength: String
     @Bean
     fun boardSummaryLength(): Int {
         return boardSummaryLength.toInt()
     }
 
-    @Value("\${pakcatt.application.board.promptTopicLength}")
+    @Value("\${pakcatt.application.board.prompt-topic-length}")
     private lateinit var boardPromptTopicLength: String
     @Bean
     fun boardPromptTopicLength(): Int {
         return boardPromptTopicLength.toInt()
     }
 
-    @Value("\${pakcatt.application.board.defaultPostListLength}")
+    @Value("\${pakcatt.application.board.default-post-list-length}")
     private lateinit var defaultPostListLength: String
     @Bean
     fun boardPostListLength(): Int {
@@ -116,35 +116,35 @@ class Configuration {
         return consolidatedTNCList
     }
 
-    @Value("\${pakcatt.network.packet.frame_size_max}")
+    @Value("\${pakcatt.network.packet.frame-size-max}")
     private lateinit var frameSizeMax: Number
     @Bean
     fun frameSizeMax(): Int {
         return frameSizeMax.toInt()
     }
 
-    @Value("\${pakcatt.network.packet.frames_per_over}")
+    @Value("\${pakcatt.network.packet.frames-per-over}")
     private lateinit var framesPerOver: Number
     @Bean
     fun framesPerOver(): Int {
         return framesPerOver.toInt()
     }
 
-    @Value("\${pakcatt.network.packet.minTXPauseSeconds}")
+    @Value("\${pakcatt.network.packet.min-tx-pause-seconds}")
     private lateinit var minTXPauseSeconds: Number
     @Bean
     fun minTXPauseSeconds(): Int {
         return minTXPauseSeconds.toInt()
     }
 
-    @Value("\${pakcatt.network.packet.maxDeliveryAttempts}")
+    @Value("\${pakcatt.network.packet.max-delivery-attempts}")
     private lateinit var maxDeliveryAttempts: Number
     @Bean
     fun maxDeliveryAttempts(): Int {
         return maxDeliveryAttempts.toInt()
     }
 
-    @Value("\${pakcatt.network.packet.deliveryRetryTimeSeconds}")
+    @Value("\${pakcatt.network.packet.delivery-retry-time-seconds}")
     private lateinit var deliveryRetryTimeSeconds: Number
     @Bean
     fun deliveryRetryTimeSeconds(): Int {

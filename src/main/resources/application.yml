@@ -3,21 +3,21 @@ pakcatt:
   application:
     mycall: PAKCAT-1 # Your callsign-SSID. Connections to this callsign will be accepted.
     # The Welcome message seen by users when they connect
-    welcomeMessage: Welcome to PakCatt! Type help to learn more :-)
-    defaultEndOfLine: "\n" # The default EOL sequence used to store content in the database
+    welcome-message: Welcome to PakCatt! Type help to learn more :-)
+    default-end-of-line: "\n" # The default EOL sequence used to store content in the database
 
     # Beacon configuration
     beacon:
       message: PAKCAT-1 on frequency, running PakCatt. Connect to PAKCAT-1 to try it out.
-      interval_minutes: 0 # An interval of 0 disables beaconing.
+      interval-minutes: 0 # An interval of 0 disables beaconing.
       destination: CQ # The destination address for beacon messages. This is typically 'CQ'.
-      channel_identifiers: # List the channels beacon messages should be broadcast on.
+      channel-identifiers: # List the channels beacon messages should be broadcast on.
         - 'Serial TNC'
         - 'TCP TNC'
 
     # Tell app configuration
     tell:
-      channel_identifiers: # List the channels tell messages should be delivered on
+      channel-identifiers: # List the channels tell messages should be delivered on.
         - 'Serial TNC'
         - 'TCP TNC'
 
@@ -30,45 +30,44 @@ pakcatt:
 
     # Bulletin Board
     board:
-      summaryLength: 10 # The length of topic and message summary test in listings
-      promptTopicLength: 8 # The length of the topic summary placed in the prompt displayed when in a topic
-      defaultPostListLength: 10 # The default number of posts presented in a listing within a topic
+      summary-length: 10 # The length of topic and message summary test in listings
+      prompt-topic-length: 8 # The length of the topic summary placed in the prompt displayed when in a topic
+      default-post-list-length: 10 # The default number of posts presented in a listing within a topic
 
     scriptable:
-      workingDir: ./
+      working-dir: ./
       timeout: 60 # Time allowed for scripts to run
       scripts:
         - name: 'Example Date'
-          pathConnect: 'scripts/example_date_connect.sh'
-          pathRequest: 'scripts/example_date_request.sh'
+          path-connect: 'scripts/example_date_connect.sh'
+          path-request: 'scripts/example_date_request.sh'
 #       This script is an example that sends messages to stations that beacon from pre-defined locations
 #       See location_messages_wrapper.sh and location_messages.kts
 #        - name: 'Location messages'
-#          pathConnect: 'scripts/location_messages_wrapper.sh'
-#          pathRequest: 'scripts/location_messages_wrapper.sh'
+#          path-connect: 'scripts/location_messages_wrapper.sh'
+#          path-request: 'scripts/location_messages_wrapper.sh'
 
   ## TNC Configuration
   tnc:
     ## Serial port / TNC configuration
-    serial_connections:
-      - channel_identifier: 'Serial TNC'
-        port_path: /dev/<YOUR TNC SERIAL PATH>
-        port_baud: 9600
+    serial-connections:
+      - channel-identifier: 'Serial TNC'
+        port-path: /dev/<YOUR TNC SERIAL PATH>
+        port-baud: 9600
 
     ## TCP/IP TNC connections
-    tcp_connections:
-      - channel_identifier: 'TCP TNC'
-        ip_address: 127.0.0.1
+    tcp-connections:
+      - channel-identifier: 'TCP TNC'
+        ip-address: 127.0.0.1
         port: 8001
 
   ## Packet performance parameters
   network.packet:
-    frame_size_max: 128 # The maximum number of bytes sent in each AX.25 frame
-    frames_per_over: 4 # The maximum number of frames / packets sent in each transmission. 4 seems to be a good value. I wouldn't go more than 6.
-    minTXPauseSeconds: 2 # The minimum amount of time left between transmissions
-    deliveryRetryTimeSeconds: 10 # The time between re-sending frames that have not been acknowledged
-    maxDeliveryAttempts: 10 # The number of times a frame is re-sent if not acknowledged
-
+    frame-size-max: 128 # The maximum number of bytes sent in each AX.25 frame
+    frames-per-over: 4 # The maximum number of frames / packets sent in each transmission. 4 seems to be a good value. I wouldn't go more than 6.
+    min-tx-pause-seconds: 2 # The minimum amount of time left between transmissions
+    delivery-retry-time-seconds: 10 # The time between re-sending frames that have not been acknowledged
+    max-delivery-attempts: 10 # The number of times a frame is re-sent if not acknowledged
 
 spring:
   ## Database configuration
