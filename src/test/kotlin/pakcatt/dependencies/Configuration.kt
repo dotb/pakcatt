@@ -58,4 +58,19 @@ class Configuration {
         return 10
     }
 
+    @Bean
+    fun tcpInteractiveEnabled(): Boolean {
+        return true
+    }
+
+    @Bean
+    fun tcpInteractivePort(): Int {
+        return 1234
+    }
+
+    @Bean
+    fun preWelcomeMessage(): String {
+        return "Welcome be good and give me your callsign. K tnx."
+    }
+
 }
