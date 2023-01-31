@@ -151,4 +151,25 @@ class Configuration {
         return deliveryRetryTimeSeconds.toInt()
     }
 
+    @Value("\${pakcatt.network.tcp.enabled}")
+    private lateinit var tcpInteractiveEnabled: String
+    @Bean
+    fun tcpInteractiveEnabled(): Boolean {
+        return tcpInteractiveEnabled.toBoolean()
+    }
+
+    @Value("\${pakcatt.network.tcp.port}")
+    private lateinit var tcpInteractivePort: Number
+    @Bean
+    fun tcpInteractivePort(): Int {
+        return tcpInteractivePort.toInt()
+    }
+
+    @Value("\${pakcatt.network.tcp.pre-welcome-message}")
+    private lateinit var preWelcomeMessage: String
+    @Bean
+    fun preWelcomeMessage(): String {
+        return preWelcomeMessage
+    }
+
 }

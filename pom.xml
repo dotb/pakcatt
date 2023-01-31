@@ -13,7 +13,7 @@
 
     <groupId>com.squarepolka</groupId>
     <artifactId>pakcatt</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
     <name>pakcatt</name>
     <description>A contemporary packet radio service</description>
 

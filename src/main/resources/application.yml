@@ -69,6 +69,13 @@ pakcatt:
     delivery-retry-time-seconds: 10 # The time between re-sending frames that have not been acknowledged
     max-delivery-attempts: 10 # The number of times a frame is re-sent if not acknowledged
 
+  ## Configuration for a TCP socket connection that enables interactive sessions over TCP/IP
+  network.tcp:
+    port: 7331 # Specify a port that will listen for interactive sessions
+    enabled: false # Setting this to true will open a socket allowing remote connections to access the service. Be careful and consider security.
+    # This welcome message is displayed to the user before they input their callsign
+    pre-welcome-message: Welcome to the BBS, running the PakCatt software https://github.com/dotb/pakcatt. This BBS is connected to an RF network and you require a valid amateur radio license to operate it. Please supply your callsign on the next line
+
 spring:
   ## Database configuration
   data.mongodb.database: pakcatt

@@ -49,6 +49,9 @@ class StringUtilsTest : TestCase() {
 
         // Test an example for a real packet
         assertEquals(realPacketResult,subject.fixEndOfLineCharacters(realPacketTest, targetEOLSequence))
+
+        // A line with no EOL character should still have the designated EOL character added
+        assertEquals("test\n", subject.fixEndOfLineCharacters("test", "\n"))
     }
 
     @Test

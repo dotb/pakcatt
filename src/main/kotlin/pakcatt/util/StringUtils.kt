@@ -126,8 +126,13 @@ class StringUtils {
         fixedString = fixedString.replace("${LF}${CR}", LF)
         // Swap CR with LF
         fixedString = fixedString.replace(CR, LF)
-        // All EOL sqeuences should be reduced to LF, now swap it with the designated new EOL string
+        // All EOL sequences should be reduced to LF, now swap it with the designated new EOL string
         fixedString = fixedString.replace(LF, newEOLString)
+
+        // If we're missing the designation EOL character, add it
+        if (!fixedString.contains(newEOLString)) {
+            fixedString = "$fixedString$newEOLString"
+        }
 
         return fixedString.toString()
     }
