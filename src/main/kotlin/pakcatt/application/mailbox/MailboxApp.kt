@@ -56,7 +56,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
         if (messageCount > 0) {
             if (channelIsInteractive) {
                 listResponse.append(stringUtils.EOL)
-                listResponse.append(columnFormatter.formatLineAsColumns("", "No", "Date", "From", "To", "Subject", isHeading = true))
+                listResponse.append(columnFormatter.formatLineAsColumns("", "No", "Date", "From", "To", "Subject", isBold = true))
             }
 
             for (limitedMessage in listLimiter.getLimitedList()) {

@@ -4,7 +4,6 @@ import pakcatt.application.bulletinboard.edit.AddThreadApp
 import pakcatt.application.bulletinboard.read.ReadThreadApp
 import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
 import pakcatt.application.bulletinboard.persistence.BulletinBoardThread
-import pakcatt.application.shared.FORMAT
 import pakcatt.application.shared.NavigateBack
 import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.command.Command
@@ -13,6 +12,7 @@ import pakcatt.application.shared.list.ListLimiter
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
 import pakcatt.application.shared.model.ParsedCommandTokens
+import pakcatt.util.ColumnFormatter
 import java.lang.StringBuilder
 
 class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
@@ -41,34 +41,22 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
         val listLimiter = ListLimiter<BulletinBoardThread>(listLimit, LimitType.LIST_TAIL).addItems(threadList)
         val listResponse = StringBuilder()
         val threadCount = threadList.size
+        val columnFormatter = ColumnFormatter(2, 4, 14, 30)
 
         if (threadCount > 0) {
             if (request.channelIsInteractive) {
                 listResponse.append(stringUtils.EOL)
-                listResponse.append(textFormat.format(FORMAT.BOLD))
-                listResponse.append("  No  ${tabSpace}Updated     ${tabSpace}Topic")
-                listResponse.append(textFormat.format(FORMAT.RESET))
-                listResponse.append(stringUtils.EOL)
+                listResponse.append(columnFormatter.formatLineAsColumns("", "No", "Updated", "Topic", isBold = true))
             }
             for (limitedThread in listLimiter.getLimitedList()) {
                 val thread = limitedThread.item
                 val topicSummary = stringUtils.shortenString(thread.topic, boardSummaryLength, true)
                 if (request.channelIsInteractive) {
-                    listResponse.append("  ")
-                }
-                listResponse.append(thread.threadNumber)
-                if (request.channelIsInteractive) {
-                    listResponse.append("  ")
-                    listResponse.append(tabSpace)
-                    listResponse.append(stringUtils.formattedDateLong(thread.lastUpdatedDataTime))
-                    listResponse.append(tabSpace)
+                    listResponse.append(columnFormatter.formatLineAsColumns("", thread.threadNumber.toString(), stringUtils.formattedDateLong(thread.lastUpdatedDataTime), topicSummary))
                 } else {
-                    listResponse.append(" ")
-                    listResponse.append(stringUtils.formattedDateShort(thread.lastUpdatedDataTime))
-                    listResponse.append(": ")
+                    listResponse.append(thread.threadNumber.toString(), " ", stringUtils.formattedDateShort(thread.lastUpdatedDataTime), " ", topicSummary)
+                    listResponse.append(stringUtils.EOL)
                 }
-                listResponse.append(topicSummary)
-                listResponse.append(stringUtils.EOL)
             }
         }
         if (request.channelIsInteractive) {

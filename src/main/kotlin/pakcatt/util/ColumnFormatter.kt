@@ -13,9 +13,9 @@ class ColumnFormatter(private vararg val columnLengths: Int) {
     private val textFormat = TextFormat()
     private val stringUtils = StringUtils()
 
-    fun formatLineAsColumns(vararg columns: String, isHeading: Boolean = false): String {
+    fun formatLineAsColumns(vararg columns: String, isBold: Boolean = false): String {
         val stringBuilder = StringBuilder()
-        if (isHeading) {
+        if (isBold) {
             stringBuilder.append(textFormat.format(FORMAT.BOLD))
         }
         for ((index, columnString) in columns.withIndex()) {
@@ -30,7 +30,7 @@ class ColumnFormatter(private vararg val columnLengths: Int) {
                 }
             }
         }
-        if (isHeading) {
+        if (isBold) {
             stringBuilder.append(textFormat.format(FORMAT.RESET))
         }
         stringBuilder.append(stringUtils.EOL)

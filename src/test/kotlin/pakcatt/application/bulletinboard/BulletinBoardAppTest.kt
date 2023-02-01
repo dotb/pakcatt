@@ -23,17 +23,17 @@ class BulletinBoardAppTest: AppServiceTest() {
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${stringUtils.EOL}" +
-                "${startBold}  No  \tUpdated     \tTopic${resetFormat}${stringUtils.EOL}" +
-                "  2  \t01 Jan 10:00\tThis is topic 2${stringUtils.EOL}" +
-                "  3  \t01 Jan 10:00\tThis is topic 3${stringUtils.EOL}" +
-                "  5  \t01 Jan 10:00\tThis is topic 5${stringUtils.EOL}" +
-                "  6  \t01 Jan 10:00\tThis is topic 6${stringUtils.EOL}" +
-                "  7  \t01 Jan 10:00\tThis is topic 7${stringUtils.EOL}" +
-                "  8  \t01 Jan 10:00\tThis is topic 8${stringUtils.EOL}" +
-                "  9  \t01 Jan 10:00\tThis is topic 9${stringUtils.EOL}" +
-                "  10  \t01 Jan 10:00\tThis is topic 10${stringUtils.EOL}" +
-                "  1  \t01 Jan 12:46\tThis is topic 1${stringUtils.EOL}" +
-                "  4  \t10 Jul 02:00\tThis is topic 4${stringUtils.EOL}" +
+                "${startBold}  No  Updated       Topic${resetFormat}${stringUtils.EOL}" +
+                "  2   01 Jan 10:00  This is topic 2${stringUtils.EOL}" +
+                "  3   01 Jan 10:00  This is topic 3${stringUtils.EOL}" +
+                "  5   01 Jan 10:00  This is topic 5${stringUtils.EOL}" +
+                "  6   01 Jan 10:00  This is topic 6${stringUtils.EOL}" +
+                "  7   01 Jan 10:00  This is topic 7${stringUtils.EOL}" +
+                "  8   01 Jan 10:00  This is topic 8${stringUtils.EOL}" +
+                "  9   01 Jan 10:00  This is topic 9${stringUtils.EOL}" +
+                "  10  01 Jan 10:00  This is topic 10${stringUtils.EOL}" +
+                "  1   01 Jan 12:46  This is topic 1${stringUtils.EOL}" +
+                "  4   10 Jul 02:00  This is topic 4${stringUtils.EOL}" +
                 "10 threads${stringUtils.EOL}" +
                 "${stringUtils.EOL}" +
                 "board> ", response.responseString())
@@ -57,15 +57,13 @@ class BulletinBoardAppTest: AppServiceTest() {
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${stringUtils.EOL}" +
-                "${startBold}No\tPosted       By\t\tSize${resetFormat}${stringUtils.EOL}" +
-                "${stringUtils.EOL}" +
-                "${startBold}1)\t01 Jan 10:16  VK2VRO\t567B${resetFormat}${stringUtils.EOL}" +
+                "${startBold}  No  Posted        By     Size${resetFormat}${stringUtils.EOL}" +
+                "${startBold}  1   01 Jan 10:16  VK2VRO 567B${resetFormat}${stringUtils.EOL}" +
                 "Sed ut perspiciatis${stringUtils.EOL}" +
                 "unde omnis iste natus${stringUtils.EOL}" +
                 "error sit voluptatem accusantium${stringUtils.EOL}" +
                 "dolor...${stringUtils.EOL}${stringUtils.EOL}" +
-                "${stringUtils.EOL}" +
-                "${startBold}2)\t01 Jan 10:33  PACKATT\t567B${resetFormat}${stringUtils.EOL}" +
+                "${startBold}  2   01 Jan 10:33  PACKATT567B${resetFormat}${stringUtils.EOL}" +
                 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${stringUtils.EOL}${stringUtils.EOL}" +
                 "${stringUtils.EOL}" +
                 "3 posts in: This is topic 1${stringUtils.EOL}" +
@@ -91,9 +89,8 @@ class BulletinBoardAppTest: AppServiceTest() {
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${stringUtils.EOL}" +
-                "${startBold}No\tPosted       By\t\tSize${resetFormat}${stringUtils.EOL}" +
-                "${stringUtils.EOL}" +
-                "${startBold}2)\t01 Jan 10:33  PACKATT\t567B${resetFormat}${stringUtils.EOL}" +
+                "${startBold}  No  Posted        By     Size${resetFormat}${stringUtils.EOL}" +
+                "${startBold}  2   01 Jan 10:33  PACKATT567B${resetFormat}${stringUtils.EOL}" +
                 "Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${stringUtils.EOL}${stringUtils.EOL}" +
                 "${stringUtils.EOL}" +
                 "3 posts in: This is topic 1${stringUtils.EOL}" +
@@ -203,16 +200,16 @@ class BulletinBoardAppTest: AppServiceTest() {
         var request = testRequest("board.list", false)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
-        assertEquals("2 01-01 10:00: This is topic 2${stringUtils.EOL}" +
-                "3 01-01 10:00: This is topic 3${stringUtils.EOL}" +
-                "5 01-01 10:00: This is topic 5${stringUtils.EOL}" +
-                "6 01-01 10:00: This is topic 6${stringUtils.EOL}" +
-                "7 01-01 10:00: This is topic 7${stringUtils.EOL}" +
-                "8 01-01 10:00: This is topic 8${stringUtils.EOL}" +
-                "9 01-01 10:00: This is topic 9${stringUtils.EOL}" +
-                "10 01-01 10:00: This is topic 10${stringUtils.EOL}" +
-                "1 01-01 12:46: This is topic 1${stringUtils.EOL}" +
-                "4 10-07 02:00: This is topic 4${stringUtils.EOL}"
+        assertEquals("2 01-01 10:00 This is topic 2${stringUtils.EOL}" +
+                "3 01-01 10:00 This is topic 3${stringUtils.EOL}" +
+                "5 01-01 10:00 This is topic 5${stringUtils.EOL}" +
+                "6 01-01 10:00 This is topic 6${stringUtils.EOL}" +
+                "7 01-01 10:00 This is topic 7${stringUtils.EOL}" +
+                "8 01-01 10:00 This is topic 8${stringUtils.EOL}" +
+                "9 01-01 10:00 This is topic 9${stringUtils.EOL}" +
+                "10 01-01 10:00 This is topic 10${stringUtils.EOL}" +
+                "1 01-01 12:46 This is topic 1${stringUtils.EOL}" +
+                "4 10-07 02:00 This is topic 4${stringUtils.EOL}"
                 , response.responseString())
     }
 
@@ -222,10 +219,10 @@ class BulletinBoardAppTest: AppServiceTest() {
         var request = testRequest("board.list.4", false)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
-        assertEquals("9 01-01 10:00: This is topic 9${stringUtils.EOL}" +
-                "10 01-01 10:00: This is topic 10${stringUtils.EOL}" +
-                "1 01-01 12:46: This is topic 1${stringUtils.EOL}" +
-                "4 10-07 02:00: This is topic 4${stringUtils.EOL}"
+        assertEquals("9 01-01 10:00 This is topic 9${stringUtils.EOL}" +
+                "10 01-01 10:00 This is topic 10${stringUtils.EOL}" +
+                "1 01-01 12:46 This is topic 1${stringUtils.EOL}" +
+                "4 10-07 02:00 This is topic 4${stringUtils.EOL}"
             , response.responseString())
     }
 
@@ -235,11 +232,8 @@ class BulletinBoardAppTest: AppServiceTest() {
         var request = testRequest("board.open.1.list", false)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
-        assertEquals("1) 01-01 10:16 VK2VRO: 567B Sed ut perspiciatis${stringUtils.EOL}" +
-                "unde omnis iste natus${stringUtils.EOL}" +
-                "error sit voluptatem accusantium${stringUtils.EOL}" +
-                "dolor...${stringUtils.EOL}${stringUtils.EOL}" +
-                "2) 01-01 10:33 PACKATT: 567B Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${stringUtils.EOL}${stringUtils.EOL}",
+        assertEquals("1 01-01 10:16 VK2VRO 567B Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${stringUtils.EOL}" +
+                "2 01-01 10:33 PACKATT 567B Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${stringUtils.EOL}",
                 response.responseString())
     }
 
