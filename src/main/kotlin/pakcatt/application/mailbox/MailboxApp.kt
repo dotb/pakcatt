@@ -1,6 +1,5 @@
 package pakcatt.application.mailbox
 
-import pakcatt.application.bulletinboard.persistence.BulletinBoardPost
 import pakcatt.application.mailbox.edit.EditSubjectApp
 import pakcatt.application.mailbox.persistence.MailMessage
 import pakcatt.application.mailbox.persistence.MailboxStore
@@ -11,6 +10,7 @@ import pakcatt.application.shared.list.ListLimiter
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
 import pakcatt.application.shared.model.ParsedCommandTokens
+import pakcatt.util.ColumnFormatter
 import java.lang.StringBuilder
 
 class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
@@ -50,47 +50,26 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
     private fun compileMessageListResponse(channelIsInteractive: Boolean, listLimiter: ListLimiter<MailMessage>): AppResponse {
         val listResponse = StringBuilder()
+        val columnFormatter = ColumnFormatter(2, 4, 14, 8, 8, 30)
         val messageCount = listLimiter.getAllItems().size
 
         if (messageCount > 0) {
             if (channelIsInteractive) {
                 listResponse.append(stringUtils.EOL)
-                listResponse.append(textFormat.format(FORMAT.BOLD))
-                listResponse.append("  No${tabSpace}Date          From${tabSpace}To${tabSpace}Subject")
-                listResponse.append(textFormat.format(FORMAT.RESET))
-                listResponse.append(stringUtils.EOL)
+                listResponse.append(columnFormatter.formatLineAsColumns("", "No", "Date", "From", "To", "Subject", isHeading = true))
             }
 
             for (limitedMessage in listLimiter.getLimitedList()) {
                 val message = limitedMessage.item
-                listResponse.append(when (message.isRead) {
-                    true -> "  "
-                    false -> "* "
-                })
-                listResponse.append(message.messageNumber)
-                if (channelIsInteractive) {
-                    listResponse.append(tabSpace)
-                    listResponse.append(stringUtils.formattedDateLong(message.dateTime))
-                    listResponse.append("  ")
-                } else {
-                    listResponse.append(" ")
-                    listResponse.append(stringUtils.formattedDateShort(message.dateTime))
-                    listResponse.append(" ")
+                val readIndicator = when (message.isRead) {
+                    true -> " "
+                    false -> "*"
                 }
-                listResponse.append(message.fromCallsign)
                 if (channelIsInteractive) {
-                    listResponse.append(tabSpace)
+                    listResponse.append(columnFormatter.formatLineAsColumns(readIndicator, message.messageNumber.toString(), stringUtils.formattedDateLong(message.dateTime), message.fromCallsign, message.toCallsign, message.subject))
                 } else {
-                    listResponse.append("->")
+                    listResponse.append(columnFormatter.formatLineAsColumns(readIndicator, message.messageNumber.toString(), stringUtils.formattedDateShort(message.dateTime), message.fromCallsign, message.toCallsign, message.subject))
                 }
-                listResponse.append(message.toCallsign)
-                if (channelIsInteractive) {
-                    listResponse.append(tabSpace)
-                } else {
-                    listResponse.append(": ")
-                }
-                listResponse.append(message.subject)
-                listResponse.append(stringUtils.EOL)
             }
         }
         if (channelIsInteractive) {

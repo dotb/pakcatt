@@ -22,11 +22,11 @@ class MailboxAppTest: AppServiceTest() {
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${stringUtils.EOL}" +
-                "${startBold}  No\tDate          From\tTo\tSubject${resetFormat}${stringUtils.EOL}" +
-                "  1\t01 Jan 10:00  PAKCATT\tVK3LIT\tSubject 1${stringUtils.EOL}" +
-                "* 2\t01 Jan 10:16  VK2VRO\tVK3LIT\tSubject 2${stringUtils.EOL}" +
-                "* 3\t01 Jan 12:30  VK3LIT\tVK2VRO\tSubject 3${stringUtils.EOL}" +
-                "* 4\t02 Jan 13:46  PAKCATT\tVK3LIT\tSubject 4${stringUtils.EOL}" +
+                "${startBold}  No  Date          From    To      Subject${resetFormat}${stringUtils.EOL}" +
+                "  1   01 Jan 10:00  PAKCATT VK3LIT  Subject 1${stringUtils.EOL}" +
+                "* 2   01 Jan 10:16  VK2VRO  VK3LIT  Subject 2${stringUtils.EOL}" +
+                "* 3   01 Jan 12:30  VK3LIT  VK2VRO  Subject 3${stringUtils.EOL}" +
+                "* 4   02 Jan 13:46  PAKCATT VK3LIT  Subject 4${stringUtils.EOL}" +
                 "4 messages${stringUtils.EOL}" +
                 "${stringUtils.EOL}mail> ", response.responseString())
     }
@@ -47,10 +47,10 @@ class MailboxAppTest: AppServiceTest() {
         response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("${stringUtils.EOL}" +
-                "${startBold}  No\tDate          From\tTo\tSubject${resetFormat}${stringUtils.EOL}" +
-                "* 2\t01 Jan 10:16  VK2VRO\tVK3LIT\tSubject 2${stringUtils.EOL}" +
-                "* 3\t01 Jan 12:30  VK3LIT\tVK2VRO\tSubject 3${stringUtils.EOL}" +
-                "* 4\t02 Jan 13:46  PAKCATT\tVK3LIT\tSubject 4${stringUtils.EOL}" +
+                "${startBold}  No  Date          From    To      Subject${resetFormat}${stringUtils.EOL}" +
+                "* 2   01 Jan 10:16  VK2VRO  VK3LIT  Subject 2${stringUtils.EOL}" +
+                "* 3   01 Jan 12:30  VK3LIT  VK2VRO  Subject 3${stringUtils.EOL}" +
+                "* 4   02 Jan 13:46  PAKCATT VK3LIT  Subject 4${stringUtils.EOL}" +
                 "3 messages${stringUtils.EOL}" +
                 "${stringUtils.EOL}mail> ", response.responseString())
     }
@@ -79,10 +79,10 @@ class MailboxAppTest: AppServiceTest() {
         var request = testRequest("mail.list", false)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
-        assertEquals("  1 01-01 10:00 PAKCATT->VK3LIT: Subject 1${stringUtils.EOL}" +
-                "* 2 01-01 10:16 VK2VRO->VK3LIT: Subject 2${stringUtils.EOL}" +
-                "* 3 01-01 12:30 VK3LIT->VK2VRO: Subject 3${stringUtils.EOL}" +
-                "* 4 02-01 13:46 PAKCATT->VK3LIT: Subject 4${stringUtils.EOL}",
+        assertEquals("  1   01-01 10:00   PAKCATT VK3LIT  Subject 1${stringUtils.EOL}" +
+                "* 2   01-01 10:16   VK2VRO  VK3LIT  Subject 2${stringUtils.EOL}" +
+                "* 3   01-01 12:30   VK3LIT  VK2VRO  Subject 3${stringUtils.EOL}" +
+                "* 4   02-01 13:46   PAKCATT VK3LIT  Subject 4${stringUtils.EOL}",
                 response.responseString())
     }
 
@@ -91,8 +91,8 @@ class MailboxAppTest: AppServiceTest() {
         var request = testRequest("mail.list.2", false)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
-        assertEquals("* 3 01-01 12:30 VK3LIT->VK2VRO: Subject 3${stringUtils.EOL}" +
-                "* 4 02-01 13:46 PAKCATT->VK3LIT: Subject 4${stringUtils.EOL}",
+        assertEquals("* 3   01-01 12:30   VK3LIT  VK2VRO  Subject 3${stringUtils.EOL}" +
+                "* 4   02-01 13:46   PAKCATT VK3LIT  Subject 4${stringUtils.EOL}",
             response.responseString())
     }
 
@@ -101,8 +101,8 @@ class MailboxAppTest: AppServiceTest() {
         var request = testRequest("mail.list.unread.2", false)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
-        assertEquals("* 3 01-01 12:30 VK3LIT->VK2VRO: Subject 3${stringUtils.EOL}" +
-                "* 4 02-01 13:46 PAKCATT->VK3LIT: Subject 4${stringUtils.EOL}",
+        assertEquals("* 3   01-01 12:30   VK3LIT  VK2VRO  Subject 3${stringUtils.EOL}" +
+                "* 4   02-01 13:46   PAKCATT VK3LIT  Subject 4${stringUtils.EOL}",
             response.responseString())
     }
 
