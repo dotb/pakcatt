@@ -80,6 +80,7 @@ class NoLayerThreeServiceTest: ProtocolTest() {
         sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, 7, rxSequenceNumber, "hello")
         var responseFrame = KissFrameStandard()
         responseFrame.populateFromFrameData(mockedTNC.sentDataBuffer())
+        rxSequenceNumber++
         assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 0, responseFrame.receiveSequenceNumber())
         assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 7, responseFrame.sendSequenceNumber())
 

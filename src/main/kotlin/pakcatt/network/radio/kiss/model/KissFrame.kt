@@ -82,7 +82,6 @@ abstract class KissFrame() {
     protected var repeaterSSIDTwo: Byte = byteUtils.intToByte(0x00)
     protected var protocolID: Byte = byteUtils.intToByte(0x00)
     protected var payloadData: ByteArray = ByteArray(0)
-    var lastDeliveryAttemptTimeStamp: Long = 0
     var deliveryAttempts = 0
     var channelIdentifier: String = ""
 
@@ -302,7 +301,7 @@ abstract class KissFrame() {
     }
 
     override fun toString(): String {
-        val stringBuilder = StringBuilder("CHAN: ")
+        val stringBuilder = StringBuilder("Chan: ")
 
         stringBuilder.append(channelIdentifier)
         stringBuilder.append(" ")

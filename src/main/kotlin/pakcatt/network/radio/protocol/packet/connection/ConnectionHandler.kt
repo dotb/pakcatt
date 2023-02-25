@@ -9,6 +9,7 @@ import pakcatt.network.radio.kiss.model.KissFrameExtended
 import pakcatt.network.radio.kiss.model.KissFrameStandard
 import pakcatt.network.radio.kiss.queue.DeliveryQueue
 import pakcatt.network.radio.protocol.packet.LinkInterface
+import pakcatt.util.SimpleTimer
 import pakcatt.util.StringUtils
 import kotlin.collections.ArrayList
 
@@ -67,7 +68,7 @@ class ConnectionHandler(
         }
     }
 
-    fun deliverQueuedControlFrame(deliveryQueue: DeliveryQueue): Int {
+    fun queueControlFramesForDelivery(deliveryQueue: DeliveryQueue): Int {
         val controlFrame = nextQueuedControlFrame
         return if (null != controlFrame) {
             controlFrame.setReceiveSequenceNumberIfRequired(nextExpectedSendSequenceNumberFromPeer)
@@ -79,9 +80,8 @@ class ConnectionHandler(
         }
     }
 
-    fun deliverContentFrames(deliveryQueue: DeliveryQueue): Int {
+    fun queueContentFramesForDelivery(deliveryQueue: DeliveryQueue): Int {
         var deliveryCount = 0
-
         // Deliver unnumbered frames that do not require an ACK
         val unnumberedFramesForDelivery = unnumberedQueue
         unnumberedQueue = ArrayList() // Reset the unnumberedQueue
@@ -98,9 +98,17 @@ class ConnectionHandler(
 
                 // If this is the last frame to be delivered in this over, set the P flag.
                 if (index >= numberedFramesForDelivery.size - 1 && !sequencedQueue.isAtEndOfMessageDelivery()) {
-                    frame.setControlField(ControlField.INFORMATION_8_P, nextExpectedSendSequenceNumberFromPeer, frame.sendSequenceNumber())
+                    frame.setControlField(
+                        ControlField.INFORMATION_8_P,
+                        nextExpectedSendSequenceNumberFromPeer,
+                        frame.sendSequenceNumber()
+                    )
                 } else {
-                    frame.setControlField(ControlField.INFORMATION_8, nextExpectedSendSequenceNumberFromPeer, frame.sendSequenceNumber())
+                    frame.setControlField(
+                        ControlField.INFORMATION_8,
+                        nextExpectedSendSequenceNumberFromPeer,
+                        frame.sendSequenceNumber()
+                    )
                 }
 
                 deliveryQueue.addFrame(frame)
@@ -137,6 +145,7 @@ class ConnectionHandler(
 
     private fun handleNumberedInformationFrame(incomingFrame: KissFrame) {
         // Check that we expected this frame, and haven't missed any or mixed up the order
+        logger.trace("Handling numbered information for frame: {}", incomingFrame.toString())
         if (incomingFrame.sendSequenceNumber() == nextExpectedSendSequenceNumberFromPeer) {
             incrementReceiveSequenceNumber()
             handleIncomingAcknowledgement(incomingFrame)
@@ -151,7 +160,7 @@ class ConnectionHandler(
             when (appResponse.responseType) {
                 ResponseType.ACK_WITH_TEXT -> queueMessageForDelivery(ControlField.INFORMATION_8, appResponse.responseString())
                 ResponseType.ACK_ONLY -> sendAcknowlegeAndReadyForReceive()
-                ResponseType.IGNORE -> logger.trace("Apps ignored frame: ${incomingFrame.toString()}")
+                ResponseType.IGNORE -> logger.trace("Apps ignored frame: $incomingFrame")
             }
         } else {
             rejectUnsequencedFrame(incomingFrame)
@@ -173,6 +182,7 @@ class ConnectionHandler(
             ResponseType.ACK_WITH_TEXT -> acceptIncomingConnectionWithMessage(appResponse.responseString())
             ResponseType.IGNORE -> logger.trace("Ignored connection request from: $remoteCallsign to :$myCallsign on Chan: $channelIdentifier")
         }
+        sequencedQueue.remoteStationIsReadyExpireDeliveryTimer() // The remote station is ready. Expire the delivery time so that we deliver the next batch of frames.
     }
 
     private fun acceptIncomingConnection() {
@@ -201,12 +211,14 @@ class ConnectionHandler(
 
     private fun handleIncomingAcknowledgement(incomingFrame: KissFrame) {
         // If our record of our last acknowledged sent frame is already updated, then the remote party may be asking us to re-sync with an RECEIVE_READY_P
+        logger.trace("Handling ack for frame: {}", incomingFrame.toString())
         if (sequencedQueue.updateSequenceNumbersAndCheckIsDuplicate(incomingFrame)
             && (incomingFrame.controlField() == ControlField.S_8_RECEIVE_READY_P
                     || incomingFrame.controlField() == ControlField.S_128_RECEIVE_READY_P)) {
             logger.debug("Received multiple of the same acknowledgement sequence number. Sending an Ready_Receive_P to re-sync.")
             handleRequestForState()
         }
+        sequencedQueue.remoteStationIsReadyExpireDeliveryTimer() // The remote station is ready. Expire the delivery time so that we deliver the next batch of frames.
     }
 
     private fun sendAcknowlegeAndReadyForReceive() {
@@ -221,6 +233,7 @@ class ConnectionHandler(
         logger.error("Rejecting frame with unexpected sequence number. Expected: {} Received {}", nextExpectedSendSequenceNumberFromPeer, incomingFrame.sendSequenceNumber())
         val frame = newResponseFrame(ControlField.S_8_REJECT, false)
         queueFrameForControl(frame)
+        sequencedQueue.remoteStationIsReadyExpireDeliveryTimer() // The remote station is ready. Expire the delivery time so that we deliver the next batch of frames.
     }
 
     /**

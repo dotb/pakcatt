@@ -1,6 +1,8 @@
 package pakcatt.network.radio.protocol.packet.connection
 
+import org.slf4j.LoggerFactory
 import pakcatt.network.radio.kiss.model.KissFrame
+import pakcatt.util.SimpleTimer
 import java.util.*
 import kotlin.math.min
 
@@ -8,8 +10,10 @@ class SequencedQueue(private val framesPerOver: Int,
                      private val maxDeliveryAttempts: Int,
                      private val deliveryRetryTimeSeconds: Int) {
 
+    private val logger = LoggerFactory.getLogger(SequencedQueue::class.java)
     private val maxSequenceNumberSize = 8
     private var sequencedFramesForDelivery = ArrayList<KissFrame>(maxSequenceNumberSize)
+    private var deliveryAttemptsRetryTimer = SimpleTimer(deliveryRetryTimeSeconds)
 
     /* Section 4.2.4 Frame Variables and Sequence Numbers, Beech et all */
     /* The send state variable contains the next sequential number to be assigned to the next transmitted I frame.
@@ -26,6 +30,11 @@ class SequencedQueue(private val framesPerOver: Int,
         ourNextUnboundedSendSequenceNumber = 0
         nextBoundedSendNumberExpectedByPeer = 0
         nextUnboundedFrameIndexExpectedByPeer = 0
+        deliveryAttemptsRetryTimer.expireTimer()
+    }
+
+    fun remoteStationIsReadyExpireDeliveryTimer() {
+        deliveryAttemptsRetryTimer.expireTimer()
     }
 
     fun addFrameForSequencedTransmission(newFrame: KissFrame) {
@@ -37,23 +46,19 @@ class SequencedQueue(private val framesPerOver: Int,
     }
 
     fun getSequencedFramesForDelivery(): LinkedList<KissFrame> {
-        val timeStampNow = Date().time
         val startIndex = nextUnboundedFrameIndexExpectedByPeer
         val endIndex = min((startIndex + framesPerOver - 1), ourNextUnboundedSendSequenceNumber - 1)
-        val deliveryRetryTimeMilliseconds = deliveryRetryTimeSeconds * 1000
         var framesForDelivery = LinkedList<KissFrame>()
 
-        if (startIndex >= 0 && endIndex >= 0) {
+        if (startIndex >= 0 && endIndex >= 0 && deliveryAttemptsRetryTimer.hasExpired()) {
             for (index in startIndex..endIndex) {
                 val frameAwaitingDelivery = sequencedFramesForDelivery[index]
-                if (frameAwaitingDelivery.deliveryAttempts < maxDeliveryAttempts
-                    && frameAwaitingDelivery.lastDeliveryAttemptTimeStamp < timeStampNow - deliveryRetryTimeMilliseconds) {
-                    // Attempt to deliver this frame
+                if (frameAwaitingDelivery.deliveryAttempts < maxDeliveryAttempts) {
                     frameAwaitingDelivery.deliveryAttempts++
-                    frameAwaitingDelivery.lastDeliveryAttemptTimeStamp = timeStampNow
                     framesForDelivery.add(frameAwaitingDelivery)
                 }
             }
+            deliveryAttemptsRetryTimer.reset()
         }
         return framesForDelivery
     }
@@ -68,7 +73,9 @@ class SequencedQueue(private val framesPerOver: Int,
 
     // Keep a record of the next send sequence number our remote party expects us to send
     fun updateSequenceNumbersAndCheckIsDuplicate(incomingFrame: KissFrame): Boolean {
+        logger.trace("Updating sequence numbers for frame: {}", incomingFrame.toString())
         return if (nextBoundedSendNumberExpectedByPeer == incomingFrame.receiveSequenceNumber()) {
+            logger.trace("nextBoundedSendNumberExpectedByPeer is the same as incomingFrame.receiveSequenceNumber() for Frame: {}", incomingFrame.toString())
             true
         } else {
             /*
@@ -76,11 +83,14 @@ class SequencedQueue(private val framesPerOver: Int,
              * use it to adjust the unbounded index that points to the next frame expected
              * to be received by our remote peer.
              */
+            logger.trace("Calculating nextUnboundedFrameIndexExpectedByPeer based on Frame: {}", incomingFrame.toString())
             val difference = when {
                 incomingFrame.receiveSequenceNumber() > nextBoundedSendNumberExpectedByPeer -> incomingFrame.receiveSequenceNumber() - nextBoundedSendNumberExpectedByPeer
                 else -> incomingFrame.receiveSequenceNumber() + maxSequenceNumberSize - nextBoundedSendNumberExpectedByPeer
             }
-            nextUnboundedFrameIndexExpectedByPeer += difference
+            val updatedNextUnboundedFrameIndexExpectedByPeer = nextUnboundedFrameIndexExpectedByPeer + difference
+            logger.trace("Updating nextUnboundedFrameIndexExpectedByPeer from {} to {}", nextUnboundedFrameIndexExpectedByPeer, updatedNextUnboundedFrameIndexExpectedByPeer)
+            nextUnboundedFrameIndexExpectedByPeer = updatedNextUnboundedFrameIndexExpectedByPeer
             nextBoundedSendNumberExpectedByPeer = incomingFrame.receiveSequenceNumber()
             false
         }

@@ -11,6 +11,7 @@ import pakcatt.application.shared.model.DeliveryType
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
 import pakcatt.network.radio.protocol.shared.ProtocolService
+import pakcatt.util.SimpleTimer
 import java.util.*
 import kotlin.collections.HashMap
 
@@ -30,7 +31,7 @@ class PacketService(private var appService: AppInterface,
     private val logger = LoggerFactory.getLogger(PacketService::class.java)
     private var connectionHandlers = HashMap<String, ConnectionHandler>()
     private var receiveQueue = LinkedList<KissFrame>()
-    private var lastTransmitTimestamp: Long = 0
+    private val minPauseTimer = SimpleTimer(minTXPauseSeconds)
 
     override fun supportedProtocol(protocolId: Int, controlField: ControlField): Boolean {
         // All frame types are handled.
@@ -69,16 +70,15 @@ class PacketService(private var appService: AppInterface,
         }
 
         // Handle frames queued for delivery
-        val minTXPauseMilliseconds = minTXPauseSeconds * 1000
-        if (Date().time - minTXPauseMilliseconds > lastTransmitTimestamp) {
+        if (minPauseTimer.hasExpired()) {
             var deliveryCount = 0
             for (connectionHandler in connectionHandlers.values) {
-                deliveryCount += connectionHandler.deliverQueuedControlFrame(deliveryQueue)
-                deliveryCount += connectionHandler.deliverContentFrames(deliveryQueue)
+                deliveryCount += connectionHandler.queueControlFramesForDelivery(deliveryQueue)
+                deliveryCount += connectionHandler.queueContentFramesForDelivery(deliveryQueue)
             }
             if (deliveryCount > 0) {
-                logger.trace("Transmitting: {} frames", deliveryCount)
-                lastTransmitTimestamp = Date().time
+                logger.trace("Queued {} frames for delivery", deliveryCount)
+                minPauseTimer.reset()
             }
         }
     }
