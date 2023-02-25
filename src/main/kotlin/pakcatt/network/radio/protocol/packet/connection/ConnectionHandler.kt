@@ -201,7 +201,7 @@ class ConnectionHandler(
 
     private fun handleIncomingAcknowledgement(incomingFrame: KissFrame) {
         // If our record of our last acknowledged sent frame is already updated, then the remote party may be asking us to re-sync with an RECEIVE_READY_P
-        if (sequencedQueue.handleIncomingAcknowledgementAndIfRepeated(incomingFrame)
+        if (sequencedQueue.updateSequenceNumbersAndCheckIsDuplicate(incomingFrame)
             && (incomingFrame.controlField() == ControlField.S_8_RECEIVE_READY_P
                     || incomingFrame.controlField() == ControlField.S_128_RECEIVE_READY_P)) {
             logger.debug("Received multiple of the same acknowledgement sequence number. Sending an Ready_Receive_P to re-sync.")
@@ -223,12 +223,16 @@ class ConnectionHandler(
         queueFrameForControl(frame)
     }
 
+    /**
+     * Handle a disconnect by resetting the connection, clearing out the
+     * delivery queues, then adding a last ack control message to confirm the
+     * disconnect with the remote station.
+     */
     private fun handleDisconnectRequest() {
         logger.trace("Disconnecting from $remoteCallsign")
         resetConnection()
         val frame = newResponseFrame(ControlField.U_UNNUMBERED_ACKNOWLEDGE_P, false)
         queueFrameForControl(frame)
-        connectionStatus = ConnectionStatus.DISCONNECTED
     }
 
     private fun ignoreFrame(incomingFrame: KissFrame) {

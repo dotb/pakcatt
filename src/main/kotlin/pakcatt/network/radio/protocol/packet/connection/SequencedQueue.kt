@@ -67,12 +67,12 @@ class SequencedQueue(private val framesPerOver: Int,
     }
 
     // Keep a record of the next send sequence number our remote party expects us to send
-    fun handleIncomingAcknowledgementAndIfRepeated(incomingFrame: KissFrame): Boolean {
+    fun updateSequenceNumbersAndCheckIsDuplicate(incomingFrame: KissFrame): Boolean {
         return if (nextBoundedSendNumberExpectedByPeer == incomingFrame.receiveSequenceNumber()) {
             true
         } else {
             /*
-             * Calculate the difference between this value and the previous received value and
+             * Calculate the difference between this received value and the previous received value, and
              * use it to adjust the unbounded index that points to the next frame expected
              * to be received by our remote peer.
              */

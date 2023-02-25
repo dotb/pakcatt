@@ -77,7 +77,7 @@ class PacketService(private var appService: AppInterface,
                 deliveryCount += connectionHandler.deliverContentFrames(deliveryQueue)
             }
             if (deliveryCount > 0) {
-                logger.debug("Transmitting: {} frames", deliveryCount)
+                logger.trace("Transmitting: {} frames", deliveryCount)
                 lastTransmitTimestamp = Date().time
             }
         }

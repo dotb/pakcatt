@@ -146,7 +146,7 @@ class KissService(val tncConnections: List<TNC>,
     }
 
     private fun handleNewFrame(frame: ByteArray, tncConnection: TNC) {
-        logger.debug("Received bytes:\t {}", stringUtils.byteArrayToHex(frame))
+        logger.trace("Received bytes:\t {}", stringUtils.byteArrayToHex(frame))
         if (frame.size >= KissFrame.SIZE_MIN) {
             val kissFrame = KissFrameStandard()
             kissFrame.channelIdentifier = tncConnection.channelIdentifier
