@@ -50,13 +50,22 @@ class SequencedQueue(private val framesPerOver: Int,
         val endIndex = min((startIndex + framesPerOver - 1), ourNextUnboundedSendSequenceNumber - 1)
         var framesForDelivery = LinkedList<KissFrame>()
 
+        var retryAttemptsExhausted = false
         if (startIndex >= 0 && endIndex >= 0 && deliveryAttemptsRetryTimer.hasExpired()) {
             for (index in startIndex..endIndex) {
                 val frameAwaitingDelivery = sequencedFramesForDelivery[index]
                 if (frameAwaitingDelivery.deliveryAttempts < maxDeliveryAttempts) {
                     frameAwaitingDelivery.deliveryAttempts++
                     framesForDelivery.add(frameAwaitingDelivery)
+                } else {
+                    retryAttemptsExhausted = true
                 }
+            }
+            if (retryAttemptsExhausted) {
+                // We've run out of delivery attempts and we need to give up.
+                // Rage quit and clear out our send buffer
+                logger.debug("Given up on delivering frames in queue. Resetting queue.")
+                reset()
             }
             deliveryAttemptsRetryTimer.reset()
         }

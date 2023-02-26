@@ -46,9 +46,10 @@ class NoLayerThreeServiceTest: ProtocolTest() {
         sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, 1, 0, "Hello!")
         // Receive two frames - 1 INFORMATION_8 and 2 S_8_RECEIVE_READY_P
         val responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
-        assertEquals(ControlField.INFORMATION_8, responseFrames[0].controlField())
-        assertEquals("Hi, there! *wave*${stringUtils.EOL}", responseFrames[0].payloadDataString())
-        assertEquals(ControlField.S_8_RECEIVE_READY_P, responseFrames[1].controlField())
+        assertEquals(ControlField.S_8_RECEIVE_READY, responseFrames[0].controlField())
+        assertEquals(ControlField.INFORMATION_8, responseFrames[1].controlField())
+        assertEquals("Hi, there! *wave*${stringUtils.EOL}", responseFrames[1].payloadDataString())
+        assertEquals(ControlField.S_8_RECEIVE_READY_P, responseFrames[2].controlField())
 
         /* Receive a disconnect, and respond with an Unnumbered ACK */
         // From: VK3LIT-2 to: VK3LIT-1 control: 53  controlType: U_DISCONNECT_P pollFinalBit: 1 protocolID: 80 Receive Seq: 2 Send Seq: 1
@@ -69,27 +70,33 @@ class NoLayerThreeServiceTest: ProtocolTest() {
         var rxSequenceNumber = 0
         for (sendSequenceNumber in 0..6) {
             sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, sendSequenceNumber, rxSequenceNumber, "hello")
-            var responseFrame = KissFrameStandard()
-            responseFrame.populateFromFrameData(mockedTNC.sentDataBuffer())
+            val responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
             rxSequenceNumber = sendSequenceNumber + 1
-            assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", sendSequenceNumber + 1, responseFrame.receiveSequenceNumber())
-            assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", sendSequenceNumber, responseFrame.sendSequenceNumber())
+            // Check the RECIEVE_READY Response
+            assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", sendSequenceNumber + 1, responseFrames[0].receiveSequenceNumber())
+            // Check the INFORMATION Response
+            assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", sendSequenceNumber + 1, responseFrames[1].receiveSequenceNumber())
+            assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", sendSequenceNumber, responseFrames[1].sendSequenceNumber())
         }
 
         // The 7th exchange should roll-over the received sequence number
         sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, 7, rxSequenceNumber, "hello")
-        var responseFrame = KissFrameStandard()
-        responseFrame.populateFromFrameData(mockedTNC.sentDataBuffer())
+        var responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
         rxSequenceNumber++
-        assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 0, responseFrame.receiveSequenceNumber())
-        assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 7, responseFrame.sendSequenceNumber())
+        // Check the RECIEVE_READY Response
+        assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 0, responseFrames[0].receiveSequenceNumber())
+        // Check the INFORMATION Response
+        assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 0, responseFrames[1].receiveSequenceNumber())
+        assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 7, responseFrames[1].sendSequenceNumber())
 
         // The 8th exchange should roll-over the sent sequence number
         sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, 0, rxSequenceNumber, "hello")
-        responseFrame = KissFrameStandard()
-        responseFrame.populateFromFrameData(mockedTNC.sentDataBuffer())
-        assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 1, responseFrame.receiveSequenceNumber())
-        assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 0, responseFrame.sendSequenceNumber())
+        responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
+        // Check the RECIEVE_READY Response
+        assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 1, responseFrames[0].receiveSequenceNumber())
+        // Check the INFORMATION Response
+        assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 1, responseFrames[1].receiveSequenceNumber())
+        assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 0, responseFrames[1].sendSequenceNumber())
 
     }
 

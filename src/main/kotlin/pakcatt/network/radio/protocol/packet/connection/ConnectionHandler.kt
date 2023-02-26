@@ -9,7 +9,6 @@ import pakcatt.network.radio.kiss.model.KissFrameExtended
 import pakcatt.network.radio.kiss.model.KissFrameStandard
 import pakcatt.network.radio.kiss.queue.DeliveryQueue
 import pakcatt.network.radio.protocol.packet.LinkInterface
-import pakcatt.util.SimpleTimer
 import pakcatt.util.StringUtils
 import kotlin.collections.ArrayList
 
@@ -95,7 +94,6 @@ class ConnectionHandler(
         val numberedFramesForDelivery = sequencedQueue.getSequencedFramesForDelivery()
         if (numberedFramesForDelivery.isNotEmpty()) {
             for ((index, frame) in numberedFramesForDelivery.withIndex()) {
-
                 // If this is the last frame to be delivered in this over, set the P flag.
                 if (index >= numberedFramesForDelivery.size - 1 && !sequencedQueue.isAtEndOfMessageDelivery()) {
                     frame.setControlField(
@@ -161,6 +159,13 @@ class ConnectionHandler(
                 ResponseType.ACK_WITH_TEXT -> queueMessageForDelivery(ControlField.INFORMATION_8, appResponse.responseString())
                 ResponseType.ACK_ONLY -> sendAcknowlegeAndReadyForReceive()
                 ResponseType.IGNORE -> logger.trace("Apps ignored frame: $incomingFrame")
+
+            }
+            // Ack the received information frame, setting the P/F flag depending on the received frame.
+            if (incomingFrame.pollFinalBit()) {
+                sendAcknowlegeAndReadyForReceiveWithPFlagSet()
+            } else {
+                sendAcknowlegeAndReadyForReceive()
             }
         } else {
             rejectUnsequencedFrame(incomingFrame)
@@ -216,7 +221,7 @@ class ConnectionHandler(
             && (incomingFrame.controlField() == ControlField.S_8_RECEIVE_READY_P
                     || incomingFrame.controlField() == ControlField.S_128_RECEIVE_READY_P)) {
             logger.debug("Received multiple of the same acknowledgement sequence number. Sending an Ready_Receive_P to re-sync.")
-            handleRequestForState()
+            sendAcknowlegeAndReadyForReceiveWithPFlagSet()
         }
         sequencedQueue.remoteStationIsReadyExpireDeliveryTimer() // The remote station is ready. Expire the delivery time so that we deliver the next batch of frames.
     }
@@ -225,7 +230,7 @@ class ConnectionHandler(
         queueFrameForControl(newResponseFrame(ControlField.S_8_RECEIVE_READY, false))
     }
 
-    private fun handleRequestForState() {
+    private fun sendAcknowlegeAndReadyForReceiveWithPFlagSet() {
         queueFrameForControl(newResponseFrame(ControlField.S_8_RECEIVE_READY_P, false))
     }
 
