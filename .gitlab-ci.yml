@@ -3,6 +3,10 @@ stages:
         - deploy
         - restart
 
+cache:
+  paths:
+  - .m2/repository
+
 build-maven:
         stage: build
         script: /usr/bin/mvn -Dspring-boot.run.jvmArguments="-Duser.timezone=Australia/Melbourne" clean install
@@ -10,21 +14,24 @@ build-maven:
           paths:
             - target/*.jar
           expire_in: 1 day
-        only:
-          - main
 
 deploy-packatt:
         stage: deploy
         script:
-          - /usr/bin/rm /opt/pakcatt/pakcatt-0.1.jar
-          - /usr/bin/cp ./target/pakcatt-0.1.jar /opt/pakcatt/
-          - /usr/bin/chmod 755 /opt/pakcatt/pakcatt-0.1.jar
-          - /usr/bin/chown :ham /opt/pakcatt/pakcatt-0.1.jar
-        only:
-          - main
+          - eval $(ssh-agent -s)
+          - 'mkdir -p ~/.ssh'
+          - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+          - ssh-add <(echo "$STAGING_PRIVATE_KEY")
+          - ssh pakcatt@pakcatt.utiku.io "rm -f /opt/pakcatt/pakcatt*.jar"
+          - rsync --checksum --delete -rvzhce ssh target/*.jar pakcatt@pakcatt.utiku.io:/opt/pakcatt/
+          - ssh pakcatt@pakcatt.utiku.io "sudo /usr/bin/chmod 755 /opt/pakcatt/pakcatt*.jar"
+          - ssh pakcatt@pakcatt.utiku.io "sudo /usr/bin/chown :ham /opt/pakcatt/pakcatt*.jar"
 
 run-packatt:
         stage: restart
-        script: /usr/bin/sudo /usr/sbin/service pakcatt restart
-        only:
-          - main
+        script: 
+          - eval $(ssh-agent -s)
+          - 'mkdir -p ~/.ssh'
+          - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+          - ssh-add <(echo "$STAGING_PRIVATE_KEY")
+          - ssh pakcatt@pakcatt.utiku.io "/usr/bin/sudo /usr/sbin/service pakcatt restart"
