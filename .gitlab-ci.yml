@@ -5,7 +5,7 @@ stages:
 
 build-maven:
         stage: build
-        script: /usr/bin/mvn clean install
+        script: /usr/bin/mvn -Dspring-boot.run.jvmArguments="-Duser.timezone=Australia/Melbourne" clean install
         artifacts:
           paths:
             - target/*.jar
