@@ -3,6 +3,13 @@ stages:
         - deploy
         - restart
 
+cache:
+  paths:
+  - .m2/repository
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
 build-maven:
         stage: build
         script: /usr/bin/mvn -Dspring-boot.run.jvmArguments="-Duser.timezone=Australia/Melbourne" clean install
@@ -14,6 +21,8 @@ build-maven:
 deploy-packatt:
         stage: deploy
         script:
+          - whoami
+          - echo $HOME
           - eval $(ssh-agent -s)
           - '[[ -f /.dockerenv ]] && touch ~/.ssh/config && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
           - ssh-add <(echo "$STAGING_PRIVATE_KEY")
