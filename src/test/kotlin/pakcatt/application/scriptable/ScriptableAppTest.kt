@@ -11,7 +11,7 @@ class ScriptableAppTest : TestCase() {
 
     private val scriptWorkingDir = "./"
     private val scriptTimeout: Long = 2
-    private val scriptableScripts = listOf(Script("Example Date", "scripts/example_date_connect.sh", "scripts/example_date_request.sh"))
+    private val scriptableScripts = listOf(Script("Example Date", "scripts/test_date_connect.sh", "scripts/test_date_request.sh"))
     private val subject = ScriptableApp(scriptableScripts, scriptWorkingDir, scriptTimeout)
 
     @Test
