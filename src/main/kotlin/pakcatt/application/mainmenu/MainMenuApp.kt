@@ -37,7 +37,7 @@ class MainMenuApp(private val myCall: String,
 
     init {
         // Apps and functionality
-        registerCommand(Command("board")   .shortCuts(listOf("m")) .reply("Launching Bulletin Board")    .openApp(BulletinBoardApp(bulletinBoardStore,
+        registerCommand(Command("board")   .shortCuts(listOf("b")) .reply("Launching Bulletin Board")    .openApp(BulletinBoardApp(bulletinBoardStore,
                                                                                                 boardPromptTopicLength,
                                                                                                 boardSummaryLength,
                                                                                                 boardPostListLength))  .description("Open the Bulletin Board"))
