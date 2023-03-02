@@ -7,9 +7,6 @@ cache:
   paths:
   - .m2/repository
 
-variables:
-  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
-
 build-maven:
         stage: build
         script: /usr/bin/mvn -Dspring-boot.run.jvmArguments="-Duser.timezone=Australia/Melbourne" clean install
