@@ -18,10 +18,9 @@ build-maven:
 deploy-packatt:
         stage: deploy
         script:
-          - whoami
-          - echo $HOME
           - eval $(ssh-agent -s)
-          - '[[ -f /.dockerenv ]] && touch ~/.ssh/config && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+          - 'mkdir -p ~/.ssh'
+          - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
           - ssh-add <(echo "$STAGING_PRIVATE_KEY")
           - ssh pakcatt@pakcatt.utiku.io "rm /opt/pakcatt/pakcatt*.jar"
           - rsync --checksum --delete -rvzhce ssh target/*.jar pakcatt@pakcatt.utiku.io:/opt/pakcatt/
