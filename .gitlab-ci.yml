@@ -29,4 +29,7 @@ deploy-packatt:
 
 run-packatt:
         stage: restart
-        script: ssh pakcatt@pakcatt.utiku.io "/usr/bin/sudo /usr/sbin/service pakcatt restart"
+        script: 
+          - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
+          - ssh-add <(echo "$STAGING_PRIVATE_KEY")
+          - ssh pakcatt@pakcatt.utiku.io "/usr/bin/sudo /usr/sbin/service pakcatt restart"
