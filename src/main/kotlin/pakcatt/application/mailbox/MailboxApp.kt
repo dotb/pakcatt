@@ -16,11 +16,11 @@ import java.lang.StringBuilder
 class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
     init {
-        registerCommand(Command("list") .function (::listMessages).description("List all messages or list unread to only see your unread messages"))
-        registerCommand(Command("send") .function(::sendMessage).description("Send a message, passing the destination callsign as an argument"))
-        registerCommand(Command("open") .function(::readMessage).description("Read a single message, passing the message number as an argument"))
-        registerCommand(Command("del")  .function(::deleteMessage).description("Delete a message, passing the message number as an argument"))
-        registerCommand(Command("back") .reply("Bye").openApp(NavigateBack(1)).description("Leave the mail app and return to the main menu"))
+        registerCommand(Command("list") .function (::listMessages).shortCuts(listOf("l")).description("List all messages or list unread to only see your unread messages"))
+        registerCommand(Command("send") .function(::sendMessage).shortCuts(listOf("s")).description("Send a message, passing the destination callsign as an argument"))
+        registerCommand(Command("open") .function(::readMessage).shortCuts(listOf("o","read","r")).description("Read a single message, passing the message number as an argument"))
+        registerCommand(Command("del")  .function(::deleteMessage).shortCuts(listOf("k")).description("Delete a message, passing the message number as an argument"))
+        registerCommand(Command("back") .reply("Bye").shortCuts(listOf("exit")).openApp(NavigateBack(1)).description("Leave the mail app and return to the main menu"))
     }
 
     override fun returnCommandPrompt(): String {
