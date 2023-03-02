@@ -22,7 +22,7 @@ deploy-packatt:
           - 'mkdir -p ~/.ssh'
           - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
           - ssh-add <(echo "$STAGING_PRIVATE_KEY")
-          - ssh pakcatt@pakcatt.utiku.io "rm /opt/pakcatt/pakcatt*.jar"
+          - ssh pakcatt@pakcatt.utiku.io "rm -f /opt/pakcatt/pakcatt*.jar"
           - rsync --checksum --delete -rvzhce ssh target/*.jar pakcatt@pakcatt.utiku.io:/opt/pakcatt/
           - ssh pakcatt@pakcatt.utiku.io "sudo /usr/bin/chmod 755 /opt/pakcatt/pakcatt*.jar"
           - ssh pakcatt@pakcatt.utiku.io "sudo /usr/bin/chown :ham /opt/pakcatt/pakcatt*.jar"
