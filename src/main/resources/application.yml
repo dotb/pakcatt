@@ -51,9 +51,9 @@ pakcatt:
   tnc:
     ## Serial port / TNC configuration
     serial-connections:
-      - channel-identifier: 'Serial TNC'
-        port-path: /dev/<YOUR TNC SERIAL PATH>
-        port-baud: 9600
+      #- channel-identifier: 'Serial TNC'
+      #  port-path: /dev/<YOUR TNC SERIAL PATH>
+      #  port-baud: 9600
 
     ## TCP/IP TNC connections
     tcp-connections:
