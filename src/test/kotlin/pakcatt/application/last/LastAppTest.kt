@@ -1,10 +1,8 @@
 package pakcatt.application.last
 
 import org.junit.Test
-import pakcatt.application.last.persistence.LastEntry
 import pakcatt.application.shared.AppServiceTest
 import pakcatt.application.shared.model.ResponseType
-import java.util.*
 
 class LastAppTest: AppServiceTest() {
 
