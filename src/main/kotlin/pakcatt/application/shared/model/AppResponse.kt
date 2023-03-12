@@ -3,7 +3,7 @@ package pakcatt.application.shared.model
 import pakcatt.application.shared.SubApp
 
 enum class ResponseType {
-    ACK_WITH_TEXT, ACK_ONLY, IGNORE
+    ACK_WITH_TEXT, ACK_ONLY, IGNORE, DISCONNECT
 }
 
 class AppResponse(val responseType: ResponseType,

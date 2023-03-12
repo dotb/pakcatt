@@ -81,8 +81,8 @@ open class AppServiceTest: TestCase() {
         assertEquals("Welcome${stringUtils.EOL}You have an unread message.${stringUtils.EOL}${stringUtils.EOL}menu> ", response.responseString())
     }
 
-    protected fun testRequest(command: String = "", channelIsInteractive: Boolean = true): AppRequest {
-        return AppRequest("144.875Mhz", "VK3LIT-1", "VK3LIT", "PAKCATT", command, channelIsInteractive, "", "", true)
+    protected fun testRequest(command: String = "", connectionType: ConnectionType = ConnectionType.INTERACTIVE_USER): AppRequest {
+        return AppRequest("144.875Mhz", "VK3LIT-1", "VK3LIT", "PAKCATT", command, "", "", true)
     }
 
 }

@@ -6,7 +6,7 @@ import pakcatt.application.shared.model.AppResponse
 import pakcatt.application.shared.model.ParsedCommandTokens
 import pakcatt.application.shared.model.ResponseType
 
-data class Command(private val fullCommand: String,
+data class Command(private val fullCommandRegex: String,
                    private var description: String? = null,
                    private var shortCuts: ArrayList<String> = arrayListOf(),
                    private var response: ResponseType = ResponseType.IGNORE,
@@ -55,7 +55,11 @@ data class Command(private val fullCommand: String,
     }
 
     fun commandText(): String {
-        return fullCommand.toLowerCase()
+        return fullCommandRegex.toLowerCase()
+    }
+
+    fun commandRegex(): Regex {
+        return fullCommandRegex.toRegex()
     }
 
     fun shortCutText(): List<String> {

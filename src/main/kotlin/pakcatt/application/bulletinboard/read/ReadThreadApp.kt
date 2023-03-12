@@ -4,6 +4,7 @@ import pakcatt.application.bulletinboard.edit.AddPostApp
 import pakcatt.application.bulletinboard.persistence.BulletinBoardPost
 import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
 import pakcatt.application.bulletinboard.persistence.BulletinBoardThread
+import pakcatt.application.shared.ConnectionType
 import pakcatt.application.shared.NavigateBack
 import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.command.Command
@@ -42,7 +43,7 @@ class ReadThreadApp(private val parentThread: BulletinBoardThread,
         val numberOfPostsToList = requestedNumberOfPosts ?: defaultPostListLength
         val postList = bulletinBoardStore.getPostsInThread(parentThread.threadNumber)
         val listLimiter = ListLimiter<BulletinBoardPost>(numberOfPostsToList, LimitType.LIST_TAIL).addItems(postList)
-        val responseString = compilePostListResponse(request.channelIsInteractive, listLimiter)
+        val responseString = compilePostListResponse(request.userContext?.connectionType == ConnectionType.INTERACTIVE_USER, listLimiter)
         return AppResponse.sendText(responseString)
     }
 

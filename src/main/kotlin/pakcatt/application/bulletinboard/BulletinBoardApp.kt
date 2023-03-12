@@ -4,6 +4,7 @@ import pakcatt.application.bulletinboard.edit.AddThreadApp
 import pakcatt.application.bulletinboard.read.ReadThreadApp
 import pakcatt.application.bulletinboard.persistence.BulletinBoardStore
 import pakcatt.application.bulletinboard.persistence.BulletinBoardThread
+import pakcatt.application.shared.ConnectionType
 import pakcatt.application.shared.NavigateBack
 import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.command.Command
@@ -44,14 +45,14 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
         val columnFormatter = ColumnFormatter(2, 4, 14, 30)
 
         if (threadCount > 0) {
-            if (request.channelIsInteractive) {
+            if (request.userContext?.connectionType == ConnectionType.INTERACTIVE_USER) {
                 listResponse.append(stringUtils.EOL)
                 listResponse.append(columnFormatter.formatLineAsColumns("", "No", "Updated", "Topic", isBold = true))
             }
             for (limitedThread in listLimiter.getLimitedList()) {
                 val thread = limitedThread.item
                 val topicSummary = stringUtils.shortenString(thread.topic, boardSummaryLength, true)
-                if (request.channelIsInteractive) {
+                if (request.userContext?.connectionType == ConnectionType.INTERACTIVE_USER) {
                     listResponse.append(columnFormatter.formatLineAsColumns("", thread.threadNumber.toString(), stringUtils.formattedDateLong(thread.lastUpdatedDataTime), topicSummary))
                 } else {
                     listResponse.append(thread.threadNumber.toString(), " ", stringUtils.formattedDateShort(thread.lastUpdatedDataTime), " ", topicSummary)
@@ -59,7 +60,7 @@ class BulletinBoardApp(private val bulletinBoardStore: BulletinBoardStore,
                 }
             }
         }
-        if (request.channelIsInteractive) {
+        if (request.userContext?.connectionType == ConnectionType.INTERACTIVE_USER) {
             listResponse.append(threadCount)
             listResponse.append(" threads")
             listResponse.append(stringUtils.EOL)

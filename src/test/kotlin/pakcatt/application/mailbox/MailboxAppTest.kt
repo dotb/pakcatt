@@ -2,6 +2,7 @@ package pakcatt.application.mailbox
 
 import org.junit.Test
 import pakcatt.application.shared.AppServiceTest
+import pakcatt.application.shared.ConnectionType
 import pakcatt.application.shared.model.ResponseType
 
 class MailboxAppTest: AppServiceTest() {
@@ -76,7 +77,7 @@ class MailboxAppTest: AppServiceTest() {
 
     fun `test mail list async`() {
         `test starting a connection to the BBS with messages`()
-        var request = testRequest("mail.list", false)
+        var request = testRequest("mail.list", ConnectionType.NON_INTERACTIVE)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("  1   01-01 10:00   PAKCATT VK3LIT  Subject 1${stringUtils.EOL}" +
@@ -88,7 +89,7 @@ class MailboxAppTest: AppServiceTest() {
 
     fun `test mail list with limit async`() {
         `test starting a connection to the BBS with messages`()
-        var request = testRequest("mail.list.2", false)
+        var request = testRequest("mail.list.2", ConnectionType.NON_INTERACTIVE)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("* 3   01-01 12:30   VK3LIT  VK2VRO  Subject 3${stringUtils.EOL}" +
@@ -98,7 +99,7 @@ class MailboxAppTest: AppServiceTest() {
 
     fun `test mail list with unread limit async`() {
         `test starting a connection to the BBS with messages`()
-        var request = testRequest("mail.list.unread.2", false)
+        var request = testRequest("mail.list.unread.2", ConnectionType.NON_INTERACTIVE)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("* 3   01-01 12:30   VK3LIT  VK2VRO  Subject 3${stringUtils.EOL}" +

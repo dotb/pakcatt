@@ -170,7 +170,7 @@ class AppService(private val rootApplications: List<RootApp>,
     // Rewrite the prompt string into the textual response
     private fun addPromptToResponse(request: AppRequest, response: AppResponse) {
         // Only add a prompt to synchronous conversations
-        if (request.channelIsInteractive) {
+        if (listOf(ConnectionType.INTERACTIVE_USER, ConnectionType.INTERACTIVE_FORWARDING).contains(request.userContext?.connectionType)) {
             val message = response.responseString()
             val currentUserEngagedApp = request.userContext?.engagedApplication()
             when (val prompt = currentUserEngagedApp?.returnCommandPrompt()) {

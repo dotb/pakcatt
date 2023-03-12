@@ -45,7 +45,7 @@ class MailboxApp(private val mailboxStore: MailboxStore): SubApp() {
 
         val listLimit = argLimitTwo ?: argLimitOne
         val listLimiter = ListLimiter<MailMessage>(listLimit, LimitType.LIST_TAIL).addItems(userMessages)
-        return compileMessageListResponse(request.channelIsInteractive, listLimiter)
+        return compileMessageListResponse(request.userContext?.connectionType == ConnectionType.INTERACTIVE_USER, listLimiter)
     }
 
     private fun compileMessageListResponse(channelIsInteractive: Boolean, listLimiter: ListLimiter<MailMessage>): AppResponse {

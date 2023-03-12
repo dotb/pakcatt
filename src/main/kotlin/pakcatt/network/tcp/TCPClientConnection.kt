@@ -82,8 +82,7 @@ class TCPClientConnection(private val clientSocket: Socket,
             stringUtils.formatCallsignEnsureSSID(remoteCall),
             stringUtils.formatCallsignRemoveSSID(remoteCall),
             myCall,
-            inputLineWithEOL,
-            true)
+            inputLineWithEOL)
     }
 
     override fun run() {

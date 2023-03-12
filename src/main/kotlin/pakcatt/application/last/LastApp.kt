@@ -1,6 +1,7 @@
 package pakcatt.application.last
 
 import pakcatt.application.last.persistence.LastEntryStore
+import pakcatt.application.shared.ConnectionType
 import pakcatt.application.shared.SubApp
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.AppResponse
@@ -49,7 +50,7 @@ class LastApp(private val lastEntryStore: LastEntryStore): SubApp() {
      * We shorten the date format for smaller message based devices
      */
     private fun appropriateDateFormatter(request: AppRequest): SimpleDateFormat {
-        return when (request.channelIsInteractive) {
+        return when (request.userContext?.connectionType == ConnectionType.INTERACTIVE_USER) {
             true -> dateFormatterLong
             false -> dateFormatterShort
         }

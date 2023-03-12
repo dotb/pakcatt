@@ -3,6 +3,7 @@ package pakcatt.application.bulletinboard
 
 import org.junit.Test
 import pakcatt.application.shared.AppServiceTest
+import pakcatt.application.shared.ConnectionType
 import pakcatt.application.shared.model.ResponseType
 
 class BulletinBoardAppTest: AppServiceTest() {
@@ -197,7 +198,7 @@ class BulletinBoardAppTest: AppServiceTest() {
     @Test
     fun `test open the board and list topics from async device`() {
         `test starting a connection to the BBS with messages`()
-        var request = testRequest("board.list", false)
+        var request = testRequest("board.list", ConnectionType.NON_INTERACTIVE)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("2 01-01 10:00 This is topic 2${stringUtils.EOL}" +
@@ -216,7 +217,7 @@ class BulletinBoardAppTest: AppServiceTest() {
     @Test
     fun `test open the board and list topics with a limit from async device`() {
         `test starting a connection to the BBS with messages`()
-        var request = testRequest("board.list.4", false)
+        var request = testRequest("board.list.4", ConnectionType.NON_INTERACTIVE)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("9 01-01 10:00 This is topic 9${stringUtils.EOL}" +
@@ -229,7 +230,7 @@ class BulletinBoardAppTest: AppServiceTest() {
     @Test
     fun `test open the board and then a topic and list posts with a default length from an async device`() {
         `test starting a connection to the BBS with messages`()
-        var request = testRequest("board.open.1.list", false)
+        var request = testRequest("board.open.1.list", ConnectionType.NON_INTERACTIVE)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("1 01-01 10:16 VK2VRO 567B Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium dolor...${stringUtils.EOL}" +

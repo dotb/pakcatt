@@ -3,11 +3,16 @@ package pakcatt.application.shared
 import pakcatt.util.StringUtils
 import java.util.*
 
+enum class ConnectionType {
+    INTERACTIVE_USER, INTERACTIVE_FORWARDING, NON_INTERACTIVE
+}
+
 class UserContext(val remoteCallsign: String,
                   val myCallsign: String) {
 
     private var navigationStack = LinkedList<SubApp>()
     var eolSequence = StringUtils().EOL
+    var connectionType = ConnectionType.INTERACTIVE_USER
 
     fun navigateToApp(app: SubApp) {
         navigationStack.push(app)

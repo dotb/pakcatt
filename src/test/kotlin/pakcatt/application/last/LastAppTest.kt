@@ -2,6 +2,7 @@ package pakcatt.application.last
 
 import org.junit.Test
 import pakcatt.application.shared.AppServiceTest
+import pakcatt.application.shared.ConnectionType
 import pakcatt.application.shared.model.ResponseType
 
 class LastAppTest: AppServiceTest() {
@@ -26,7 +27,7 @@ class LastAppTest: AppServiceTest() {
     fun `test last app returns results in the correct order for async requests`() {
         `test starting a connection to the BBS with messages`()
 
-        var request = testRequest("last", false)
+        var request = testRequest("last", ConnectionType.NON_INTERACTIVE)
         var response = appService.getResponseForReceivedMessage(request)
         assertEquals(ResponseType.ACK_WITH_TEXT, response.responseType)
         assertEquals("VK3LIT: 01-01-1970@10:16 via 144.875Mhz${stringUtils.EOL}" +

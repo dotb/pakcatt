@@ -34,7 +34,6 @@ class APRSMessageHandler(myCall: String,
                                             stringUtils.formatCallsignRemoveSSID(aprsMessageFrame.messageSourceCallsign()),
                                             aprsMessageFrame.messageDestinationCallsign(),
                                             aprsMessageFrame.message(),
-                                            false,
                                             aprsFrame.repeaterCallsignOne(),
                                             aprsFrame.repeaterCallsignTwo(),
                                             true)

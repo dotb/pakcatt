@@ -33,7 +33,9 @@ abstract class SubApp {
         } else {
             // Find a command that handles the request sent to us
             for (registeredCommand in allRegisteredCommands) {
-                if (registeredCommand.commandText() == parsedCommandTokens.command()
+                val commandRegex = registeredCommand.commandRegex()
+                val command = parsedCommandTokens.command()
+                if (command.matches(commandRegex)
                     || (registeredCommand.shortCutText().contains(parsedCommandTokens.command()))) {
                     return registeredCommand.execute(request, parsedCommandTokens)
                 }

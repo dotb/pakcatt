@@ -153,8 +153,7 @@ class ConnectionHandler(
                                                                             incomingFrame.sourceCallsign(),
                                                                             stringUtils.formatCallsignRemoveSSID(incomingFrame.sourceCallsign()),
                                                                             incomingFrame.destCallsign(),
-                                                                            incomingFrame.payloadDataString(),
-                                                                            true))
+                                                                            incomingFrame.payloadDataString()))
             when (appResponse.responseType) {
                 ResponseType.ACK_WITH_TEXT -> queueMessageForDelivery(ControlField.INFORMATION_8, appResponse.responseString())
                 ResponseType.ACK_ONLY -> sendAcknowlegeAndReadyForReceive()
@@ -180,8 +179,8 @@ class ConnectionHandler(
                                                                         incomingFrame.sourceCallsign(),
                                                                         stringUtils.formatCallsignRemoveSSID(incomingFrame.sourceCallsign()),
                                                                         incomingFrame.destCallsign(),
-                                                                        incomingFrame.payloadDataString(),
-                                                                        true))
+                                                                        incomingFrame.payloadDataString()
+        ))
         when (appResponse.responseType) {
             ResponseType.ACK_ONLY -> acceptIncomingConnection()
             ResponseType.ACK_WITH_TEXT -> acceptIncomingConnectionWithMessage(appResponse.responseString())

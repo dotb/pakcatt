@@ -17,7 +17,9 @@ import pakcatt.application.shared.command.Command
 import pakcatt.application.tell.TellApp
 import pakcatt.application.shared.model.AppResponse
 import pakcatt.application.shared.model.ParsedCommandTokens
+import pakcatt.application.shared.model.ResponseType
 import pakcatt.application.tell.model.TellAppConfig
+import pakcatt.protocols.forwarding.w0rli.W0rliForwardApp
 import java.lang.StringBuilder
 import kotlin.math.sqrt
 
@@ -58,6 +60,7 @@ class MainMenuApp(private val myCall: String,
         registerCommand(Command("nop")     .ackOnly().description("I'll do nothing, just acknowledge your request"))
         registerCommand(Command("ignore")  .ignore().description("I'll receive your command but won't acknowledge it"))
         registerCommand(Command("settings").reply("Launching Settings") .openApp(SettingsApp()).description("View your environment settings"))
+        registerCommand(Command("\\[[a-zA-Z0-9]+-[0-9a-zA-Z\\.]+-[ABCFHILMRSTUX1]*\\\$?\\]").reply("> ").openApp(W0rliForwardApp()).description("Start a W0RLI forwarding session"))
     }
 
     override fun returnCommandPrompt(): String {
@@ -67,19 +70,33 @@ class MainMenuApp(private val myCall: String,
     override fun decisionOnConnectionRequest(request: AppRequest): AppResponse {
         return if (isAddressedToMe(request, myCall)) {
             val stringBuilder = StringBuilder()
-            val mailboxApp = MailboxApp(mailboxStore)
-            val unreadMessages = mailboxApp.unreadMessageCount(request)
-
-            stringBuilder.append(welcomeMessage)
+            motdAppendSID(request, stringBuilder)
             stringBuilder.append(stringUtils.EOL)
-            if (unreadMessages > 1) {
-                stringBuilder.append("You have $unreadMessages unread messages.${stringUtils.EOL}")
-            } else if (unreadMessages > 0) {
-                stringBuilder.append("You have an unread message.${stringUtils.EOL}")
-            }
+            motdAppendWelcomeMessage(request, stringBuilder)
+            stringBuilder.append(stringUtils.EOL)
+            motdAppendUnreadMailMessage(request, stringBuilder)
+            stringBuilder.append(stringUtils.EOL)
             AppResponse.sendText(stringBuilder.toString(), this)
         } else {
             AppResponse.ignore()
+        }
+    }
+
+    private fun motdAppendSID(request: AppRequest, stringBuilder: StringBuilder) {
+        stringBuilder.append("[PAKCATT-0.3-M$]")
+    }
+
+    private fun motdAppendWelcomeMessage(request: AppRequest, stringBuilder: StringBuilder) {
+        stringBuilder.append(welcomeMessage)
+    }
+
+    private fun motdAppendUnreadMailMessage(request: AppRequest, stringBuilder: StringBuilder) {
+        val mailboxApp = MailboxApp(mailboxStore)
+        val unreadMessages = mailboxApp.unreadMessageCount(request)
+        if (unreadMessages > 1) {
+            stringBuilder.append("You have $unreadMessages unread messages.")
+        } else if (unreadMessages > 0) {
+            stringBuilder.append("You have an unread message.")
         }
     }
 
@@ -135,5 +152,4 @@ class MainMenuApp(private val myCall: String,
 
         return AppResponse.sendText(returnString.toString())
     }
-
 }
