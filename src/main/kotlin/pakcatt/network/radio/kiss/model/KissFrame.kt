@@ -334,7 +334,7 @@ abstract class KissFrame() {
             stringBuilder.append("Receive Seq: ${receiveSequenceNumber()} Send Seq: ${sendSequenceNumber()} Delivery Attempt: $deliveryAttempts protocolID: ${stringUtils.byteToHex(protocolID())} ")
         }
 
-        stringBuilder.append("From: ${sourceCallsign()} to: ${destCallsign()} controlType: ")
+        stringBuilder.append("From: ${sourceCallsign()} to: ${destCallsign()} ")
 
         if (repeaterCallsignOne.isNotEmpty()) {
             stringBuilder.append("Via1: ${repeaterCallsignOne()} ")
@@ -443,6 +443,144 @@ abstract class KissFrame() {
             ControlField.U_UNNUMBERED_ACKNOWLEDGE_P -> byteUtils.setBits(sourceSSID, 0x80)
             ControlField.U_REJECT_P -> byteUtils.setBits(sourceSSID, 0x80)
             else -> sourceSSID
+        }
+    }
+
+    fun isPFlagSet(): Boolean {
+        return when (controlField()) {
+            ControlField.INFORMATION_8 -> false
+            ControlField.INFORMATION_8_P -> true
+            ControlField.INFORMATION_128 -> false
+            ControlField.INFORMATION_128_P -> true
+            ControlField.S_8_RECEIVE_READY -> false
+            ControlField.S_8_RECEIVE_NOT_READY -> false
+            ControlField.S_8_REJECT -> false
+            ControlField.S_8_SELECTIVE_REJECT -> false
+            ControlField.S_8_RECEIVE_READY_P -> true
+            ControlField.S_8_RECEIVE_NOT_READY_P -> true
+            ControlField.S_8_REJECT_P -> true
+            ControlField.S_8_SELECTIVE_REJECT_P -> true
+            ControlField.S_128_RECEIVE_READY -> false
+            ControlField.S_128_RECEIVE_NOT_READY -> false
+            ControlField.S_128_REJECT -> false
+            ControlField.S_128_SELECTIVE_REJECT -> false
+            ControlField.S_128_RECEIVE_READY_P -> true
+            ControlField.S_128_RECEIVE_NOT_READY_P -> true
+            ControlField.S_128_REJECT_P -> true
+            ControlField.S_128_SELECTIVE_REJECT_P -> true
+            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED -> false
+            ControlField.U_SET_ASYNC_BALANCED_MODE -> false
+            ControlField.U_DISCONNECT -> false
+            ControlField.U_DISCONNECT_MODE -> false
+            ControlField.U_UNNUMBERED_ACKNOWLEDGE -> false
+            ControlField.U_REJECT -> false
+            ControlField.U_UNNUMBERED_INFORMATION -> false
+            ControlField.U_EXCHANGE_IDENTIFICATION -> false
+            ControlField.U_TEST -> false
+            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P -> true
+            ControlField.U_SET_ASYNC_BALANCED_MODE_P -> true
+            ControlField.U_DISCONNECT_P -> true
+            ControlField.U_DISCONNECT_MODE_P -> true
+            ControlField.U_UNNUMBERED_ACKNOWLEDGE_P -> true
+            ControlField.U_REJECT_P -> true
+            ControlField.U_UNNUMBERED_INFORMATION_P -> true
+            ControlField.U_EXCHANGE_IDENTIFICATION_P -> true
+            ControlField.U_TEST_P -> true
+            ControlField.UNKNOWN_Field -> false
+        }
+    }
+
+    /**
+     * Inspect the current control field and make sure it's P Flag is set
+     */
+    fun setPFlag() {
+        when (controlField()) {
+            ControlField.INFORMATION_8 -> setControlField(ControlField.INFORMATION_8_P)
+            ControlField.INFORMATION_8_P -> {}
+            ControlField.INFORMATION_128 -> setControlField(ControlField.INFORMATION_128_P)
+            ControlField.INFORMATION_128_P -> {}
+            ControlField.S_8_RECEIVE_READY -> setControlField(ControlField.S_8_RECEIVE_READY_P)
+            ControlField.S_8_RECEIVE_NOT_READY -> setControlField(ControlField.S_8_RECEIVE_NOT_READY_P)
+            ControlField.S_8_REJECT -> setControlField(ControlField.S_8_REJECT_P)
+            ControlField.S_8_SELECTIVE_REJECT -> setControlField(ControlField.S_8_SELECTIVE_REJECT_P)
+            ControlField.S_8_RECEIVE_READY_P -> {}
+            ControlField.S_8_RECEIVE_NOT_READY_P -> {}
+            ControlField.S_8_REJECT_P -> {}
+            ControlField.S_8_SELECTIVE_REJECT_P -> {}
+            ControlField.S_128_RECEIVE_READY -> setControlField(ControlField.S_128_RECEIVE_READY_P)
+            ControlField.S_128_RECEIVE_NOT_READY -> setControlField(ControlField.S_128_RECEIVE_NOT_READY_P)
+            ControlField.S_128_REJECT -> setControlField(ControlField.S_128_REJECT_P)
+            ControlField.S_128_SELECTIVE_REJECT -> setControlField(ControlField.S_128_SELECTIVE_REJECT_P)
+            ControlField.S_128_RECEIVE_READY_P -> {}
+            ControlField.S_128_RECEIVE_NOT_READY_P -> {}
+            ControlField.S_128_REJECT_P -> {}
+            ControlField.S_128_SELECTIVE_REJECT_P -> {}
+            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED -> setControlField(ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P)
+            ControlField.U_SET_ASYNC_BALANCED_MODE -> setControlField(ControlField.U_SET_ASYNC_BALANCED_MODE_P)
+            ControlField.U_DISCONNECT -> setControlField(ControlField.U_DISCONNECT_P)
+            ControlField.U_DISCONNECT_MODE -> setControlField(ControlField.U_DISCONNECT_MODE_P)
+            ControlField.U_UNNUMBERED_ACKNOWLEDGE -> setControlField(ControlField.U_UNNUMBERED_ACKNOWLEDGE_P)
+            ControlField.U_REJECT -> setControlField(ControlField.U_REJECT_P)
+            ControlField.U_UNNUMBERED_INFORMATION -> (ControlField.U_UNNUMBERED_INFORMATION_P)
+            ControlField.U_EXCHANGE_IDENTIFICATION -> setControlField(ControlField.U_EXCHANGE_IDENTIFICATION_P)
+            ControlField.U_TEST -> setControlField(ControlField.U_TEST_P)
+            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P -> {}
+            ControlField.U_SET_ASYNC_BALANCED_MODE_P -> {}
+            ControlField.U_DISCONNECT_P -> {}
+            ControlField.U_DISCONNECT_MODE_P -> {}
+            ControlField.U_UNNUMBERED_ACKNOWLEDGE_P -> {}
+            ControlField.U_REJECT_P -> {}
+            ControlField.U_UNNUMBERED_INFORMATION_P -> {}
+            ControlField.U_EXCHANGE_IDENTIFICATION_P -> {}
+            ControlField.U_TEST_P -> {}
+            ControlField.UNKNOWN_Field -> {}
+        }
+    }
+
+    /**
+     * Inspecth the current control field and make sure it's P Flag is not set
+     */
+    fun unsetPFlag() {
+        when (controlField()) {
+            ControlField.INFORMATION_8 -> {}
+            ControlField.INFORMATION_8_P -> setControlField(ControlField.INFORMATION_8)
+            ControlField.INFORMATION_128 -> {}
+            ControlField.INFORMATION_128_P -> setControlField(ControlField.INFORMATION_128)
+            ControlField.S_8_RECEIVE_READY -> {}
+            ControlField.S_8_RECEIVE_NOT_READY -> {}
+            ControlField.S_8_REJECT -> {}
+            ControlField.S_8_SELECTIVE_REJECT -> {}
+            ControlField.S_8_RECEIVE_READY_P -> setControlField(ControlField.S_8_RECEIVE_READY)
+            ControlField.S_8_RECEIVE_NOT_READY_P -> setControlField(ControlField.S_8_RECEIVE_NOT_READY)
+            ControlField.S_8_REJECT_P -> setControlField(ControlField.S_8_REJECT)
+            ControlField.S_8_SELECTIVE_REJECT_P -> setControlField(ControlField.S_8_SELECTIVE_REJECT)
+            ControlField.S_128_RECEIVE_READY -> {}
+            ControlField.S_128_RECEIVE_NOT_READY -> {}
+            ControlField.S_128_REJECT -> {}
+            ControlField.S_128_SELECTIVE_REJECT -> {}
+            ControlField.S_128_RECEIVE_READY_P -> setControlField(ControlField.S_128_RECEIVE_READY)
+            ControlField.S_128_RECEIVE_NOT_READY_P -> setControlField(ControlField.S_128_RECEIVE_NOT_READY)
+            ControlField.S_128_REJECT_P -> setControlField(ControlField.S_128_REJECT)
+            ControlField.S_128_SELECTIVE_REJECT_P -> setControlField(ControlField.S_128_SELECTIVE_REJECT)
+            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED -> {}
+            ControlField.U_SET_ASYNC_BALANCED_MODE -> {}
+            ControlField.U_DISCONNECT -> {}
+            ControlField.U_DISCONNECT_MODE -> {}
+            ControlField.U_UNNUMBERED_ACKNOWLEDGE -> {}
+            ControlField.U_REJECT -> {}
+            ControlField.U_UNNUMBERED_INFORMATION -> {}
+            ControlField.U_EXCHANGE_IDENTIFICATION -> {}
+            ControlField.U_TEST -> {}
+            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P -> setControlField(ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED)
+            ControlField.U_SET_ASYNC_BALANCED_MODE_P -> setControlField(ControlField.U_SET_ASYNC_BALANCED_MODE)
+            ControlField.U_DISCONNECT_P -> setControlField(ControlField.U_DISCONNECT)
+            ControlField.U_DISCONNECT_MODE_P -> setControlField(ControlField.U_DISCONNECT_MODE)
+            ControlField.U_UNNUMBERED_ACKNOWLEDGE_P -> setControlField(ControlField.U_UNNUMBERED_ACKNOWLEDGE)
+            ControlField.U_REJECT_P -> setControlField(ControlField.U_REJECT)
+            ControlField.U_UNNUMBERED_INFORMATION_P -> setControlField(ControlField.U_UNNUMBERED_INFORMATION)
+            ControlField.U_EXCHANGE_IDENTIFICATION_P -> setControlField(ControlField.U_EXCHANGE_IDENTIFICATION)
+            ControlField.U_TEST_P -> setControlField(ControlField.U_TEST)
+            ControlField.UNKNOWN_Field -> {}
         }
     }
 

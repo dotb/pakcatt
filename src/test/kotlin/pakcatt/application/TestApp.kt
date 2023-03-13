@@ -33,7 +33,8 @@ class TestApp: RootApp() {
             "Hello!" -> AppResponse.sendText("Hi, there! *wave*")
             "ping" -> AppResponse.sendText("pong")
             "longtest" -> AppResponse.sendText(largeResponse())
-            else ->  AppResponse.sendText("Test")
+            "hello" -> AppResponse.sendText("test")
+            else ->  AppResponse.ignore()
         }
     }
 

@@ -111,8 +111,14 @@ class AppService(private val rootApplications: List<RootApp>,
             val parsedCommandInput = ParsedCommandTokens().parseCommandLine(request.message)
             val interactionResponse = callAppsRecursively(request, parsedCommandInput, app)
             when (interactionResponse.responseType) {
-                ResponseType.ACK_WITH_TEXT -> finalInteractionResponse = interactionResponse
-                ResponseType.ACK_ONLY -> finalInteractionResponse = interactionResponse
+                ResponseType.ACK_WITH_TEXT -> {
+                    logger.trace("App responded to our request: {} {}", app.javaClass, interactionResponse)
+                    finalInteractionResponse = interactionResponse
+                }
+                ResponseType.ACK_ONLY -> {
+                    logger.trace("App responded to our request: {} {}", app.javaClass, interactionResponse)
+                    finalInteractionResponse = interactionResponse
+                }
                 ResponseType.IGNORE -> logger.trace("App isn't interested in responding {}", app)
             }
         }

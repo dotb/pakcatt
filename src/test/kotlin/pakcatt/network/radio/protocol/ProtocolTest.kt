@@ -3,21 +3,25 @@ package pakcatt.network.radio.protocol
 import junit.framework.TestCase
 import org.awaitility.Awaitility
 import org.awaitility.Duration
+import org.slf4j.LoggerFactory
 import pakcatt.network.radio.kiss.model.ControlField
 import pakcatt.network.radio.kiss.model.KissFrame
 import pakcatt.network.radio.kiss.model.KissFrameStandard
+import pakcatt.network.radio.protocol.packet.PacketService
 import pakcatt.network.radio.tnc.TNCMocked
 import pakcatt.util.ByteUtils
 import pakcatt.util.StringUtils
+import java.util.concurrent.TimeUnit
 
 abstract class ProtocolTest: TestCase() {
 
+    private val logger = LoggerFactory.getLogger(ProtocolTest::class.java)
     protected val byteUtils = ByteUtils()
     protected val stringUtils = StringUtils()
 
-    protected fun sendFrameAndWaitResponse(mockedTNC: TNCMocked, controlType: ControlField, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null) {
+    protected fun sendFrameAndWaitResponse(mockedTNC: TNCMocked, controlType: ControlField, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null, expectedFramesInResponse: Int = 1) {
         sendFrame(mockedTNC, controlType, sendSequenceNumber, rxSequenceNumber, payload)
-        waitForResponse(mockedTNC)
+        waitForResponse(mockedTNC, expectedFramesInResponse)
     }
 
     protected fun sendFrame(mockedTNC: TNCMocked, controlType: ControlField, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null) {
@@ -31,9 +35,9 @@ abstract class ProtocolTest: TestCase() {
         sendFrameFromBytes(mockedTNC, requestFrame.packetData())
     }
 
-    protected fun sendFrameFromBytesAndWaitResponse(mockedTNC: TNCMocked, frameData: ByteArray) {
+    protected fun sendFrameFromBytesAndWaitResponse(mockedTNC: TNCMocked, frameData: ByteArray, expectedFramesInResponse: Int = 1) {
         sendFrameFromBytes(mockedTNC, frameData)
-        waitForResponse(mockedTNC)
+        waitForResponse(mockedTNC, expectedFramesInResponse)
     }
 
     protected fun sendFrameFromBytes(mockedTNC: TNCMocked, frameData: ByteArray) {
@@ -60,14 +64,19 @@ abstract class ProtocolTest: TestCase() {
         var frameEnd = 0
         for (byte in responseBuffer) {
             when (byte) {
-                // We've come to the end of the frame
                 0xC0.toByte() -> {
+                    // We've come to the end of the frame
                     val frameSize = frameEnd - frameStart
                     val frameBuffer = ByteArray(frameSize)
                     responseBuffer.copyInto(frameBuffer, 0, frameStart, frameEnd)
-                    val kissFrame = KissFrameStandard()
-                    kissFrame.populateFromFrameData(frameBuffer)
-                    responseFrameList.add(kissFrame)
+                    logger.trace("parsed a frame buffer: {}", frameBuffer)
+                    if (frameBuffer.isNotEmpty()) {
+                        /* Only populate a frame if the buffer is populated. The TNC will send empty frames
+                        * as keep-alive packets, messing up long running tests */
+                        val kissFrame = KissFrameStandard()
+                        kissFrame.populateFromFrameData(frameBuffer)
+                        responseFrameList.add(kissFrame)
+                    }
                     frameEnd++
                     frameStart = frameEnd
                 }
@@ -78,10 +87,10 @@ abstract class ProtocolTest: TestCase() {
         return responseFrameList
     }
 
-    protected fun waitForResponse(mockedTNC: TNCMocked) {
+    protected fun waitForResponse(mockedTNC: TNCMocked, expectedFramesInResponse: Int) {
         // Wait for the response
         Awaitility.await().atMost(Duration.TEN_SECONDS).until {
-            mockedTNC.sentDataBuffer().size >= 10
+            mockedTNC.numberOfFramesInSendDataBuffer() >= expectedFramesInResponse
         }
     }
 

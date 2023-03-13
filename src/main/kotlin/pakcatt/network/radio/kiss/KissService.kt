@@ -123,8 +123,6 @@ class KissService(val tncConnections: List<TNC>,
 
     private fun handleNewByte(newByte: Byte, tncConnection: TNC) {
         if (KissFrame.FRAME_END == newByte.toInt()) {
-            logger.trace("Received boundary of KISS frame after ${incomingFrameIndex + 1} bytes")
-
             if (incomingFrameIndex >= 0) {
                 // Make a copy of the new frame
                 val newFrame = incomingFrame.copyOfRange(0, incomingFrameIndex + 1)

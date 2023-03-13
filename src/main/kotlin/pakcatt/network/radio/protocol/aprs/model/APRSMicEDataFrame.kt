@@ -155,14 +155,18 @@ class APRSMicEDataFrame: APRSFrame() {
      *  ' = 0x27 = beacon / location only compatible device
      */
     fun radioCompatibility(): RadioCompatibility {
-        return when (payloadData[9].toChar()) {
-            ' ' -> RadioCompatibility.BEACON
-            '\'' -> RadioCompatibility.BEACON
-            'T' -> RadioCompatibility.BEACON
-            '>' -> RadioCompatibility.MESSAGE
-            ']' -> RadioCompatibility.MESSAGE
-            '`' -> RadioCompatibility.MESSAGE
-            else -> RadioCompatibility.UNKNOWN
+        return if (payloadData.size >= 9) {
+            when (payloadData[8].toChar()) {
+                ' ' -> RadioCompatibility.BEACON
+                '\'' -> RadioCompatibility.BEACON
+                'T' -> RadioCompatibility.BEACON
+                '>' -> RadioCompatibility.MESSAGE
+                ']' -> RadioCompatibility.MESSAGE
+                '`' -> RadioCompatibility.MESSAGE
+                else -> RadioCompatibility.UNKNOWN
+            }
+        } else {
+            RadioCompatibility.UNKNOWN
         }
     }
 

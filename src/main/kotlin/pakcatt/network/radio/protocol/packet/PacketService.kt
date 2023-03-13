@@ -71,13 +71,11 @@ class PacketService(private var appService: AppInterface,
 
         // Handle frames queued for delivery
         if (minPauseTimer.hasExpired()) {
-            var deliveryCount = 0
             for (connectionHandler in connectionHandlers.values) {
-                deliveryCount += connectionHandler.queueControlFramesForDelivery(deliveryQueue)
-                deliveryCount += connectionHandler.queueContentFramesForDelivery(deliveryQueue)
+                connectionHandler.queueFramesForDelivery(deliveryQueue)
             }
-            if (deliveryCount > 0) {
-                logger.trace("Queued {} frames for delivery", deliveryCount)
+            if (deliveryQueue.queueSize() > 0) {
+                logger.trace("Queued {} frames for delivery", deliveryQueue.queueSize())
                 minPauseTimer.reset()
             }
         }

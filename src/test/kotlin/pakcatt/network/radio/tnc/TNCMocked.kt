@@ -2,6 +2,7 @@ package pakcatt.network.radio.tnc
 
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
+import pakcatt.network.radio.kiss.model.KissFrame
 import pakcatt.util.ByteUtils
 
 @Component
@@ -21,6 +22,10 @@ class TNCMocked: TNC("Mocked TNC") {
 
     fun sentDataBuffer(): ByteArray {
         return sentDataBuffer.copyOf(dataIndex)
+    }
+
+    fun numberOfFramesInSendDataBuffer(): Int {
+        return sentDataBuffer.filter { it == KissFrame.FRAME_END.toByte() }.size
     }
 
     override fun connect() {
