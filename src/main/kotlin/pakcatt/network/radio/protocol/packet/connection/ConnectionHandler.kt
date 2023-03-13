@@ -71,19 +71,19 @@ class ConnectionHandler(
      * It should first queue control frames, then content frames, and
      * lastly make sure the first frame has the correct P/F flag set.
      */
-    fun queueFramesForDelivery(deliveryQueue: DeliveryQueue) {
-        val indexOfFirstFrameThatWasAdded = deliveryQueue.queueSize()
+    fun queueFramesForDelivery(globalDeliveryQueue: DeliveryQueue) {
+        val indexOfFirstFrameThatWasAdded = globalDeliveryQueue.queueSize()
         val localQueueOfContentFrames = DeliveryQueue()
         val localQueueOfControlFrames = DeliveryQueue()
         // Collect content frames and then control frames to make sure we have the latest control frame
         queueContentFramesForDelivery(localQueueOfContentFrames)
         queueControlFramesForDelivery(localQueueOfControlFrames)
         // Add our collected frames to the global delivery queue
-        deliveryQueue.addFramesFromQueue(localQueueOfContentFrames)
-        deliveryQueue.addFramesFromQueue(localQueueOfControlFrames)
+        globalDeliveryQueue.addFramesFromQueue(localQueueOfControlFrames)
+        globalDeliveryQueue.addFramesFromQueue(localQueueOfContentFrames)
         // Lastly, make sure the P/F flag is set correctly for the first frame to be sent
-        val indexOfLastFrameThatWasAdded = deliveryQueue.queueSize() - 1
-        updatePFlagForFirstFrameInDeliveryQueue(deliveryQueue, indexOfFirstFrameThatWasAdded, indexOfLastFrameThatWasAdded)
+        val indexOfLastFrameThatWasAdded = globalDeliveryQueue.queueSize() - 1
+        updatePFlagForFirstFrameInDeliveryQueue(globalDeliveryQueue, indexOfFirstFrameThatWasAdded, indexOfLastFrameThatWasAdded)
     }
 
     /**
