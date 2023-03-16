@@ -26,6 +26,8 @@ deploy-packatt:
           - rsync --checksum --delete -rvzhce ssh target/*.jar pakcatt@pakcatt.utiku.io:/opt/pakcatt/
           - ssh pakcatt@pakcatt.utiku.io "sudo /usr/bin/chmod 755 /opt/pakcatt/pakcatt*.jar"
           - ssh pakcatt@pakcatt.utiku.io "sudo /usr/bin/chown :ham /opt/pakcatt/pakcatt*.jar"
+        only:
+          - main
 
 run-packatt:
         stage: restart
@@ -35,3 +37,5 @@ run-packatt:
           - '[[ -f /.dockerenv ]] && echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config'
           - ssh-add <(echo "$STAGING_PRIVATE_KEY")
           - ssh pakcatt@pakcatt.utiku.io "/usr/bin/sudo /usr/sbin/service pakcatt restart"
+        only:
+          - main
