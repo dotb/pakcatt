@@ -105,6 +105,24 @@ class NoLayerThreeServiceTest: ProtocolTest() {
         // Check the INFORMATION Response
         assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 1, responseFrames[0].receiveSequenceNumber())
         assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 0, responseFrames[0].sendSequenceNumber())
+
+
+        // Send another I frame
+        sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8_P, 1, rxSequenceNumber, "hello")
+        responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
+
+        assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 2, responseFrames[1].receiveSequenceNumber())
+        assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 1, responseFrames[1].sendSequenceNumber())
+
+        // "Fail" to send a packet:
+        /* sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8_P, 2, rxSequenceNumber, "hello")
+        / responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer()) */
+        // Those 2 lines are the "failed" packet, left here as an annotation
+
+        // Send a RECEIVE_READY_P to follow up the "failed" packet
+        sendFrameAndWaitResponse(mockedTNC, ControlField.S_8_RECEIVE_READY_P, 2, rxSequenceNumber)
+        responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
+        assertEquals("The sendSeq number from the remote party should be the same as the sendSeq number we sent.", 2, responseFrames[0].sendSequenceNumber())
     }
 
     @Test
