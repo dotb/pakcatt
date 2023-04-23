@@ -279,7 +279,23 @@ class NoLayerThreeServiceTest: ProtocolTest() {
         assertEquals(ControlField.INFORMATION_8, receivedFrames[1].controlField())
         assertEquals(ControlField.INFORMATION_8_P, receivedFrames[2].controlField())
         assertEquals(3, receivedFrames.size)
+    }
 
+    /**
+     * This test makes sure Pakcatt won't impersonate another station
+     */
+    @Test
+    fun testThirdPartyTrafficIsIgnored() {
+        val mockedTNC = tnc as TNCMocked
+        val receivedFrames = ArrayList<KissFrame>()
+
+        // Disconnect a frame
+        sendFrame(mockedTNC, ControlField.U_DISCONNECT_P, "VK2FAB-14", "VK3LE-5", 0, 0)
+        waitForResponse(mockedTNC, 0)
+        receivedFrames.addAll(parseFramesFromResponse(mockedTNC.sentDataBuffer()))
+
+        // Pakcatt should remain silent
+        assertEquals(0, receivedFrames.size)
     }
 
 }

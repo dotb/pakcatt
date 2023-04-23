@@ -3,8 +3,8 @@ package pakcatt.application.shared
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import pakcatt.application.shared.model.*
-import pakcatt.application.shared.filter.common.InputFilter
-import pakcatt.application.shared.filter.common.OutputFilter
+import pakcatt.application.shared.filter.common.AppInputFilter
+import pakcatt.application.shared.filter.common.AppOutputFilter
 import pakcatt.util.StringUtils
 
 interface AppInterface {
@@ -16,8 +16,8 @@ interface AppInterface {
 
 @Service
 class AppService(private val rootApplications: List<RootApp>,
-                 private val inputFilters: List<InputFilter>,
-                 private val outputFilters: List<OutputFilter>): AppInterface {
+                 private val appInputFilters: List<AppInputFilter>,
+                 private val appOutputFilters: List<AppOutputFilter>): AppInterface {
 
     private val logger = LoggerFactory.getLogger(AppService::class.java)
     private val stringUtils = StringUtils()
@@ -144,13 +144,13 @@ class AppService(private val rootApplications: List<RootApp>,
     }
 
     private fun filterRequestOnInput(request: AppRequest) {
-        for (inputFilter in inputFilters) {
+        for (inputFilter in appInputFilters) {
             inputFilter.applyFilter(request)
         }
     }
 
     private fun filterResponseOnOutput(response: AppResponse, userContext: UserContext?) {
-        for (outputFilter in outputFilters) {
+        for (outputFilter in appOutputFilters) {
             outputFilter.applyFilter(response, userContext)
         }
     }

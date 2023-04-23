@@ -60,7 +60,7 @@ class ConnectionHandler(
             ControlField.S_8_REJECT -> handleIncomingAcknowledgement(incomingFrame)
             ControlField.S_8_REJECT_P -> handleIncomingAcknowledgement(incomingFrame)
             ControlField.U_DISCONNECT_P -> handleDisconnectRequest()
-            ControlField.U_REJECT -> resetConnection() // FRMR is unrecoverable. We reset the connection.
+            ControlField.U_REJECT -> handleIncomingAcknowledgement(incomingFrame)
             else -> ignoreFrame(incomingFrame)
         }
     }

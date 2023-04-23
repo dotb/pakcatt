@@ -3,7 +3,7 @@ package pakcatt.application.shared.filter
 import org.springframework.stereotype.Component
 import pakcatt.application.shared.UserContext
 import pakcatt.application.shared.model.AppRequest
-import pakcatt.application.shared.filter.common.InputFilter
+import pakcatt.application.shared.filter.common.AppInputFilter
 
 /**
  * This filter does two things
@@ -18,7 +18,7 @@ import pakcatt.application.shared.filter.common.InputFilter
  * can be assumed. Although, with EOL one should never assume! :-)
  */
 @Component
-class EOLInputFilter: InputFilter() {
+class EOLAppInputFilter: AppInputFilter() {
 
     override fun applyFilter(request: AppRequest) {
         updateUserContextWithAutodetectedEOLSequence(request.message, request.userContext)

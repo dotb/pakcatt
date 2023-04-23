@@ -109,15 +109,19 @@ class KissService(val tncConnections: List<TNC>,
     }
 
     private fun transmitFrame(frame: KissFrame) {
-        for (tncConnection in tncConnections) {
-            if (tncConnection.channelIdentifier.equals(frame.channelIdentifier)) {
-                tncConnection.sendData(frame.packetData())
-                tncConnection.sendData(KissFrame.FRAME_END)
-                logger.trace("Sent bytes:\t\t {}", stringUtils.byteArrayToHex(frame.packetData()))
-                logger.debug("Sent frame:\t\t Chan: {} {}", frame.channelIdentifier, stringUtils.removeEOLChars(frame.toString(), " "))
-            } else {
-                logger.trace("Not sending frame to TNC: {}, doesn't match frame channel identifier: {} for Frame: {}", tncConnection.channelIdentifier, frame.channelIdentifier, stringUtils.removeEOLChars(frame.toString(), " "))
+        if (myCall == frame.sourceCallsign()) {
+            for (tncConnection in tncConnections) {
+                if (tncConnection.channelIdentifier == frame.channelIdentifier) {
+                    tncConnection.sendData(frame.packetData())
+                    tncConnection.sendData(KissFrame.FRAME_END)
+                    logger.trace("Sent bytes:\t\t {}", stringUtils.byteArrayToHex(frame.packetData()))
+                    logger.debug("Sent frame:\t\t Chan: {} {}", frame.channelIdentifier, stringUtils.removeEOLChars(frame.toString(), " "))
+                } else {
+                    logger.trace("Not sending frame to TNC: {}, doesn't match frame channel identifier: {} for Frame: {}", tncConnection.channelIdentifier, frame.channelIdentifier, stringUtils.removeEOLChars(frame.toString(), " "))
+                }
             }
+        } else {
+            logger.error("Avoided sending a frame that's not from my callsign: {} frame: {}", myCall, frame)
         }
     }
 
