@@ -71,10 +71,12 @@ pakcatt:
 
   ## Configuration for a TCP socket connection that enables interactive sessions over TCP/IP
   network.tcp:
-    port: 7331 # Specify a port that will listen for interactive sessions
     enabled: false # Setting this to true will open a socket allowing remote connections to access the service. Be careful and consider security.
+    port: 7331 # Specify a port that will listen for interactive sessions
+    callsign-regex: '[a-zA-Z]+[0-9][a-zA-Z]+-?[0-9]?' # Client callsigns are validated against this regex
     # This welcome message is displayed to the user before they input their callsign
     pre-welcome-message: Welcome to the BBS, running the PakCatt software https://github.com/dotb/pakcatt. This BBS is connected to an RF network and you require a valid amateur radio license to operate it. Please supply your callsign on the next line
+    callsign-regex-fail-message: Sorry, the callsign you supplied could not be validated. Please check your callsign, contact the administrator of this service, or if you're a robot go away.
 
   logging:
     # Log conversations into individual files.

@@ -12,12 +12,15 @@ import java.net.Socket
 class TCPClientConnection(private val clientSocket: Socket,
                           private val appService: AppService,
                           private val myCall: String,
+                          private val regexForCallsignValidation: String,
                           private val preWelcomeMessage: String,
+                          private val callsignRegexFailMessage: String,
                           private val stringUtils: StringUtils): Runnable {
 
     private val logger = LoggerFactory.getLogger(TCPClientConnection::class.java)
     private val bufferedInputReader = BufferedInputStream(clientSocket.getInputStream()).bufferedReader(Charsets.UTF_8)
     private val bufferedOutputWriter = BufferedOutputStream(clientSocket.getOutputStream()).bufferedWriter()
+    private val callsignValidationRegex = regexForCallsignValidation.toRegex()
     private var remoteCall = ""
 
     private fun serviceNextClientRequest() {
@@ -34,7 +37,14 @@ class TCPClientConnection(private val clientSocket: Socket,
 
     private fun getRemoteCallsign() {
         sendLine(preWelcomeMessage)
-        remoteCall = stringUtils.formatCallsignRemoveSSID(readLine())
+        val suppliedCallsign = stringUtils.formatCallsignRemoveSSID(readLine())
+        if (callsignValidationRegex.matches(suppliedCallsign)) {
+            remoteCall = suppliedCallsign
+        } else {
+            logger.error("Remote TCP/IP user failed callsign validation: {}", suppliedCallsign)
+            sendLine(callsignRegexFailMessage)
+            disconnect()
+        }
     }
 
     private fun startApplicationConnection() {

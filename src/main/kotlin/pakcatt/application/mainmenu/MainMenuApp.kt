@@ -1,5 +1,6 @@
 package pakcatt.application.mainmenu
 
+import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.Profile
 import org.springframework.stereotype.Component
 import pakcatt.application.bulletinboard.BulletinBoardApp
@@ -33,6 +34,7 @@ class MainMenuApp(private val myCall: String,
                   boardPostListLength: Int,
                   private val tellAppConfig: TellAppConfig): RootApp() {
 
+    private val logger = LoggerFactory.getLogger(MainMenuApp::class.java)
     private val lastApp = LastApp(lastEntryStore)
 
     init {
@@ -68,14 +70,17 @@ class MainMenuApp(private val myCall: String,
         return if (isAddressedToMe(request, myCall)) {
             val stringBuilder = StringBuilder()
             val mailboxApp = MailboxApp(mailboxStore)
-            val unreadMessages = mailboxApp.unreadMessageCount(request)
-
-            stringBuilder.append(welcomeMessage)
-            stringBuilder.append(stringUtils.EOL)
-            if (unreadMessages > 1) {
-                stringBuilder.append("You have $unreadMessages unread messages.${stringUtils.EOL}")
-            } else if (unreadMessages > 0) {
-                stringBuilder.append("You have an unread message.${stringUtils.EOL}")
+            try {
+                val unreadMessages = mailboxApp.unreadMessageCount(request)
+                stringBuilder.append(welcomeMessage)
+                stringBuilder.append(stringUtils.EOL)
+                if (unreadMessages > 1) {
+                    stringBuilder.append("You have $unreadMessages unread messages.${stringUtils.EOL}")
+                } else if (unreadMessages > 0) {
+                    stringBuilder.append("You have an unread message.${stringUtils.EOL}")
+                }
+            } catch (e: Exception) {
+                logger.error("Could not fetch unread messages: {}", e.message)
             }
             AppResponse.sendText(stringBuilder.toString(), this)
         } else {

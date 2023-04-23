@@ -10,8 +10,10 @@ import java.net.ServerSocket
 @Component
 class TCPServerListener(private val appService: AppService,
                         private val myCall: String,
+                        private val regexForCallsignValidation: String,
                         private val tcpInteractivePort: Int,
                         private val preWelcomeMessage: String,
+                        private val callsignRegexFailMessage: String,
                         private val taskExecutor: TaskExecutor,
                         private val stringUtils: StringUtils): Runnable {
 
@@ -22,7 +24,7 @@ class TCPServerListener(private val appService: AppService,
         logger.trace("Waiting for new client connection")
         val clientSocket = tcpServerSocket.accept()
         logger.info("Opening interactive TCP connection for client {}", clientSocket.remoteSocketAddress)
-        val newClient = TCPClientConnection(clientSocket, appService, myCall, preWelcomeMessage, stringUtils)
+        val newClient = TCPClientConnection(clientSocket, appService, myCall, regexForCallsignValidation, preWelcomeMessage, callsignRegexFailMessage, stringUtils)
         taskExecutor.execute(newClient)
     }
 

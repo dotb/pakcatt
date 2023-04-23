@@ -171,6 +171,20 @@ class Configuration {
         return preWelcomeMessage
     }
 
+    @Value("\${pakcatt.network.tcp.callsign-regex}")
+    private lateinit var regexForCallsignValidation: String
+    @Bean
+    fun regexForCallsignValidation(): String {
+        return regexForCallsignValidation
+    }
+
+    @Value("\${pakcatt.network.tcp.callsign-regex-fail-message}")
+    private lateinit var callsignRegexFailMessage: String
+    @Bean
+    fun callsignRegexFailMessage(): String {
+        return callsignRegexFailMessage
+    }
+
     @Value("\${pakcatt.logging.conversation-log-enabled}")
     private lateinit var conversationLogEnabled: String
     @Bean
