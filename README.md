@@ -32,53 +32,62 @@ VK3FUR has made a fantastic video that walks you through the technical setup you
 ## Install and setup
 Running PakCatt is easy:
 
-1) Download the latest pakcatt-x.x.jar and application.yml files from the [available releases](https://github.com/dotb/pakcatt/releases/). Replace x.x with the latest release version. For release 0.3:
+1) Download the latest pakcatt-x.x.jar and application.yml files from the [PakCatt repo on GitHub](https://github.com/dotb/pakcatt/releases/). Replace x.x with the latest release version. For release 0.3:
    ```
-   wget https://github.com/dotb/pakcatt/releases/download/release_0.3/pakcatt-0.3.jar
-   wget https://github.com/dotb/pakcatt/releases/download/release_0.3/application.yml
+   $ wget https://github.com/dotb/pakcatt/releases/download/release_0.3/pakcatt-0.3.jar
+   $ wget https://github.com/dotb/pakcatt/releases/download/release_0.3/application.yml
    ```
+
 2) Install the Java Runtime Environment (JRE). Yes I know, don't worry it'll be painless! On a Debian / Ubuntu system this can be done using apt:
    ```
-   apt install default-jre
+   $ apt install default-jre
    ```
-3) Edit the application.yml file to taste. At minimum you'll want to change the callsign and TCP/IP configuration:
+
+3) Edit the application.yml file to taste. At minimum you'll want to change the mycall, TCP/IP and MongoDB configuration:
    ```
    pakcatt:
     application:
         mycall: PAKCAT-1
 
    network.tcp:
-    port: 7331
     enabled: true
+    port: 7331
+    callsign-regex: '[a-zA-Z]+[0-9][a-zA-Z]+-?[0-9]?'
     pre-welcome-message: Welcome to PakCatt!
+    callsign-regex-fail-message: Sorry, your callsign could not be validated.
+  
+   spring:
+    ## Database configuration
+    data.mongodb.database: pakcatt
+    spring.data.mongodb.host: 127.0.0.1
+    spring.data.mongodb.port: 27017
    ```
-4) Run the PakCatt service:
-   ```
-   java -jar pakcatt-x.x.jar --spring.config.location=./application.yml
-   ╔═══╗     ╔╗  ╔═══╗      ╔╗  ╔╗ 
-   ║╔═╗║     ║║  ║╔═╗║     ╔╝╚╗╔╝╚╗
-   ║╚═╝║╔══╗ ║║╔╗║║ ╚╝╔══╗ ╚╗╔╝╚╗╔╝
-   ║╔══╝╚ ╗║ ║╚╝╝║║ ╔╗╚ ╗║  ║║  ║║ 
-   ║║   ║╚╝╚╗║╔╗╗║╚═╝║║╚╝╚╗ ║╚╗ ║╚╗
-   ╚╝   ╚═══╝╚╝╚╝╚═══╝╚═══╝ ╚═╝ ╚═╝
-   By VK3AT & VK3LE
-   2023-03-03 09:46:59.349 [         PakCattKt] 	 INFO: Starting PakCattKt v0.2 
-   on mufasa.utiku.io with PID 21435 (/tmp/pakcatt-0.2.jar started by bradley 
-   in /tmp)
-   2023-03-03 09:46:59.355 [         PakCattKt] 	 INFO: The following profiles 
-   are active: production
-   ...
-   ```
-5) Connect to PakCatt via radio or TCP/IP. Here's a TCP/IP example:
-   ```
-   nc localhost
-   Welcome to the VK3AT BBS, running the PakCatt software https://github.com/dotb/pakcatt. This BBS is connected to an RF network and you require a valid amateur radio licence to operate it. Please supply your callsign on the next line to get started!
-   VK3AT
-   Welcome to PakCatt! Type help to learn more :-)
 
-   menu> last VK3AT
-   VK3AT: Sunday, 23 April 2023, 17:05 via TCPClient
+
+4) The bulletin board and mail apps need a database to store messages. PakCatt uses MongoDB as it's persistence layer, which is also quick and easy to get running. On Debian / Ubuntu systems this can be done using apt, then run MongoDB and specify a folder to store your data:
    ```
+   $ apt install mongodb
+   $ mongodb --dbpath /home/mydir/pakcattdb
+   ```
+
+Now you can start PakCatt and then connect to it over TCP/IP to create posts and messages!
+
+```
+$ java -jar pakcatt-x.x.jar --spring.config.location=./application.yml
+╔═══╗     ╔╗  ╔═══╗      ╔╗  ╔╗ 
+║╔═╗║     ║║  ║╔═╗║     ╔╝╚╗╔╝╚╗
+║╚═╝║╔══╗ ║║╔╗║║ ╚╝╔══╗ ╚╗╔╝╚╗╔╝
+║╔══╝╚ ╗║ ║╚╝╝║║ ╔╗╚ ╗║  ║║  ║║ 
+║║   ║╚╝╚╗║╔╗╗║╚═╝║║╚╝╚╗ ║╚╗ ║╚╗
+╚╝   ╚═══╝╚╝╚╝╚═══╝╚═══╝ ╚═╝ ╚═╝
+By VK3AT & VK3LE
+2023-03-03 09:46:59.349 [         PakCattKt] 	 INFO: Starting PakCattKt v0.2 
+on mufasa.utiku.io with PID 21435 (/tmp/pakcatt-0.2.jar started by bradley 
+in /tmp)
+2023-03-03 09:46:59.355 [         PakCattKt] 	 INFO: The following profiles 
+are active: production
+...
+```
 
 Check out [this blog post](https://bradleyclayton.io/posts/radio/pakcatt_getting_started/) for more detailed configuration instructions.
 
@@ -91,7 +100,7 @@ You'll need:
 Build and run should be as easy as two commands:
 ```bash
 $ mvn install
-$ java -jar target/pakcatt-x.x.jar
+$ java -jar target/pakcatt-x.x.jar --spring.config.location=./application.yml
 ╔═══╗     ╔╗  ╔═══╗      ╔╗  ╔╗ 
 ║╔═╗║     ║║  ║╔═╗║     ╔╝╚╗╔╝╚╗
 ║╚═╝║╔══╗ ║║╔╗║║ ╚╝╔══╗ ╚╗╔╝╚╗╔╝
