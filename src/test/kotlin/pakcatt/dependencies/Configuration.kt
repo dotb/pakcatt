@@ -73,4 +73,14 @@ class Configuration {
         return "Welcome be good and give me your callsign. K tnx."
     }
 
+    @Bean
+    fun conversationLogEnabled(): Boolean {
+        return true
+    }
+
+    @Bean
+    fun conversationLogPath(): String {
+        return "/tmp"
+    }
+
 }

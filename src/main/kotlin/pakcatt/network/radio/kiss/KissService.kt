@@ -3,6 +3,7 @@ package pakcatt.network.radio.kiss
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import pakcatt.network.radio.kiss.debug.ConversationLogger
 import pakcatt.network.radio.kiss.model.ControlField
 import pakcatt.network.radio.kiss.model.KissFrame
 import pakcatt.network.radio.kiss.model.KissFrameStandard
@@ -16,6 +17,7 @@ import javax.annotation.PreDestroy
 @Service
 class KissService(val tncConnections: List<TNC>,
                   val protocolServices: List<ProtocolService>,
+                  val conversationLogger: ConversationLogger,
                   val stringUtils: StringUtils,
                   val byteUtils: ByteUtils,
                   val myCall: String,
@@ -47,6 +49,7 @@ class KissService(val tncConnections: List<TNC>,
             }
         }
         for (frame in framesForDelivery.allFrames()) {
+            conversationLogger.logFrame(frame.packetData())
             transmitFrame(frame)
         }
     }
@@ -147,8 +150,12 @@ class KissService(val tncConnections: List<TNC>,
         }
     }
 
+    /**
+     * Handle a new fully formed frame received by the TNC
+     */
     private fun handleNewFrame(frame: ByteArray, tncConnection: TNC) {
         logger.trace("Received bytes:\t {}", stringUtils.byteArrayToHex(frame))
+        conversationLogger.logFrame(frame)
         if (frame.size >= KissFrame.SIZE_MIN) {
             val kissFrame = KissFrameStandard()
             kissFrame.channelIdentifier = tncConnection.channelIdentifier

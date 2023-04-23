@@ -13,7 +13,6 @@ import pakcatt.network.radio.tnc.TNC
 import pakcatt.network.radio.tnc.TNCDataStreamSerial
 import pakcatt.network.radio.tnc.TNCDataStreamTCP
 import pakcatt.network.radio.tnc.model.TNCConfig
-import java.lang.NumberFormatException
 
 @Configuration
 @Profile("production")
@@ -170,6 +169,20 @@ class Configuration {
     @Bean
     fun preWelcomeMessage(): String {
         return preWelcomeMessage
+    }
+
+    @Value("\${pakcatt.logging.conversation-log-enabled}")
+    private lateinit var conversationLogEnabled: String
+    @Bean
+    fun conversationLogEnabled(): Boolean {
+        return conversationLogEnabled.toBoolean()
+    }
+
+    @Value("\${pakcatt.logging.conversation-log-path}")
+    private lateinit var conversationLogPath: String
+    @Bean
+    fun conversationLogPath(): String {
+        return conversationLogPath
     }
 
 }

@@ -76,6 +76,12 @@ pakcatt:
     # This welcome message is displayed to the user before they input their callsign
     pre-welcome-message: Welcome to the BBS, running the PakCatt software https://github.com/dotb/pakcatt. This BBS is connected to an RF network and you require a valid amateur radio license to operate it. Please supply your callsign on the next line
 
+  logging:
+    # Log conversations into individual files.
+    # This makes debugging a conversation a specific remote station easier.
+    conversation-log-enabled: false
+    conversation-log-path: "/tmp" # The folder in which you want to store conversation log files
+
 spring:
   ## Database configuration
   data.mongodb.database: pakcatt
