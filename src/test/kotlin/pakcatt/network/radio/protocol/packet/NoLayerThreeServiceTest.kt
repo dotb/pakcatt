@@ -69,6 +69,20 @@ class NoLayerThreeServiceTest: ProtocolTest() {
         assertResponse(byteUtils.byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x63, 0xC0), mockedTNC)
     }
 
+    fun solveThreeBitDecrementAndRollover(input: Int): Int {
+        return when (input % 8) {
+            0 -> 7
+            else -> input % 8 - 1
+        }
+    }
+
+    fun solveThreeBitIncrementAndRollover(input: Int): Int {
+        return when (input % 8) {
+            7 -> 0
+            else -> input % 8 + 1
+        }
+    }
+
     @Test
     fun testSequenceNumbersAndRollover() {
         val mockedTNC = tnc as TNCMocked
@@ -78,44 +92,49 @@ class NoLayerThreeServiceTest: ProtocolTest() {
         assertResponse(byteUtils.byteArrayFromInts(0x00, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0x64, 0xac, 0x96, 0x66, 0x98, 0x92, 0xa8, 0xe3, 0x73, 0xC0), mockedTNC)
 
         // Send multiple message exchanges to ensure sequence numbers increment and roll over properly after 7 (a 3 bit value)
-        var rxSequenceNumber = 0
+        var ourNextExpectedRXSequenceNumber = 0
         for (sendSequenceNumber in 0..6) {
-            sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, sendSequenceNumber, rxSequenceNumber, "hello")
+            sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, sendSequenceNumber, ourNextExpectedRXSequenceNumber, "hello")
             val responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
-            rxSequenceNumber = sendSequenceNumber + 1
-            sendFrame(mockedTNC, ControlField.S_8_RECEIVE_READY_P, 0, rxSequenceNumber) // Ack the last I frame
+            ourNextExpectedRXSequenceNumber += responseFrames.size // Assume all recevied frames increment our expected RX squence number
+            sendFrame(mockedTNC, ControlField.S_8_RECEIVE_READY_P, 0, ourNextExpectedRXSequenceNumber) // Ack the last I frame
             // Check the INFORMATION Response
-            assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", sendSequenceNumber + 1, responseFrames[0].receiveSequenceNumber())
-            assertEquals("The sendSeq number from the remote party should be the same as the rxSequenceNumber number we sent.", if(rxSequenceNumber % 8 == 0) 7 else rxSequenceNumber%8-1, responseFrames[0].sendSequenceNumber())
+            val ourExpectationOfTheirNextReceiveSequenceNumber = sendSequenceNumber + 1
+            val ourExpectationOfTheirSendSquenceNumber = solveThreeBitDecrementAndRollover(ourNextExpectedRXSequenceNumber)
+            assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", ourExpectationOfTheirNextReceiveSequenceNumber, responseFrames[0].receiveSequenceNumber())
+            assertEquals("The sendSeq number from the remote party should be the same as the rxSequenceNumber number we sent.", ourExpectationOfTheirSendSquenceNumber, responseFrames[0].sendSequenceNumber())
         }
 
         // The 7th exchange should roll-over the received sequence number
-        sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, 7, rxSequenceNumber, "hello")
+        sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, 7, ourNextExpectedRXSequenceNumber, "hello")
         var responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
-        rxSequenceNumber = (rxSequenceNumber + 1) % 8
-        sendFrame(mockedTNC, ControlField.S_8_RECEIVE_READY_P, 0, rxSequenceNumber) // Ack the last I frame
+        ourNextExpectedRXSequenceNumber = (ourNextExpectedRXSequenceNumber + 1) % 8
+        sendFrame(mockedTNC, ControlField.S_8_RECEIVE_READY_P, 0, ourNextExpectedRXSequenceNumber) // Ack the last I frame
         // Check the INFORMATION Response
         assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 0, responseFrames[0].receiveSequenceNumber())
-        assertEquals("The sendSeq number from the remote party should be the same as the rxSequenceNumber number we sent.", if(rxSequenceNumber % 8 == 0) 7 else rxSequenceNumber%8-1, responseFrames[0].sendSequenceNumber())
+        assertEquals("The sendSeq number from the remote party should be the same as the rxSequenceNumber number we sent.", if(ourNextExpectedRXSequenceNumber % 8 == 0) 7 else ourNextExpectedRXSequenceNumber%8-1, responseFrames[0].sendSequenceNumber())
 
         // The 8th exchange should roll-over the sent sequence number
-        sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, 1, rxSequenceNumber, "hello")
+        sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8, 1, ourNextExpectedRXSequenceNumber, "hello")
         responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
-        rxSequenceNumber = (rxSequenceNumber + 1) % 8
-        sendFrame(mockedTNC, ControlField.S_8_RECEIVE_READY_P, 1, rxSequenceNumber) // Ack the last I frame
+        ourNextExpectedRXSequenceNumber = (ourNextExpectedRXSequenceNumber + 1) % 8
+        sendFrame(mockedTNC, ControlField.S_8_RECEIVE_READY_P, 1, ourNextExpectedRXSequenceNumber) // Ack the last I frame
         // Check the INFORMATION Response
         assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 1, responseFrames[0].receiveSequenceNumber())
-        assertEquals("The sendSeq number from the remote party should be the same as the rxSequenceNumber number we sent.", if(rxSequenceNumber % 8 == 0) 7 else rxSequenceNumber%8-1, responseFrames[0].sendSequenceNumber())
+        assertEquals("The sendSeq number from the remote party should be the same as the rxSequenceNumber number we sent.", if(ourNextExpectedRXSequenceNumber % 8 == 0) 7 else ourNextExpectedRXSequenceNumber%8-1, responseFrames[0].sendSequenceNumber())
 
         // Send another I frame, but it will fail because it's commented out, simulating a failed transmission
         /*sendFrameAndWaitResponse(mockedTNC, ControlField.INFORMATION_8_P, 1, rxSequenceNumber, "hello")
         responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())*/
-        rxSequenceNumber = (rxSequenceNumber + 1) % 8
+
 
         // Send a READY_RECEIVE_P like a normal TNC would
-        sendFrame(mockedTNC, ControlField.S_8_RECEIVE_READY_P, 1, rxSequenceNumber) // Ack the last I frame
+        sendFrameAndWaitResponse(mockedTNC, ControlField.S_8_RECEIVE_READY_P, 1, ourNextExpectedRXSequenceNumber) // Ack the last I frame
+        responseFrames = parseFramesFromResponse(mockedTNC.sentDataBuffer())
+//        rxSequenceNumber = (rxSequenceNumber + 1) % 8
         // Check the response
-        assertEquals("The sendSeq number from the remote party should be the same as the rxSequenceNumber number we sent.", if(rxSequenceNumber % 8 == 0) 7 else rxSequenceNumber%8-1, responseFrames[0].sendSequenceNumber())
+        assertEquals("The rxSeq number from the remote party should be one more than the last sendSeq number we've sent.", 1, responseFrames[0].receiveSequenceNumber())
+        assertEquals("The sendSeq number from the remote party should be the same as the rxSequenceNumber number we sent.", if(ourNextExpectedRXSequenceNumber % 8 == 0) 7 else ourNextExpectedRXSequenceNumber%8-1, responseFrames[0].sendSequenceNumber())
     }
 
     @Test
