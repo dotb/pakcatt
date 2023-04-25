@@ -1,5 +1,6 @@
 package pakcatt.dependencies
 
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -65,12 +66,32 @@ class Configuration {
 
     @Bean
     fun tcpInteractivePort(): Int {
-        return 1234
+        return 3771
     }
 
     @Bean
     fun preWelcomeMessage(): String {
         return "Welcome be good and give me your callsign. K tnx."
+    }
+
+    @Bean
+    fun regexForCallsignValidation(): String {
+        return "[a-zA-Z]+[0-9][a-zA-Z]+"
+    }
+
+    @Bean
+    fun callsignRegexFailMessage(): String {
+        return "Go away."
+    }
+
+    @Bean
+    fun conversationLogEnabled(): Boolean {
+        return true
+    }
+
+    @Bean
+    fun conversationLogPath(): String {
+        return "/tmp"
     }
 
 }

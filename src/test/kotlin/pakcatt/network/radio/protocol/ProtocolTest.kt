@@ -25,9 +25,13 @@ abstract class ProtocolTest: TestCase() {
     }
 
     protected fun sendFrame(mockedTNC: TNCMocked, controlType: ControlField, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null) {
+        sendFrame(mockedTNC, controlType, "VK3LIT-2", "VK3LIT-1", sendSequenceNumber, rxSequenceNumber, payload)
+    }
+
+    protected fun sendFrame(mockedTNC: TNCMocked, controlType: ControlField, srcCallsign: String, dstCallsign: String, sendSequenceNumber: Int, rxSequenceNumber: Int, payload: String? = null) {
         val requestFrame = KissFrameStandard()
-        requestFrame.setDestCallsign("VK3LIT-1")
-        requestFrame.setSourceCallsign("VK3LIT-2")
+        requestFrame.setSourceCallsign(srcCallsign)
+        requestFrame.setDestCallsign(dstCallsign)
         requestFrame.setControlField(controlType, rxSequenceNumber, sendSequenceNumber)
         if (null != payload) {
             requestFrame.setPayloadMessage(payload)
@@ -88,9 +92,15 @@ abstract class ProtocolTest: TestCase() {
     }
 
     protected fun waitForResponse(mockedTNC: TNCMocked, expectedFramesInResponse: Int) {
-        // Wait for the response
-        Awaitility.await().atMost(Duration.TEN_SECONDS).until {
-            mockedTNC.numberOfFramesInSendDataBuffer() >= expectedFramesInResponse
+        // Wait for the response if we're expecting a response.
+        // If we're not expecting a response, wait just enough for the incoming queue and outgoing queues to be serviced.
+        if (expectedFramesInResponse > 0) {
+            Awaitility.await().atMost(Duration.TEN_SECONDS).until {
+                mockedTNC.numberOfFramesInSendDataBuffer() >= expectedFramesInResponse
+            }
+        } else {
+            // Sleep briefly to collect any frames we're not expecting
+            Thread.sleep(500)
         }
     }
 
