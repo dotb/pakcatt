@@ -120,11 +120,11 @@ class ConnectionHandler(
             for ((index, frame) in numberedFramesForDelivery.withIndex()) {
                 // If this is the last frame to be delivered in this over, set the P flag.
                 if (index >= numberedFramesForDelivery.size - 1) {
-                    frame.setControlField(ControlField.INFORMATION_8_P, nextExpectedSendSequenceNumberFromPeer, frame.sendSequenceNumber())
+                    frame.setControlFieldAndSequenceNumbers(ControlField.INFORMATION_8_P, nextExpectedSendSequenceNumberFromPeer, frame.sendSequenceNumber())
                     // We'll expect the remote station to clear this flag, to ensure we get a Receive Ready to know when we can send more data.
                     pFlagState = PFlagStatus.P_FLAG_SET_BY_US
                 } else {
-                    frame.setControlField(ControlField.INFORMATION_8, nextExpectedSendSequenceNumberFromPeer, frame.sendSequenceNumber())
+                    frame.setControlFieldAndSequenceNumbers(ControlField.INFORMATION_8, nextExpectedSendSequenceNumberFromPeer, frame.sendSequenceNumber())
                 }
                 deliveryQueue.addFrame(frame)
                 logger.trace("Added an numbered content frame to the global delivery queue: {}", frame)
@@ -324,7 +324,7 @@ class ConnectionHandler(
         newFrame.setDestCallsign(remoteCallsign)
         newFrame.setSourceCallsign(myCallsign)
         // Set the control type now. The receive and send sequence numbers are updated just before it's transmitted.
-        newFrame.setControlField(fieldType)
+        newFrame.setControlFieldAndSequenceNumbers(fieldType)
         newFrame.channelIdentifier = channelIdentifier
         return newFrame
     }

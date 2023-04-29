@@ -29,7 +29,7 @@ class NoLayerThreeServiceTest: ProtocolTest() {
         val testFrame = KissFrameStandard()
         testFrame.setDestCallsign("VK3LIT-1")
         testFrame.setSourceCallsign("VK3LIT-2")
-        testFrame.setControlField(ControlField.S_8_RECEIVE_READY, 0, 2)
+        testFrame.setControlFieldAndSequenceNumbers(ControlField.S_8_RECEIVE_READY, 0, 2)
         assertEquals(ControlField.S_8_RECEIVE_READY, testFrame.controlField())
         assertEquals(0, testFrame.receiveSequenceNumber())
     }
