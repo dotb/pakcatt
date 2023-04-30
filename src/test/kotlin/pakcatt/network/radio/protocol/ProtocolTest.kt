@@ -7,11 +7,9 @@ import org.slf4j.LoggerFactory
 import pakcatt.network.radio.kiss.model.ControlField
 import pakcatt.network.radio.kiss.model.KissFrame
 import pakcatt.network.radio.kiss.model.KissFrameStandard
-import pakcatt.network.radio.protocol.packet.PacketService
 import pakcatt.network.radio.tnc.TNCMocked
 import pakcatt.util.ByteUtils
 import pakcatt.util.StringUtils
-import java.util.concurrent.TimeUnit
 
 abstract class ProtocolTest: TestCase() {
 
@@ -32,7 +30,7 @@ abstract class ProtocolTest: TestCase() {
         val requestFrame = KissFrameStandard()
         requestFrame.setSourceCallsign(srcCallsign)
         requestFrame.setDestCallsign(dstCallsign)
-        requestFrame.setControlField(controlType, rxSequenceNumber, sendSequenceNumber)
+        requestFrame.setControlFieldAndSequenceNumbers(controlType, rxSequenceNumber, sendSequenceNumber)
         if (null != payload) {
             requestFrame.setPayloadMessage(payload)
         }
