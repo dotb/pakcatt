@@ -19,8 +19,9 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <kotlin.version>1.3.21</kotlin.version>
-        <jacoco.version>0.8.6</jacoco.version>
+        <springboot.version>3.1.1</springboot.version>
+        <kotlin.version>1.8.22</kotlin.version>
+        <jacoco.version>0.8.10</jacoco.version>
     </properties>
 
     <dependencies>
@@ -36,16 +37,19 @@
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-kotlin</artifactId>
+            <version>2.15.2</version>
         </dependency>
 
         <!-- Spring -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-rest</artifactId>
+            <version>${springboot.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
+            <version>${springboot.version}</version>
             <scope>test</scope>
         </dependency>
 
@@ -53,21 +57,21 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-freemarker</artifactId>
-            <version>1.5.7.RELEASE</version>
+            <version>3.1.1</version>
         </dependency>
 
         <!-- Serial Port -->
         <dependency>
             <groupId>com.neuronrobotics</groupId>
             <artifactId>nrjavaserial</artifactId>
-            <version>5.1.1</version>
+            <version>5.2.1</version>
         </dependency>
 
         <!-- Awaitility for testing scheduled code -->
         <dependency>
             <groupId>org.awaitility</groupId>
             <artifactId>awaitility</artifactId>
-            <version>3.1.6</version>
+            <version>4.2.0</version>
             <scope>test</scope>
         </dependency>
 
@@ -75,12 +79,14 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-mongodb</artifactId>
+            <version>${springboot.version}</version>
         </dependency>
 
         <!-- Spring Integration for a TCP/IP service -->
         <dependency>
             <groupId>org.springframework.integration</groupId>
             <artifactId>spring-integration-ip</artifactId>
+            <version>6.1.1</version>
         </dependency>
 
         <!-- JaCoCo test coverage reports -->

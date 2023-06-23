@@ -2,16 +2,15 @@ package pakcatt.network.radio.protocol
 
 import junit.framework.TestCase
 import org.awaitility.Awaitility
-import org.awaitility.Duration
 import org.slf4j.LoggerFactory
 import pakcatt.network.radio.kiss.model.ControlField
 import pakcatt.network.radio.kiss.model.KissFrame
 import pakcatt.network.radio.kiss.model.KissFrameStandard
-import pakcatt.network.radio.protocol.packet.PacketService
 import pakcatt.network.radio.tnc.TNCMocked
 import pakcatt.util.ByteUtils
 import pakcatt.util.StringUtils
-import java.util.concurrent.TimeUnit
+import java.time.Duration
+import java.util.*
 
 abstract class ProtocolTest: TestCase() {
 
@@ -95,7 +94,7 @@ abstract class ProtocolTest: TestCase() {
         // Wait for the response if we're expecting a response.
         // If we're not expecting a response, wait just enough for the incoming queue and outgoing queues to be serviced.
         if (expectedFramesInResponse > 0) {
-            Awaitility.await().atMost(Duration.TEN_SECONDS).until {
+            Awaitility.await().atMost(Duration.ofSeconds(10)).until {
                 mockedTNC.numberOfFramesInSendDataBuffer() >= expectedFramesInResponse
             }
         } else {
