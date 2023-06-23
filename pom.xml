@@ -19,7 +19,7 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <springboot.version>3.1.1</springboot.version>
+        <springboot.version>3.1.0</springboot.version>
         <kotlin.version>1.8.22</kotlin.version>
         <jacoco.version>0.8.10</jacoco.version>
     </properties>
@@ -57,7 +57,7 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-freemarker</artifactId>
-            <version>3.1.1</version>
+            <version>${springboot.version}</version>
         </dependency>
 
         <!-- Serial Port -->
@@ -86,7 +86,7 @@
         <dependency>
             <groupId>org.springframework.integration</groupId>
             <artifactId>spring-integration-ip</artifactId>
-            <version>6.1.1</version>
+            <version>6.1.0</version>
         </dependency>
 
         <!-- JaCoCo test coverage reports -->
