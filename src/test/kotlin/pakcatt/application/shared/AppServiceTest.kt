@@ -12,10 +12,10 @@ import pakcatt.application.mailbox.persistence.MockedMailMessageRepository
 import pakcatt.application.mainmenu.MainMenuApp
 import pakcatt.application.shared.model.AppRequest
 import pakcatt.application.shared.model.ResponseType
-import pakcatt.application.shared.filter.EOLInputFilter
-import pakcatt.application.shared.filter.EOLOutputFilter
+import pakcatt.application.shared.filter.EOLAppInputFilter
+import pakcatt.application.shared.filter.EOLAppOutputFilter
 import pakcatt.application.last.filter.LastAppInputFilter
-import pakcatt.application.shared.filter.MentionOutputFilter
+import pakcatt.application.shared.filter.MentionAppOutputFilter
 import pakcatt.application.tell.model.TellAppConfig
 import pakcatt.util.StringUtils
 
@@ -45,8 +45,8 @@ open class AppServiceTest: TestCase() {
 
     protected val stringUtils = StringUtils()
     protected val appService = AppService(listOf(mainMenuApp),
-                                            listOf(EOLInputFilter(), LastAppInputFilter(lastEntryStore)),
-                                            listOf(EOLOutputFilter(), MentionOutputFilter()))
+                                            listOf(EOLAppInputFilter(), LastAppInputFilter(lastEntryStore)),
+                                            listOf(EOLAppOutputFilter(), MentionAppOutputFilter()))
     protected val escapeChar = 27.toChar()
     protected val startBold = "${escapeChar}[1m"
     protected val resetFormat = "${escapeChar}[0m"

@@ -3,6 +3,7 @@ package pakcatt.network.radio.kiss
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import pakcatt.network.radio.kiss.debug.ConversationLogger
 import pakcatt.network.radio.kiss.model.ControlField
 import pakcatt.network.radio.kiss.model.KissFrame
 import pakcatt.network.radio.kiss.model.KissFrameStandard
@@ -16,6 +17,7 @@ import javax.annotation.PreDestroy
 @Service
 class KissService(val tncConnections: List<TNC>,
                   val protocolServices: List<ProtocolService>,
+                  val conversationLogger: ConversationLogger,
                   val stringUtils: StringUtils,
                   val byteUtils: ByteUtils,
                   val myCall: String,
@@ -47,6 +49,7 @@ class KissService(val tncConnections: List<TNC>,
             }
         }
         for (frame in framesForDelivery.allFrames()) {
+            conversationLogger.logFrame(frame.packetData())
             transmitFrame(frame)
         }
     }
@@ -109,22 +112,24 @@ class KissService(val tncConnections: List<TNC>,
     }
 
     private fun transmitFrame(frame: KissFrame) {
-        for (tncConnection in tncConnections) {
-            if (tncConnection.channelIdentifier.equals(frame.channelIdentifier)) {
-                tncConnection.sendData(frame.packetData())
-                tncConnection.sendData(KissFrame.FRAME_END)
-                logger.trace("Sent bytes:\t\t {}", stringUtils.byteArrayToHex(frame.packetData()))
-                logger.debug("Sent frame:\t\t Chan: {} {}", frame.channelIdentifier, stringUtils.removeEOLChars(frame.toString(), " "))
-            } else {
-                logger.trace("Not sending frame to TNC: {}, doesn't match frame channel identifier: {} for Frame: {}", tncConnection.channelIdentifier, frame.channelIdentifier, stringUtils.removeEOLChars(frame.toString(), " "))
+        if (myCall == frame.sourceCallsign()) {
+            for (tncConnection in tncConnections) {
+                if (tncConnection.channelIdentifier == frame.channelIdentifier) {
+                    tncConnection.sendData(frame.packetData())
+                    tncConnection.sendData(KissFrame.FRAME_END)
+                    logger.trace("Sent bytes:\t\t {}", stringUtils.byteArrayToHex(frame.packetData()))
+                    logger.debug("Sent frame:\t\t Chan: {} {}", frame.channelIdentifier, stringUtils.removeEOLChars(frame.toString(), " "))
+                } else {
+                    logger.trace("Not sending frame to TNC: {}, doesn't match frame channel identifier: {} for Frame: {}", tncConnection.channelIdentifier, frame.channelIdentifier, stringUtils.removeEOLChars(frame.toString(), " "))
+                }
             }
+        } else {
+            logger.error("Avoided sending a frame that's not from my callsign: {} frame: {}", myCall, frame)
         }
     }
 
     private fun handleNewByte(newByte: Byte, tncConnection: TNC) {
         if (KissFrame.FRAME_END == newByte.toInt()) {
-            logger.trace("Received boundary of KISS frame after ${incomingFrameIndex + 1} bytes")
-
             if (incomingFrameIndex >= 0) {
                 // Make a copy of the new frame
                 val newFrame = incomingFrame.copyOfRange(0, incomingFrameIndex + 1)
@@ -145,8 +150,12 @@ class KissService(val tncConnections: List<TNC>,
         }
     }
 
+    /**
+     * Handle a new fully formed frame received by the TNC
+     */
     private fun handleNewFrame(frame: ByteArray, tncConnection: TNC) {
         logger.trace("Received bytes:\t {}", stringUtils.byteArrayToHex(frame))
+        conversationLogger.logFrame(frame)
         if (frame.size >= KissFrame.SIZE_MIN) {
             val kissFrame = KissFrameStandard()
             kissFrame.channelIdentifier = tncConnection.channelIdentifier

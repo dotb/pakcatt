@@ -14,4 +14,21 @@ class DeliveryQueue {
         return deliveryQueue
     }
 
+    fun queueSize(): Int {
+        return deliveryQueue.size
+    }
+
+    fun setPFlagForFrameAtIndex(index: Int) {
+        deliveryQueue[index].setPFlag()
+    }
+
+    fun unsetPFlagForFrameAtIndex(index: Int) {
+        deliveryQueue[index].unsetPFlag()
+    }
+
+    fun addFramesFromQueue(incomingDeliveryQueue: DeliveryQueue) {
+        for (frame in incomingDeliveryQueue.allFrames()) {
+            deliveryQueue.add(frame)
+        }
+    }
 }

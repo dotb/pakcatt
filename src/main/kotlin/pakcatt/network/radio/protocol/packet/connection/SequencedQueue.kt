@@ -81,18 +81,20 @@ class SequencedQueue(private val framesPerOver: Int,
     }
 
     // Keep a record of the next send sequence number our remote party expects us to send
-    fun updateSequenceNumbersAndCheckIsDuplicate(incomingFrame: KissFrame): Boolean {
+    fun updateOurSendSequenceNumberBasedOnIncomingFrame(incomingFrame: KissFrame) {
         logger.trace("Updating sequence numbers for frame: {}", incomingFrame.toString())
-        return if (nextBoundedSendNumberExpectedByPeer == incomingFrame.receiveSequenceNumber()) {
-            logger.trace("nextBoundedSendNumberExpectedByPeer is the same as incomingFrame.receiveSequenceNumber() for Frame: {}", incomingFrame.toString())
-            true
+        if (nextBoundedSendNumberExpectedByPeer == incomingFrame.receiveSequenceNumber()) {
+            logger.trace("While updating our send sequence number, our peer has not ACKed any frames sent by us. incomingFrame.receiveSequenceNumber: {} has not advanced beyond nextBoundedSendNumberExpectedByPeer: {}.", incomingFrame.receiveSequenceNumber(), nextBoundedSendNumberExpectedByPeer)
         } else {
             /*
+             * This is good. The remote station has consumed some of our packets and ACKed
+             * this by updating their RX sequence number (our send sequence number)
              * Calculate the difference between this received value and the previous received value, and
              * use it to adjust the unbounded index that points to the next frame expected
-             * to be received by our remote peer.
+             * to be received by our remote peer so that we continue to walk the queue and
+             * deliver the next batch of frames to the remote station.
              */
-            logger.trace("Calculating nextUnboundedFrameIndexExpectedByPeer based on Frame: {}", incomingFrame.toString())
+            logger.trace("Updating our send sequence no for {}. Was nextBoundedSendNumberExpectedByPeer: {} and peer ACKed: {}. Updating based on frame: {}", incomingFrame.destCallsign(), nextBoundedSendNumberExpectedByPeer, incomingFrame.receiveSequenceNumber(), incomingFrame)
             val difference = when {
                 incomingFrame.receiveSequenceNumber() > nextBoundedSendNumberExpectedByPeer -> incomingFrame.receiveSequenceNumber() - nextBoundedSendNumberExpectedByPeer
                 else -> incomingFrame.receiveSequenceNumber() + maxSequenceNumberSize - nextBoundedSendNumberExpectedByPeer
@@ -101,7 +103,6 @@ class SequencedQueue(private val framesPerOver: Int,
             logger.trace("Updating nextUnboundedFrameIndexExpectedByPeer from {} to {}", nextUnboundedFrameIndexExpectedByPeer, updatedNextUnboundedFrameIndexExpectedByPeer)
             nextUnboundedFrameIndexExpectedByPeer = updatedNextUnboundedFrameIndexExpectedByPeer
             nextBoundedSendNumberExpectedByPeer = incomingFrame.receiveSequenceNumber()
-            false
         }
     }
 

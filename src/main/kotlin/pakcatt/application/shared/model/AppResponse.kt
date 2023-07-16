@@ -45,4 +45,8 @@ class AppResponse(val responseType: ResponseType,
         responseString = responseText
     }
 
+    override fun toString(): String {
+        return "responseType: $responseType nextApp: $nextApp responseString: $responseString"
+    }
+
 }

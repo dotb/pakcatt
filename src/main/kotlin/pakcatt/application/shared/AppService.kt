@@ -3,8 +3,8 @@ package pakcatt.application.shared
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import pakcatt.application.shared.model.*
-import pakcatt.application.shared.filter.common.InputFilter
-import pakcatt.application.shared.filter.common.OutputFilter
+import pakcatt.application.shared.filter.common.AppInputFilter
+import pakcatt.application.shared.filter.common.AppOutputFilter
 import pakcatt.util.StringUtils
 
 interface AppInterface {
@@ -16,8 +16,8 @@ interface AppInterface {
 
 @Service
 class AppService(private val rootApplications: List<RootApp>,
-                 private val inputFilters: List<InputFilter>,
-                 private val outputFilters: List<OutputFilter>): AppInterface {
+                 private val appInputFilters: List<AppInputFilter>,
+                 private val appOutputFilters: List<AppOutputFilter>): AppInterface {
 
     private val logger = LoggerFactory.getLogger(AppService::class.java)
     private val stringUtils = StringUtils()
@@ -74,6 +74,7 @@ class AppService(private val rootApplications: List<RootApp>,
                 ResponseType.ACK_WITH_TEXT -> finalConnectionDecision = connectionDecision
                 ResponseType.ACK_ONLY -> finalConnectionDecision = connectionDecision
                 ResponseType.IGNORE -> logger.trace("App isn't interested in this connection.")
+                ResponseType.DISCONNECT -> logger.error("NOT IMPLEMENTED, your job aint done yet!")
             }
         }
         return finalConnectionDecision
@@ -111,9 +112,16 @@ class AppService(private val rootApplications: List<RootApp>,
             val parsedCommandInput = ParsedCommandTokens().parseCommandLine(request.message)
             val interactionResponse = callAppsRecursively(request, parsedCommandInput, app)
             when (interactionResponse.responseType) {
-                ResponseType.ACK_WITH_TEXT -> finalInteractionResponse = interactionResponse
-                ResponseType.ACK_ONLY -> finalInteractionResponse = interactionResponse
+                ResponseType.ACK_WITH_TEXT -> {
+                    logger.trace("App responded to our request: {} {}", app.javaClass, interactionResponse)
+                    finalInteractionResponse = interactionResponse
+                }
+                ResponseType.ACK_ONLY -> {
+                    logger.trace("App responded to our request: {} {}", app.javaClass, interactionResponse)
+                    finalInteractionResponse = interactionResponse
+                }
                 ResponseType.IGNORE -> logger.trace("App isn't interested in responding {}", app)
+                ResponseType.DISCONNECT -> logger.error("THIS NEEDS TO BE IMPLEMENTED") //TODO
             }
         }
         return finalInteractionResponse
@@ -138,13 +146,13 @@ class AppService(private val rootApplications: List<RootApp>,
     }
 
     private fun filterRequestOnInput(request: AppRequest) {
-        for (inputFilter in inputFilters) {
+        for (inputFilter in appInputFilters) {
             inputFilter.applyFilter(request)
         }
     }
 
     private fun filterResponseOnOutput(response: AppResponse, userContext: UserContext?) {
-        for (outputFilter in outputFilters) {
+        for (outputFilter in appOutputFilters) {
             outputFilter.applyFilter(response, userContext)
         }
     }

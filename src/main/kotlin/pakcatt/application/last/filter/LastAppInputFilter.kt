@@ -1,7 +1,7 @@
 package pakcatt.application.last.filter
 
 import org.springframework.stereotype.Component
-import pakcatt.application.shared.filter.common.InputFilter
+import pakcatt.application.shared.filter.common.AppInputFilter
 import pakcatt.application.last.persistence.LastEntryStore
 import pakcatt.application.shared.model.AppRequest
 import java.util.*
@@ -11,7 +11,7 @@ import java.util.*
  * so that they can be displayed in the last log.
  */
 @Component
-class LastAppInputFilter(private val lastEntryStore: LastEntryStore): InputFilter() {
+class LastAppInputFilter(private val lastEntryStore: LastEntryStore): AppInputFilter() {
 
     override fun applyFilter(request: AppRequest) {
         updateCallsignEntry(request.remoteCallsign, request.channelIdentifier)

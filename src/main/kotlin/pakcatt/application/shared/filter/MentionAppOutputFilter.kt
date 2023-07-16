@@ -3,12 +3,12 @@ package pakcatt.application.shared.filter
 import org.springframework.stereotype.Component
 import pakcatt.application.shared.UserContext
 import pakcatt.application.shared.model.AppResponse
-import pakcatt.application.shared.filter.common.OutputFilter
+import pakcatt.application.shared.filter.common.AppOutputFilter
 import pakcatt.application.shared.FORMAT
 import pakcatt.application.shared.TextFormat
 
 @Component
-class MentionOutputFilter: OutputFilter() {
+class MentionAppOutputFilter: AppOutputFilter() {
 
     private val textFormat = TextFormat()
 

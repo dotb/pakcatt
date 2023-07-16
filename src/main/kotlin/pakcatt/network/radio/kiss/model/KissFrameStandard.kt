@@ -32,9 +32,13 @@ open class KissFrameStandard: KissFrame() {
         controlField = byteUtils.intToByte(0x00)
         // Set the control type bits first
         controlField = byteUtils.setBits(controlField, controlType.bitPattern)
-        // Then set the send and receive sequence bits. No change is made if they are 0.
-        setSendSequenceNumberBits(sendSeq)
-        setReceiveSequenceNumberBits(receiveSeq)
+        // If supported by this frame type, set the send and receive sequence bits. No change is made if they are 0.
+        if (requiresSendSequenceNumber()) {
+            setSendSequenceNumberBits(sendSeq)
+        }
+        if (requiresReceiveSequenceNumber()) {
+            setReceiveSequenceNumberBits(receiveSeq)
+        }
         // Lastly, set the protocol ID if required
         setProtocolIdBasedOnControlType(controlType)
     }
