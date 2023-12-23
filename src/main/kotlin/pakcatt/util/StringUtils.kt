@@ -20,8 +20,8 @@ class StringUtils {
     private var defaultEndOfLine: String = LF
 
     val EOL: String = defaultEndOfLine
-    private val dateFormatterLong = SimpleDateFormat("dd MMM HH:mm")
-    private val dateFormatterShort = SimpleDateFormat("dd-MM HH:mm")
+    private val dateFormatterLong = SimpleDateFormat("dd MMM HH:mm", Locale.UK)
+    private val dateFormatterShort = SimpleDateFormat("dd-MM HH:mm", Locale.UK)
 
     fun byteToHex(byte: Byte): String {
         return String.format("%02x", byte)

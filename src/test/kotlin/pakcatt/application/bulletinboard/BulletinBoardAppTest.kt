@@ -8,7 +8,7 @@ import pakcatt.application.shared.model.ResponseType
 class BulletinBoardAppTest: AppServiceTest() {
 
     @Test
-    fun `test open the board and list topics`() {
+    fun `test open the board and list threads`() {
         `test starting a connection to the BBS with messages`()
         var request = testRequest()
         request.message = "board"
