@@ -35,15 +35,16 @@ class TCPClientConnection(private val clientSocket: Socket,
         }
     }
 
-    private fun getRemoteCallsign() {
+    private fun getAndValidateRemoveCallsign(): Boolean {
         sendLine(preWelcomeMessage)
         val suppliedCallsign = stringUtils.formatCallsignRemoveSSID(readLine())
-        if (callsignValidationRegex.matches(suppliedCallsign)) {
+        return if (callsignValidationRegex.matches(suppliedCallsign)) {
             remoteCall = suppliedCallsign
+            true;
         } else {
             logger.error("Remote TCP/IP user failed callsign validation: {}", suppliedCallsign)
             sendLine(callsignRegexFailMessage)
-            disconnect()
+            false;
         }
     }
 
@@ -97,13 +98,18 @@ class TCPClientConnection(private val clientSocket: Socket,
     }
 
     override fun run() {
-        getRemoteCallsign()
-        logger.info("Starting interactive TCP connection for {} @ {}", remoteCall, clientSocket.remoteSocketAddress)
-        startApplicationConnection()
-        while (clientSocket.isConnected && !clientSocket.isClosed) {
-            serviceNextClientRequest()
+        if (getAndValidateRemoveCallsign()) {
+            // Remote callsign looks like a valid ham call based on the configured regex
+            logger.info("Starting interactive TCP connection for {} @ {}", remoteCall, clientSocket.remoteSocketAddress)
+            startApplicationConnection()
+            while (clientSocket.isConnected && !clientSocket.isClosed) {
+                serviceNextClientRequest()
+            }
+            logger.info("Interactive TCP connection close for {} @ {}", remoteCall, clientSocket.remoteSocketAddress)
+        } else {
+            // The remote callsign was not validated against the configured regex
+            disconnect()
         }
-        logger.info("Interactive TCP connection close for {} @ {}", remoteCall, clientSocket.remoteSocketAddress)
     }
 
 }
