@@ -7,6 +7,7 @@ import pakcatt.application.shared.model.ResponseType
 import pakcatt.util.StringUtils
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
+import java.io.IOException
 import java.net.Socket
 
 class TCPClientConnection(private val clientSocket: Socket,
@@ -58,8 +59,12 @@ class TCPClientConnection(private val clientSocket: Socket,
     }
 
     private fun sendString(string: String) {
-        bufferedOutputWriter.write(string)
-        bufferedOutputWriter.flush()
+        try {
+            bufferedOutputWriter.write(string)
+            bufferedOutputWriter.flush()
+        } catch (e: IOException) {
+            logger.debug("Exception while trying to send a string to a TCP/IP client: {}", e.message)
+        }
     }
 
     private fun sendLine(line: String) {
