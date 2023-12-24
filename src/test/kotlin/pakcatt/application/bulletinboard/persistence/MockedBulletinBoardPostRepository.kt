@@ -4,8 +4,10 @@ import org.springframework.data.domain.Example
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
+import org.springframework.data.repository.query.FluentQuery
 import pakcatt.util.StringUtils
 import java.util.*
+import java.util.function.Function
 
 class MockedBulletinBoardPostRepository: BulletinBoardPostRepository {
 
@@ -46,7 +48,7 @@ class MockedBulletinBoardPostRepository: BulletinBoardPostRepository {
         TODO("Not yet implemented")
     }
 
-    override fun findAllById(p0: MutableIterable<Int>): MutableIterable<BulletinBoardPost> {
+    override fun findAllById(ids: MutableIterable<Int>): MutableList<BulletinBoardPost> {
         TODO("Not yet implemented")
     }
 
@@ -59,6 +61,10 @@ class MockedBulletinBoardPostRepository: BulletinBoardPostRepository {
     }
 
     override fun delete(p0: BulletinBoardPost) {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteAllById(ids: MutableIterable<Int>) {
         TODO("Not yet implemented")
     }
 
@@ -75,6 +81,13 @@ class MockedBulletinBoardPostRepository: BulletinBoardPostRepository {
     }
 
     override fun <S : BulletinBoardPost?> exists(p0: Example<S>): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun <S : BulletinBoardPost?, R : Any?> findBy(
+        example: Example<S>,
+        queryFunction: Function<FluentQuery.FetchableFluentQuery<S>, R>
+    ): R {
         TODO("Not yet implemented")
     }
 

@@ -1,9 +1,13 @@
 package pakcatt.dependencies
 
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
+import pakcatt.application.beacon.model.BeaconAppConfig
+import pakcatt.application.bulletinboard.persistence.BulletinBoardPostRepository
+import pakcatt.application.bulletinboard.persistence.BulletinBoardThreadRepository
+import pakcatt.application.bulletinboard.persistence.MockedBulletinBoardPostRepository
+import pakcatt.application.bulletinboard.persistence.MockedBulletinBoardThreadRepository
 
 @Configuration
 @Profile("test")

@@ -4,8 +4,10 @@ import org.springframework.data.domain.Example
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
+import org.springframework.data.repository.query.FluentQuery
 import pakcatt.util.StringUtils
 import java.util.*
+import java.util.function.Function
 
 class MockedMailMessageRepository: MailMessageRepository {
 
@@ -48,7 +50,7 @@ class MockedMailMessageRepository: MailMessageRepository {
         TODO("Not yet implemented")
     }
 
-    override fun findAllById(p0: MutableIterable<Int>): MutableIterable<MailMessage> {
+    override fun findAllById(ids: MutableIterable<Int>): MutableList<MailMessage> {
         TODO("Not yet implemented")
     }
 
@@ -61,6 +63,10 @@ class MockedMailMessageRepository: MailMessageRepository {
     }
 
     override fun delete(p0: MailMessage) {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteAllById(ids: MutableIterable<Int>) {
         TODO("Not yet implemented")
     }
 
@@ -77,6 +83,13 @@ class MockedMailMessageRepository: MailMessageRepository {
     }
 
     override fun <S : MailMessage?> exists(p0: Example<S>): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun <S : MailMessage?, R : Any?> findBy(
+        example: Example<S>,
+        queryFunction: Function<FluentQuery.FetchableFluentQuery<S>, R>
+    ): R {
         TODO("Not yet implemented")
     }
 

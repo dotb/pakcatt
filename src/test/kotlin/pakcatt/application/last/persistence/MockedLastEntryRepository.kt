@@ -4,7 +4,9 @@ import org.springframework.data.domain.Example
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
+import org.springframework.data.repository.query.FluentQuery
 import java.util.*
+import java.util.function.Function
 
 class MockedLastEntryRepository: LastEntryRepository {
     var lastEntryIsAvailable = true
@@ -58,7 +60,7 @@ class MockedLastEntryRepository: LastEntryRepository {
         TODO("Not yet implemented")
     }
 
-    override fun findAllById(p0: MutableIterable<String>): MutableIterable<LastEntry> {
+    override fun findAllById(ids: MutableIterable<String>): MutableList<LastEntry> {
         TODO("Not yet implemented")
     }
 
@@ -78,6 +80,10 @@ class MockedLastEntryRepository: LastEntryRepository {
         TODO("Not yet implemented")
     }
 
+    override fun deleteAllById(ids: MutableIterable<String>) {
+        TODO("Not yet implemented")
+    }
+
     override fun deleteAll(p0: MutableIterable<LastEntry>) {
         TODO("Not yet implemented")
     }
@@ -91,6 +97,13 @@ class MockedLastEntryRepository: LastEntryRepository {
     }
 
     override fun <S : LastEntry?> exists(p0: Example<S>): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun <S : LastEntry?, R : Any?> findBy(
+        example: Example<S>,
+        queryFunction: Function<FluentQuery.FetchableFluentQuery<S>, R>
+    ): R {
         TODO("Not yet implemented")
     }
 

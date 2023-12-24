@@ -1,10 +1,14 @@
 package pakcatt.application.bulletinboard.persistence
 
+import org.springframework.context.annotation.Profile
 import org.springframework.data.domain.Example
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Sort
+import org.springframework.data.repository.query.FluentQuery
+import org.springframework.stereotype.Service
 import java.util.*
+import java.util.function.Function
 
 class MockedBulletinBoardThreadRepository: BulletinBoardThreadRepository {
     override fun <S : BulletinBoardThread?> save(p0: S): S {
@@ -48,7 +52,7 @@ class MockedBulletinBoardThreadRepository: BulletinBoardThreadRepository {
         TODO("Not yet implemented")
     }
 
-    override fun findAllById(p0: MutableIterable<Int>): MutableIterable<BulletinBoardThread> {
+    override fun findAllById(ids: MutableIterable<Int>): MutableList<BulletinBoardThread> {
         TODO("Not yet implemented")
     }
 
@@ -61,6 +65,10 @@ class MockedBulletinBoardThreadRepository: BulletinBoardThreadRepository {
     }
 
     override fun delete(p0: BulletinBoardThread) {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteAllById(ids: MutableIterable<Int>) {
         TODO("Not yet implemented")
     }
 
@@ -77,6 +85,13 @@ class MockedBulletinBoardThreadRepository: BulletinBoardThreadRepository {
     }
 
     override fun <S : BulletinBoardThread?> exists(p0: Example<S>): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun <S : BulletinBoardThread?, R : Any?> findBy(
+        example: Example<S>,
+        queryFunction: Function<FluentQuery.FetchableFluentQuery<S>, R>
+    ): R {
         TODO("Not yet implemented")
     }
 

@@ -2,10 +2,8 @@ package pakcatt.application.beacon.model
 
 import org.slf4j.LoggerFactory
 import org.springframework.boot.context.properties.ConfigurationProperties
-import org.springframework.boot.context.properties.ConstructorBinding
 import pakcatt.network.radio.kiss.KissService
 
-@ConstructorBinding
 @ConfigurationProperties(prefix = "pakcatt.application.beacon")
 data class BeaconAppConfig(
     val message: String,

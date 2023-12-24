@@ -12,7 +12,7 @@ import pakcatt.network.radio.protocol.shared.ProtocolService
 import pakcatt.network.radio.tnc.TNC
 import pakcatt.util.ByteUtils
 import pakcatt.util.StringUtils
-import javax.annotation.PreDestroy
+import jakarta.annotation.PreDestroy
 
 @Service
 class KissService(val tncConnections: List<TNC>,
