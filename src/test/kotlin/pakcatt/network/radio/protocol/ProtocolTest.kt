@@ -31,7 +31,7 @@ abstract class ProtocolTest: TestCase() {
         val requestFrame = KissFrameStandard()
         requestFrame.setSourceCallsign(srcCallsign)
         requestFrame.setDestCallsign(dstCallsign)
-        requestFrame.setControlField(controlType, rxSequenceNumber, sendSequenceNumber)
+        requestFrame.setControlFieldAndSequenceNumbers(controlType, rxSequenceNumber, sendSequenceNumber)
         if (null != payload) {
             requestFrame.setPayloadMessage(payload)
         }

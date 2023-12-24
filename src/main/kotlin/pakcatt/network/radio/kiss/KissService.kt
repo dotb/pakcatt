@@ -104,7 +104,7 @@ class KissService(val tncConnections: List<TNC>,
 
     private fun newBroadcastFrame(message: String): KissFrame {
         val frame = KissFrameStandard()
-        frame.setControlField(ControlField.U_UNNUMBERED_INFORMATION)
+        frame.setControlFieldAndSequenceNumbers(ControlField.U_UNNUMBERED_INFORMATION)
         frame.setSourceCallsign(myCall)
         frame.setDestCallsign("CQ")
         frame.setPayloadMessage(message)

@@ -6,7 +6,7 @@
 
     <groupId>com.squarepolka</groupId>
     <artifactId>pakcatt</artifactId>
-    <version>0.4</version>
+    <version>0.4.2</version>
     <name>pakcatt</name>
     <description>A contemporary packet radio service</description>
 

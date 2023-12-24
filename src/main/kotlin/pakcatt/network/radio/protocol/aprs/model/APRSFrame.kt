@@ -50,7 +50,7 @@ open class APRSFrame: KissFrameStandard() {
 
     init {
         // Configure the AX.25 frame parameters for APRS
-        setControlField(ControlField.U_UNNUMBERED_INFORMATION)
+        setControlFieldAndSequenceNumbers(ControlField.U_UNNUMBERED_INFORMATION)
         // Version identifier goes into teh destination callsign
         setDestCallsign("PAKCAT-0")
     }

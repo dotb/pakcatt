@@ -208,19 +208,22 @@ abstract class KissFrame() {
         this.sourceSSID = byteUtils.setBits(parsedCallsign.second, 0x01)
     }
 
-    fun setControlField(controlType: ControlField, receiveSeq: Int = 0, sendSeq: Int = 0) {
+    fun setControlFieldOnly(controlField: ControlField) {
+        setControlFieldAndSequenceNumbers(controlField, receiveSequenceNumber(), sendSequenceNumber())
+    }
+    fun setControlFieldAndSequenceNumbers(controlType: ControlField, receiveSeq: Int = 0, sendSeq: Int = 0) {
         setControlFrame(controlType, receiveSeq, sendSeq)
         setCommandBits(controlType)
     }
 
     fun setReceiveSequenceNumberIfRequired(receiveSeq: Int) {
         if (requiresReceiveSequenceNumber()) {
-            setControlField(controlField(), receiveSeq, sendSequenceNumber())
+            setControlFieldAndSequenceNumbers(controlField(), receiveSeq, sendSequenceNumber())
         }
     }
 
     fun setSendSequenceNumber(sendSeq: Int) {
-        setControlField(controlField(), receiveSequenceNumber(), sendSeq)
+        setControlFieldAndSequenceNumbers(controlField(), receiveSequenceNumber(), sendSeq)
     }
 
     fun setPayloadMessage(message: String) {
@@ -495,35 +498,35 @@ abstract class KissFrame() {
      */
     fun setPFlag() {
         when (controlField()) {
-            ControlField.INFORMATION_8 -> setControlField(ControlField.INFORMATION_8_P)
+            ControlField.INFORMATION_8 -> setControlFieldOnly(ControlField.INFORMATION_8_P)
             ControlField.INFORMATION_8_P -> {}
-            ControlField.INFORMATION_128 -> setControlField(ControlField.INFORMATION_128_P)
+            ControlField.INFORMATION_128 -> setControlFieldOnly(ControlField.INFORMATION_128_P)
             ControlField.INFORMATION_128_P -> {}
-            ControlField.S_8_RECEIVE_READY -> setControlField(ControlField.S_8_RECEIVE_READY_P)
-            ControlField.S_8_RECEIVE_NOT_READY -> setControlField(ControlField.S_8_RECEIVE_NOT_READY_P)
-            ControlField.S_8_REJECT -> setControlField(ControlField.S_8_REJECT_P)
-            ControlField.S_8_SELECTIVE_REJECT -> setControlField(ControlField.S_8_SELECTIVE_REJECT_P)
+            ControlField.S_8_RECEIVE_READY -> setControlFieldOnly(ControlField.S_8_RECEIVE_READY_P)
+            ControlField.S_8_RECEIVE_NOT_READY -> setControlFieldOnly(ControlField.S_8_RECEIVE_NOT_READY_P)
+            ControlField.S_8_REJECT -> setControlFieldOnly(ControlField.S_8_REJECT_P)
+            ControlField.S_8_SELECTIVE_REJECT -> setControlFieldOnly(ControlField.S_8_SELECTIVE_REJECT_P)
             ControlField.S_8_RECEIVE_READY_P -> {}
             ControlField.S_8_RECEIVE_NOT_READY_P -> {}
             ControlField.S_8_REJECT_P -> {}
             ControlField.S_8_SELECTIVE_REJECT_P -> {}
-            ControlField.S_128_RECEIVE_READY -> setControlField(ControlField.S_128_RECEIVE_READY_P)
-            ControlField.S_128_RECEIVE_NOT_READY -> setControlField(ControlField.S_128_RECEIVE_NOT_READY_P)
-            ControlField.S_128_REJECT -> setControlField(ControlField.S_128_REJECT_P)
-            ControlField.S_128_SELECTIVE_REJECT -> setControlField(ControlField.S_128_SELECTIVE_REJECT_P)
+            ControlField.S_128_RECEIVE_READY -> setControlFieldOnly(ControlField.S_128_RECEIVE_READY_P)
+            ControlField.S_128_RECEIVE_NOT_READY -> setControlFieldOnly(ControlField.S_128_RECEIVE_NOT_READY_P)
+            ControlField.S_128_REJECT -> setControlFieldOnly(ControlField.S_128_REJECT_P)
+            ControlField.S_128_SELECTIVE_REJECT -> setControlFieldOnly(ControlField.S_128_SELECTIVE_REJECT_P)
             ControlField.S_128_RECEIVE_READY_P -> {}
             ControlField.S_128_RECEIVE_NOT_READY_P -> {}
             ControlField.S_128_REJECT_P -> {}
             ControlField.S_128_SELECTIVE_REJECT_P -> {}
-            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED -> setControlField(ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P)
-            ControlField.U_SET_ASYNC_BALANCED_MODE -> setControlField(ControlField.U_SET_ASYNC_BALANCED_MODE_P)
-            ControlField.U_DISCONNECT -> setControlField(ControlField.U_DISCONNECT_P)
-            ControlField.U_DISCONNECT_MODE -> setControlField(ControlField.U_DISCONNECT_MODE_P)
-            ControlField.U_UNNUMBERED_ACKNOWLEDGE -> setControlField(ControlField.U_UNNUMBERED_ACKNOWLEDGE_P)
-            ControlField.U_REJECT -> setControlField(ControlField.U_REJECT_P)
+            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED -> setControlFieldOnly(ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P)
+            ControlField.U_SET_ASYNC_BALANCED_MODE -> setControlFieldOnly(ControlField.U_SET_ASYNC_BALANCED_MODE_P)
+            ControlField.U_DISCONNECT -> setControlFieldOnly(ControlField.U_DISCONNECT_P)
+            ControlField.U_DISCONNECT_MODE -> setControlFieldOnly(ControlField.U_DISCONNECT_MODE_P)
+            ControlField.U_UNNUMBERED_ACKNOWLEDGE -> setControlFieldOnly(ControlField.U_UNNUMBERED_ACKNOWLEDGE_P)
+            ControlField.U_REJECT -> setControlFieldOnly(ControlField.U_REJECT_P)
             ControlField.U_UNNUMBERED_INFORMATION -> (ControlField.U_UNNUMBERED_INFORMATION_P)
-            ControlField.U_EXCHANGE_IDENTIFICATION -> setControlField(ControlField.U_EXCHANGE_IDENTIFICATION_P)
-            ControlField.U_TEST -> setControlField(ControlField.U_TEST_P)
+            ControlField.U_EXCHANGE_IDENTIFICATION -> setControlFieldOnly(ControlField.U_EXCHANGE_IDENTIFICATION_P)
+            ControlField.U_TEST -> setControlFieldOnly(ControlField.U_TEST_P)
             ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P -> {}
             ControlField.U_SET_ASYNC_BALANCED_MODE_P -> {}
             ControlField.U_DISCONNECT_P -> {}
@@ -543,25 +546,25 @@ abstract class KissFrame() {
     fun unsetPFlag() {
         when (controlField()) {
             ControlField.INFORMATION_8 -> {}
-            ControlField.INFORMATION_8_P -> setControlField(ControlField.INFORMATION_8)
+            ControlField.INFORMATION_8_P -> setControlFieldAndSequenceNumbers(ControlField.INFORMATION_8)
             ControlField.INFORMATION_128 -> {}
-            ControlField.INFORMATION_128_P -> setControlField(ControlField.INFORMATION_128)
+            ControlField.INFORMATION_128_P -> setControlFieldAndSequenceNumbers(ControlField.INFORMATION_128)
             ControlField.S_8_RECEIVE_READY -> {}
             ControlField.S_8_RECEIVE_NOT_READY -> {}
             ControlField.S_8_REJECT -> {}
             ControlField.S_8_SELECTIVE_REJECT -> {}
-            ControlField.S_8_RECEIVE_READY_P -> setControlField(ControlField.S_8_RECEIVE_READY)
-            ControlField.S_8_RECEIVE_NOT_READY_P -> setControlField(ControlField.S_8_RECEIVE_NOT_READY)
-            ControlField.S_8_REJECT_P -> setControlField(ControlField.S_8_REJECT)
-            ControlField.S_8_SELECTIVE_REJECT_P -> setControlField(ControlField.S_8_SELECTIVE_REJECT)
+            ControlField.S_8_RECEIVE_READY_P -> setControlFieldAndSequenceNumbers(ControlField.S_8_RECEIVE_READY)
+            ControlField.S_8_RECEIVE_NOT_READY_P -> setControlFieldAndSequenceNumbers(ControlField.S_8_RECEIVE_NOT_READY)
+            ControlField.S_8_REJECT_P -> setControlFieldAndSequenceNumbers(ControlField.S_8_REJECT)
+            ControlField.S_8_SELECTIVE_REJECT_P -> setControlFieldAndSequenceNumbers(ControlField.S_8_SELECTIVE_REJECT)
             ControlField.S_128_RECEIVE_READY -> {}
             ControlField.S_128_RECEIVE_NOT_READY -> {}
             ControlField.S_128_REJECT -> {}
             ControlField.S_128_SELECTIVE_REJECT -> {}
-            ControlField.S_128_RECEIVE_READY_P -> setControlField(ControlField.S_128_RECEIVE_READY)
-            ControlField.S_128_RECEIVE_NOT_READY_P -> setControlField(ControlField.S_128_RECEIVE_NOT_READY)
-            ControlField.S_128_REJECT_P -> setControlField(ControlField.S_128_REJECT)
-            ControlField.S_128_SELECTIVE_REJECT_P -> setControlField(ControlField.S_128_SELECTIVE_REJECT)
+            ControlField.S_128_RECEIVE_READY_P -> setControlFieldAndSequenceNumbers(ControlField.S_128_RECEIVE_READY)
+            ControlField.S_128_RECEIVE_NOT_READY_P -> setControlFieldAndSequenceNumbers(ControlField.S_128_RECEIVE_NOT_READY)
+            ControlField.S_128_REJECT_P -> setControlFieldAndSequenceNumbers(ControlField.S_128_REJECT)
+            ControlField.S_128_SELECTIVE_REJECT_P -> setControlFieldAndSequenceNumbers(ControlField.S_128_SELECTIVE_REJECT)
             ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED -> {}
             ControlField.U_SET_ASYNC_BALANCED_MODE -> {}
             ControlField.U_DISCONNECT -> {}
@@ -571,15 +574,15 @@ abstract class KissFrame() {
             ControlField.U_UNNUMBERED_INFORMATION -> {}
             ControlField.U_EXCHANGE_IDENTIFICATION -> {}
             ControlField.U_TEST -> {}
-            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P -> setControlField(ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED)
-            ControlField.U_SET_ASYNC_BALANCED_MODE_P -> setControlField(ControlField.U_SET_ASYNC_BALANCED_MODE)
-            ControlField.U_DISCONNECT_P -> setControlField(ControlField.U_DISCONNECT)
-            ControlField.U_DISCONNECT_MODE_P -> setControlField(ControlField.U_DISCONNECT_MODE)
-            ControlField.U_UNNUMBERED_ACKNOWLEDGE_P -> setControlField(ControlField.U_UNNUMBERED_ACKNOWLEDGE)
-            ControlField.U_REJECT_P -> setControlField(ControlField.U_REJECT)
-            ControlField.U_UNNUMBERED_INFORMATION_P -> setControlField(ControlField.U_UNNUMBERED_INFORMATION)
-            ControlField.U_EXCHANGE_IDENTIFICATION_P -> setControlField(ControlField.U_EXCHANGE_IDENTIFICATION)
-            ControlField.U_TEST_P -> setControlField(ControlField.U_TEST)
+            ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED_P -> setControlFieldAndSequenceNumbers(ControlField.U_SET_ASYNC_BALANCED_MODE_EXTENDED)
+            ControlField.U_SET_ASYNC_BALANCED_MODE_P -> setControlFieldAndSequenceNumbers(ControlField.U_SET_ASYNC_BALANCED_MODE)
+            ControlField.U_DISCONNECT_P -> setControlFieldAndSequenceNumbers(ControlField.U_DISCONNECT)
+            ControlField.U_DISCONNECT_MODE_P -> setControlFieldAndSequenceNumbers(ControlField.U_DISCONNECT_MODE)
+            ControlField.U_UNNUMBERED_ACKNOWLEDGE_P -> setControlFieldAndSequenceNumbers(ControlField.U_UNNUMBERED_ACKNOWLEDGE)
+            ControlField.U_REJECT_P -> setControlFieldAndSequenceNumbers(ControlField.U_REJECT)
+            ControlField.U_UNNUMBERED_INFORMATION_P -> setControlFieldAndSequenceNumbers(ControlField.U_UNNUMBERED_INFORMATION)
+            ControlField.U_EXCHANGE_IDENTIFICATION_P -> setControlFieldAndSequenceNumbers(ControlField.U_EXCHANGE_IDENTIFICATION)
+            ControlField.U_TEST_P -> setControlFieldAndSequenceNumbers(ControlField.U_TEST)
             ControlField.UNKNOWN_Field -> {}
         }
     }
