@@ -13,7 +13,7 @@
     <properties>
         <java.version>17</java.version>
         <kotlin.version>1.8.0</kotlin.version>
-        <springboot.version>3.2.1</springboot.version>
+        <springboot.version>3.2.3</springboot.version>
     </properties>
 
     <parent>
